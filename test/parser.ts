@@ -190,7 +190,8 @@ describe("Parser", function() {
       $: "VariableDeclaration",
       type: { $: "PrimitiveType", name: "int" },
       left: { $: "Identifier", name: "a" },
-      right: { $: "IntLiteral", value: 1 }
+      right: { $: "IntLiteral", value: 1 },
+      hasMutableFlag: false
     });
     deepEq(parseStatement(`int [ ] a = 1;`), {
       $: "VariableDeclaration",
@@ -199,7 +200,15 @@ describe("Parser", function() {
         type: { $: "PrimitiveType", name: "int" }
       },
       left: { $: "Identifier", name: "a" },
-      right: { $: "IntLiteral", value: 1 }
+      right: { $: "IntLiteral", value: 1 },
+      hasMutableFlag: false
+    });
+    deepEq(parseStatement(`var int a = 1;`), {
+      $: "VariableDeclaration",
+      type: { $: "PrimitiveType", name: "int" },
+      left: { $: "Identifier", name: "a" },
+      right: { $: "IntLiteral", value: 1 },
+      hasMutableFlag: true
     });
   });
   it("loop", () => {
