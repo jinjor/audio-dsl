@@ -1,0 +1,11 @@
+<button id="start">Start</button>
+<script type="module">
+  const context = new AudioContext();
+  context.audioWorklet.addModule("js/a.js").then(() => {
+    document.getElementById("start").onclick = e => {
+      context.resume();
+      const node = new AudioWorkletNode(context, "a");
+      node.connect(context.destination);
+    };
+  });
+</script>

@@ -1,0 +1,186 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "dsl",
+  "patterns": [
+    {
+      "include": "#global-statements"
+    },
+    {
+      "include": "#comments"
+    }
+  ],
+  "repository": {
+    "global-statements": {
+      "begin": "^",
+      "end": "$",
+      "patterns": [
+        {
+          "include": "#declaration"
+        },
+        {
+          "include": "#function"
+        }
+      ]
+    },
+    "function": {
+      "patterns": [
+        {
+          "include": "#type"
+        },
+        {
+          "begin": "\\(",
+          "end": "\\)",
+          "patterns": [
+            {
+              "include": "#type"
+            },
+            {
+              "include": "#expressions"
+            },
+            {
+              "include": "#comments"
+            }
+          ]
+        },
+        {
+          "include": "#block"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "block": {
+      "begin": "{",
+      "end": "}",
+      "patterns": [
+        {
+          "include": "#local_statements"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "type": {
+      "patterns": [
+        {
+          "name": "keyword.control.dsl",
+          "match": "\\b(int|float|void|bool)\\b"
+        }
+      ]
+    },
+    "declaration": {
+      "patterns": [
+        {
+          "name": "keyword.control.dsl",
+          "match": "\\b(var)\\b"
+        },
+        {
+          "include": "#type"
+        },
+        {
+          "match": "=",
+          "name": "keyword.operator.comparison.dsl"
+        },
+        {
+          "include": "#expressions"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "loop": {
+      "patterns": [
+        {
+          "name": "keyword.control.dsl",
+          "match": "\\b(loop)\\b"
+        },
+        {
+          "include": "#block"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "return": {
+      "patterns": [
+        {
+          "name": "keyword.control.dsl",
+          "match": "\\b(return)\\b"
+        },
+        {
+          "include": "#expressions"
+        }
+      ]
+    },
+    "local_statements": {
+      "patterns": [
+        {
+          "include": "#declaration"
+        },
+        {
+          "include": "#loop"
+        },
+        {
+          "include": "#return"
+        }
+      ]
+    },
+    "expressions": {
+      "patterns": [
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#numbers"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.dsl",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.dsl",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric",
+      "match": "\\b[0-9]+(.[0-9]+)?\\b"
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.documentation.dsl",
+          "begin": "/\\*\\*",
+          "end": "\\*/",
+          "patterns": [
+            {
+              "name": "entity.other.attribute-name.dsl",
+              "match": "@[a-zA-Z0-9]+"
+            }
+          ]
+        },
+        {
+          "name": "comment.line.dsl",
+          "begin": "//",
+          "end": "$",
+          "patterns": []
+        },
+        {
+          "name": "comment.block.dsl",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "patterns": []
+        }
+      ]
+    }
+  },
+  "scopeName": "source.dsl"
+}

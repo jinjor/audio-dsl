@@ -1,0 +1,10 @@
+- binaryen
+  - old: https://github.com/WebAssembly/binaryen/wiki/binaryen.js-API
+  - latest: https://www.npmjs.com/package/binaryen
+- about call_indirect
+  - ref: https://developer.mozilla.org/ja/docs/WebAssembly/Understanding_the_text_format
+- others
+  - https://github.com/AssemblyScript/assemblyscript/tree/0d64c9661a60446164c38bf414613ca8ac9cf88e/tests/binaryen
+  - https://developer.mozilla.org/ja/docs/WebAssembly/Understanding_the_text_format
+  - https://github.com/WebAssembly/binaryen/blob/master/test/binaryen.js/kitchen-sink.js
+  - https://developer.mozilla.org/ja/docs/Web/API/Blob
