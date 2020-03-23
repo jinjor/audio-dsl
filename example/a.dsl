@@ -36,12 +36,8 @@ void process() {
     angle = angle > TWO_PI ? angle - TWO_PI : angle;
   }
 }
-bool b(bool bo) {
-  log_b(bo);
-  return bo;
-}
 void test() {
   log_s(2048, 13);// Hello, World!
   log_f(angle);
-  bool a = b(2 < 1);
+  log_b(1 > 0);
 }
