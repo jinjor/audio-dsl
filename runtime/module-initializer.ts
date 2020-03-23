@@ -19,6 +19,10 @@ export function createInstance(bytes: Uint8Array): LanguageSpecificInstance {
         console.log("log_f:", arg);
         checkInfiniteLoop();
       },
+      log_b: function(arg: number) {
+        console.log("log_b:", arg);
+        checkInfiniteLoop();
+      },
       log_s: function(start: number, length: number) {
         console.log(start, length);
         const sliced = memory.buffer.slice(start, start + length);

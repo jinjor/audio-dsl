@@ -175,12 +175,12 @@ export type Expression =
 export type LocalGet = {
   $: "LocalGet";
   index: number;
-  type: Int32Type | Float32Type;
+  type: Int32Type | Float32Type | BoolType;
 };
 export type GlobalGet = {
   $: "GlobalGet";
   name: string;
-  type: Int32Type | Float32Type;
+  type: Int32Type | Float32Type | BoolType;
 };
 export type FunctionGet = {
   $: "FunctionGet";
@@ -279,11 +279,10 @@ export type GlobalVariableDeclaration = {
 export type FunctionDeclaration = {
   $: "FunctionDeclaration";
   name: string;
-  // params: ParamType[];
-  params: (Int32Type | Float32Type)[];
+  params: ParamType[];
   returnType: ReturnType;
   // localTypes: DeclaredType[];
-  localTypes: (Int32Type | Float32Type | VoidType)[];
+  localTypes: (Int32Type | Float32Type | BoolType | VoidType)[];
   statements: LocalStatement[];
   export: boolean;
 };

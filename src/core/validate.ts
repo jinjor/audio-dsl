@@ -76,11 +76,13 @@ interface Scope {
 }
 interface LocalScope extends Scope {
   createBlockScope(): BlockScope;
-  declareType(name: string, type: Int32Type | Float32Type): void;
+  declareType(name: string, type: Int32Type | Float32Type | BoolType): void;
   isDeclaredInThisScope(name: string): boolean;
-  addLocalType(type: Int32Type | Float32Type): number;
+  addLocalType(type: Int32Type | Float32Type | BoolType): number;
   lookupType(name: string): [FoundExp, ExpressionType] | null;
-  lookupLocalTypeByIndex(index: number): Int32Type | Float32Type | null;
+  lookupLocalTypeByIndex(
+    index: number
+  ): Int32Type | Float32Type | BoolType | null;
   lookupReturnType(): ReturnType | null;
 }
 
@@ -161,19 +163,19 @@ class GlobalScope implements Scope {
 
 class FunctionScope implements LocalScope {
   private declaredTypes = new Map<string, number>();
-  private localTypes: (Int32Type | Float32Type)[] = [];
+  private localTypes: (Int32Type | Float32Type | BoolType)[] = [];
   constructor(private parent: GlobalScope, private returnType: ReturnType) {}
   createBlockScope(): BlockScope {
     return new BlockScope(this);
   }
-  declareType(name: string, type: Int32Type | Float32Type): void {
+  declareType(name: string, type: Int32Type | Float32Type | BoolType): void {
     if (this.isDeclaredInThisScope(name)) {
       throw new Error(name + " is already defined in this scope");
     }
     const index = this.addLocalType(type);
     this.declaredTypes.set(name, index);
   }
-  addLocalType(type: Int32Type | Float32Type): number {
+  addLocalType(type: Int32Type | Float32Type | BoolType): number {
     const index = this.localTypes.length;
     this.localTypes[index] = type;
     return index;
@@ -181,7 +183,7 @@ class FunctionScope implements LocalScope {
   isDeclaredInThisScope(name: string): boolean {
     return this.declaredTypes.has(name);
   }
-  getLocalTypes(): (Int32Type | Float32Type)[] {
+  getLocalTypes(): (Int32Type | Float32Type | BoolType)[] {
     return this.localTypes;
   }
   lookupType(name: string): [FoundExp, ExpressionType] | null {
@@ -192,7 +194,9 @@ class FunctionScope implements LocalScope {
     }
     return this.parent.lookupType(name);
   }
-  lookupLocalTypeByIndex(index: number): Int32Type | Float32Type | null {
+  lookupLocalTypeByIndex(
+    index: number
+  ): Int32Type | Float32Type | BoolType | null {
     return this.localTypes[index];
   }
   lookupReturnType(): ReturnType {
@@ -231,7 +235,9 @@ class BlockScope implements LocalScope {
   addLocalType(type: Int32Type | Float32Type): number {
     return this.parent.addLocalType(type);
   }
-  lookupLocalTypeByIndex(index: number): Int32Type | Float32Type | null {
+  lookupLocalTypeByIndex(
+    index: number
+  ): Int32Type | Float32Type | BoolType | null {
     return this.parent.lookupLocalTypeByIndex(index);
   }
   lookupReturnType(): ReturnType | null {
@@ -495,9 +501,7 @@ function validateFunctionDeclaration(
   ast: ast.FunctionDeclaration
 ): void {
   const statements: LocalStatement[] = [];
-  const paramTypes = new Array<Int32Type | Float32Type>(
-    ast.params.items.length
-  );
+  const paramTypes = new Array<ParamType>(ast.params.items.length);
 
   const returnType = validateReturnType(state, scope, ast.returnType);
   if (returnType == null) {
@@ -514,7 +518,11 @@ function validateFunctionDeclaration(
       state.errors.push(new AlreadyDeclared(paramAst.range, "param", name));
       continue;
     }
-    if (paramType.$ !== "Int32Type" && paramType.$ !== "Float32Type") {
+    if (
+      paramType.$ !== "Int32Type" &&
+      paramType.$ !== "Float32Type" &&
+      paramType.$ !== "BoolType"
+    ) {
       state.errors.push(
         new Unsupported(paramAst.range, "receiving non-primitive types")
       );

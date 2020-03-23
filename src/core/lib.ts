@@ -28,6 +28,11 @@ utilModule.types.set("log_f", {
   params: [primitives.float32Type],
   returnType: primitives.voidType
 });
+utilModule.types.set("log_b", {
+  $: "FunctionType",
+  params: [primitives.boolType],
+  returnType: primitives.voidType
+});
 utilModule.types.set("log_s", {
   $: "FunctionType",
   params: [primitives.int32Type, primitives.int32Type],
