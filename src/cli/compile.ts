@@ -28,12 +28,6 @@ for (let i = 2; i < process.argv.length; i++) {
 log.debug("targets:", targets);
 log.debug("options:", options);
 
-const processorTemplateFile = path.resolve(
-  __dirname,
-  "../template/processor.js"
-);
-const processorTemplate = fs.readFileSync(processorTemplateFile, "utf8");
-
 for (const srcFile of targets) {
   const srcFileBasename = path.basename(srcFile, ".dsl");
   const outFileBasename = srcFileBasename + ".js";
@@ -50,10 +44,6 @@ for (const srcFile of targets) {
   const base64 = Buffer.from(binary.buffer).toString("base64");
 
   const moduleName = srcFileBasename;
-  // const processorSourceText = processorTemplate
-  //   .replace("{{RUNTIME_PATH}}", "./runtime/runtime.js")
-  //   .replace("{{MODULE_NAME}}", moduleName)
-  //   .replace("{{WASM_BASE64}}", base64);
   const RUNTIME_PATH = "./runtime/runtime.js";
   const MODULE_NAME = moduleName;
   const WASM_BASE64 = base64;
