@@ -537,7 +537,7 @@ function validateFunctionDeclaration(
   if (paramTypes.some(p => p == null)) {
     return;
   }
-  const localTypes = childScope.getLocalTypes();
+  const localTypes = childScope.getLocalTypes().slice(paramTypes.length);
 
   // TODO:
   // - should return XXX
