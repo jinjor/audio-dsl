@@ -1,5 +1,5 @@
 import * as compiler from "../core/compiler";
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import * as path from "path";
 import * as log from "../core/log";
 
@@ -63,7 +63,7 @@ const moduleName = "${MODULE_NAME}";
 const base64 = "${WASM_BASE64}";
 register(moduleName, base64);
 `;
-  fs.ensureDirSync(path.dirname(outFile));
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, processorSourceText);
 
   console.log("compiled:", srcFile, "->", path.dirname(outFile));

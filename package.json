@@ -20,12 +20,10 @@
   "dependencies": {
     "binaryen": "^91.0.0",
     "chalk": "^3.0.0",
-    "fs-extra": "^8.1.0",
     "rollup": "^2.0.3"
   },
   "devDependencies": {
     "@types/chalk": "^2.2.0",
-    "@types/fs-extra": "^8.1.0",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.9.0",
     "http-server": "^0.12.1",
