@@ -193,14 +193,26 @@ export class Module {
     if (exp.$ === "Int32LT") {
       return this.i32Lt(this.expression(exp.left), this.expression(exp.right));
     }
+    if (exp.$ === "Int32LE") {
+      return this.i32Le(this.expression(exp.left), this.expression(exp.right));
+    }
     if (exp.$ === "Int32GT") {
       return this.i32Gt(this.expression(exp.left), this.expression(exp.right));
+    }
+    if (exp.$ === "Int32GE") {
+      return this.i32Ge(this.expression(exp.left), this.expression(exp.right));
     }
     if (exp.$ === "Float32LT") {
       return this.f32Lt(this.expression(exp.left), this.expression(exp.right));
     }
+    if (exp.$ === "Float32LE") {
+      return this.f32Le(this.expression(exp.left), this.expression(exp.right));
+    }
     if (exp.$ === "Float32GT") {
       return this.f32Gt(this.expression(exp.left), this.expression(exp.right));
+    }
+    if (exp.$ === "Float32GE") {
+      return this.f32Ge(this.expression(exp.left), this.expression(exp.right));
     }
     if (exp.$ === "CondOp") {
       return this.raw.select(
