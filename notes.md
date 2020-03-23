@@ -8,3 +8,16 @@
   - https://developer.mozilla.org/ja/docs/WebAssembly/Understanding_the_text_format
   - https://github.com/WebAssembly/binaryen/blob/master/test/binaryen.js/kitchen-sink.js
   - https://developer.mozilla.org/ja/docs/Web/API/Blob
+- LS
+  - https://github.com/microsoft/language-server-protocol
+  - How it works https://microsoft.github.io//language-server-protocol/overviews/lsp/overview/
+  - Position, Range, etc. https://microsoft.github.io/language-server-protocol/specifications/specification-current/#position
+  - Diagnostics https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics
+  - Hover https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover
+  - Goto Declaration Request https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_declaration
+  - Goto Definition Request https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition
+  - Goto Type Definition Request https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_typeDefinition
+  - Goto Implementation Request https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation
+  - Find References Request https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references
+  - Document Symbols Request https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol
+  - Document Formatting Request https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting
