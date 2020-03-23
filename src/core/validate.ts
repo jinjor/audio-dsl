@@ -24,7 +24,6 @@ import {
   Call,
   BinOp,
   ArrayAccess,
-  FoundExp,
   LocalGet,
   GlobalGet,
   GetForAssign,
@@ -35,7 +34,9 @@ import {
   FunctionDeclaration,
   GlobalVariableDeclaration,
   Import,
-  sizeOf
+  sizeOf,
+  FunctionGet,
+  ArrayGet
 } from "./types";
 import { ModuleCache } from "./loader";
 import { StringRefsBuilder } from "./string";
@@ -69,6 +70,7 @@ import {
 } from "./errors";
 
 // Scopes
+type FoundExp = LocalGet | GlobalGet | FunctionGet | ArrayGet | NumberConst;
 interface Scope {
   declareType(name: string, type: DeclaredType): void;
   isDeclaredInThisScope(name: string): boolean;
@@ -85,7 +87,6 @@ interface LocalScope extends Scope {
   ): Int32Type | Float32Type | BoolType | null;
   lookupReturnType(): ReturnType | null;
 }
-
 class GlobalScope implements Scope {
   byteOffset = 0;
   private declaredTypesOrStaticValue = new Map<

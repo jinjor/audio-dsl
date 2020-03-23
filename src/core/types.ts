@@ -154,12 +154,6 @@ export function typeToString(a: AnyType): string {
 //  Expressions
 // --------------------
 export type AssignableExpression = LocalGet | GlobalGet;
-export type FoundExp =
-  | LocalGet
-  | GlobalGet
-  | FunctionGet
-  | ArrayGet
-  | NumberConst;
 export type Expression =
   | NumberConst
   | LocalGet
