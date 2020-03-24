@@ -10,7 +10,7 @@
     "url": "https://github.com/Microsoft/vscode-extension-samples"
   },
   "engines": {
-    "vscode": "^1.33.0"
+    "vscode": "^1.43.0"
   },
   "scripts": {
     "update-vscode": "vscode-install",
