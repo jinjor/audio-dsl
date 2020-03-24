@@ -1,5 +1,5 @@
 {
-  "name": "lsp-sample",
+  "name": "dsl-ls",
   "description": "A language server example",
   "author": "Microsoft Corporation",
   "license": "MIT",
@@ -17,7 +17,7 @@
     "vscode": "^1.43.0"
   },
   "activationEvents": [
-    "onLanguage:plaintext"
+    "onLanguage:dsl"
   ],
   "main": "./client/out/extension",
   "contributes": {
