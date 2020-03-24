@@ -6,7 +6,7 @@
 import {
   createConnection,
   TextDocuments,
-  TextDocument,
+  // TextDocument,
   Diagnostic,
   DiagnosticSeverity,
   ProposedFeatures,
@@ -16,6 +16,7 @@ import {
   CompletionItemKind,
   TextDocumentPositionParams
 } from "vscode-languageserver";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -23,7 +24,7 @@ let connection = createConnection(ProposedFeatures.all);
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
-let documents: TextDocuments = new TextDocuments();
+let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability: boolean = false;
 let hasWorkspaceFolderCapability: boolean = false;
@@ -48,7 +49,8 @@ connection.onInitialize((params: InitializeParams) => {
 
   return {
     capabilities: {
-      textDocumentSync: documents.syncKind,
+      // TODO: does not compile on vscode-languageserver@6
+      // textDocumentSync: documents.syncKind,
       // Tell the client that the server supports code completion
       completionProvider: {
         resolveProvider: true

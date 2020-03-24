@@ -53,9 +53,9 @@
     "test": "sh ./scripts/e2e.sh"
   },
   "devDependencies": {
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^12.11.7",
-    "tslint": "^5.16.0",
-    "typescript": "^3.6.4"
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.9.3",
+    "tslint": "^6.1.0",
+    "typescript": "^3.8.3"
   }
 }
