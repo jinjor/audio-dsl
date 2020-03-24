@@ -11,6 +11,8 @@
 - LS
   - https://github.com/microsoft/language-server-protocol
   - How it works https://microsoft.github.io//language-server-protocol/overviews/lsp/overview/
+  - npm package https://github.com/Microsoft/vscode-languageserver-node
+  - guide https://code.visualstudio.com/api/language-extensions/language-server-extension-guide
   - Position, Range, etc. https://microsoft.github.io/language-server-protocol/specifications/specification-current/#position
   - Diagnostics https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics
   - Hover https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover
