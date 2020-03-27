@@ -12,10 +12,6 @@
   "engines": {
     "vscode": "^1.43.0"
   },
-  "scripts": {
-    "update-vscode": "vscode-install",
-    "postinstall": "vscode-install"
-  },
   "dependencies": {
     "vscode-languageclient": "^6.1.3"
   },

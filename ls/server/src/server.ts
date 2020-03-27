@@ -6,7 +6,6 @@
 import {
   createConnection,
   TextDocuments,
-  // TextDocument,
   Diagnostic,
   DiagnosticSeverity,
   ProposedFeatures,
@@ -14,7 +13,9 @@ import {
   DidChangeConfigurationNotification,
   CompletionItem,
   CompletionItemKind,
-  TextDocumentPositionParams
+  TextDocumentPositionParams,
+  TextDocumentSyncKind,
+  InitializeResult
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
@@ -47,16 +48,23 @@ connection.onInitialize((params: InitializeParams) => {
     capabilities.textDocument.publishDiagnostics.relatedInformation
   );
 
-  return {
+  const result: InitializeResult = {
     capabilities: {
-      // TODO: does not compile on vscode-languageserver@6
-      // textDocumentSync: documents.syncKind,
+      textDocumentSync: TextDocumentSyncKind.Full,
       // Tell the client that the server supports code completion
       completionProvider: {
         resolveProvider: true
       }
     }
   };
+  if (hasWorkspaceFolderCapability) {
+    result.capabilities.workspace = {
+      workspaceFolders: {
+        supported: true
+      }
+    };
+  }
+  return result;
 });
 
 connection.onInitialized(() => {
