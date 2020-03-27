@@ -1,23 +1,29 @@
-name: Node.js CI
-
+name: Build and Test
 on: [push]
-
+env:
+  CI: true
 jobs:
   build:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [12.x]
-
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install
-      - run: npm run build
-      - run: npm test
-        env:
-          CI: true
+      - name: Main
+        run: npm ci
+          npm run build
+          npm test
+      - name: Syntax Highlight
+        workind-directory: ./vscode-dsl
+        run: npm ci
+          npx vsce package
+      - name: Language Server
+        workind-directory: ./ls
+        run: npm ci
+          npm run compile
+          npm test
