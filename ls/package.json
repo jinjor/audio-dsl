@@ -9,7 +9,9 @@
     "url": "https://github.com/Microsoft/vscode-extension-samples"
   },
   "publisher": "jinjor",
-  "categories": [],
+  "categories": [
+    "Programming Languages"
+  ],
   "keywords": [
     "multi-root ready"
   ],
@@ -21,6 +23,25 @@
   ],
   "main": "./client/out/extension",
   "contributes": {
+    "languages": [
+      {
+        "id": "dsl",
+        "aliases": [
+          "dsl"
+        ],
+        "extensions": [
+          ".dsl"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dsl",
+        "scopeName": "source.dsl",
+        "path": "./syntaxes/dsl.tmLanguage.json"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Example configuration",
@@ -56,6 +77,7 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.9.3",
     "eslint": "^6.8.0",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "vsce": "^1.74.0"
   }
 }

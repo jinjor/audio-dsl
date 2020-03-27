@@ -18,10 +18,6 @@ jobs:
         run: npm ci
           npm run build
           npm test
-      - name: Syntax Highlight
-        workind-directory: ./vscode-dsl
-        run: npm ci
-          npx vsce package
       - name: Language Server
         workind-directory: ./ls
         run: npm ci
