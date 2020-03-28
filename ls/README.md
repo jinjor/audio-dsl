@@ -1,8 +1,6 @@
-# Language Server
+# vscode-dsl
 
-Ref: https://code.visualstudio.com/api/language-extensions/language-server-extension-guide
-
-## Running
+## Develop
 
 - Run `npm install`
 - Open VS Code
@@ -13,7 +11,7 @@ Ref: https://code.visualstudio.com/api/language-extensions/language-server-exten
 - If you want to debug the server as well use the launch configuration `Attach to Server`
 - In the [Extension Development Host] instance of VSCode, open a document in 'dsl' language mode.
 
-# vscode-dsl README
+Ref: https://code.visualstudio.com/api/language-extensions/language-server-extension-guide
 
 ## Build
 
@@ -26,8 +24,3 @@ npx vsce package
 ```
 code --install-extension vscode-dsl-0.0.1.vsix
 ```
-
-## Develop
-
-- Run debugger: `F5`
-- Reload: `Ctrl+R` or `Cmd+R`
