@@ -12,6 +12,7 @@
     "url": "https://github.com/Microsoft/vscode-extension-samples"
   },
   "dependencies": {
+    "audio-dsl": "file:../..",
     "vscode-languageserver": "^6.1.1",
     "vscode-languageserver-textdocument": "^1.0.1"
   },

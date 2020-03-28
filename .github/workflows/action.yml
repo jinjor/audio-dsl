@@ -23,9 +23,10 @@ jobs:
           npm ci
           npm run build
           npm test
-      - name: Language Server
-        working-directory: ./ls
+      - name: VSCode Extension
+        working-directory: ./vscode-dsl
         run: |
           npm ci
           npm run compile
           npm test
+          npm run package

@@ -15,8 +15,14 @@
     "test": "mocha -r source-map-support/register dist/test/**/*.js",
     "clean": "rm -rf dist public/js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "jinjor",
+  "license": "MIT",
+  "files": [
+    "dist/src"
+  ],
+  "bin": {
+    "dsl": "bin/dsl"
+  },
   "dependencies": {
     "binaryen": "^91.0.0",
     "chalk": "^3.0.0",

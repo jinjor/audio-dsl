@@ -18,6 +18,7 @@ import {
   InitializeResult
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import * as compiler from "audio-dsl/dist/src/core/compiler";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.

@@ -16,7 +16,7 @@ Ref: https://code.visualstudio.com/api/language-extensions/language-server-exten
 ## Build
 
 ```
-npx vsce package
+npm run package
 ```
 
 ## Install
