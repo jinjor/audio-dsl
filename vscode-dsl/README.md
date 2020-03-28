@@ -22,5 +22,5 @@ npm run package
 ## Install
 
 ```
-code --install-extension vscode-dsl-0.0.1.vsix
+npm run use
 ```

@@ -69,7 +69,8 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
-    "package": "vsce package",
+    "package": "rm *.vsix && vsce package",
+    "use": "code --install-extension vscode-dsl-0.0.1.vsix",
     "test": "sh ./scripts/e2e.sh"
   },
   "devDependencies": {
