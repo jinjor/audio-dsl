@@ -44,7 +44,7 @@ for (const srcFile of targets) {
   const base64 = Buffer.from(binary.buffer).toString("base64");
 
   const moduleName = srcFileBasename;
-  const RUNTIME_PATH = "./runtime/runtime.js";
+  const RUNTIME_PATH = "./_runtime.js";
   const MODULE_NAME = moduleName;
   const WASM_BASE64 = base64;
   const processorSourceText = `
@@ -56,5 +56,10 @@ register(moduleName, base64);
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, processorSourceText);
 
+  const runtimeOutputFile = path.join(outDir, RUNTIME_PATH);
+  if (!fs.existsSync(runtimeOutputFile)) {
+    const runtimeSourceFile = path.join(__dirname, "../../runtime/bundle.js");
+    fs.copyFileSync(runtimeSourceFile, runtimeOutputFile);
+  }
   console.log("compiled:", srcFile, "->", path.dirname(outFile));
 }
