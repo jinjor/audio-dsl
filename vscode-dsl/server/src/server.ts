@@ -15,12 +15,10 @@ import {
   CompletionItemKind,
   TextDocumentPositionParams,
   TextDocumentSyncKind,
-  InitializeResult,
-  Position,
-  Range
+  InitializeResult
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { compiler, ast } from "audio-dsl";
+import { compiler } from "audio-dsl";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -139,21 +137,6 @@ documents.onDidChangeContent(change => {
   validateTextDocument(change.document);
 });
 
-function transformPosition(pos: ast.Position): Position {
-  return {
-    line: pos.row - 1,
-    character: pos.column - 1
-  };
-}
-function transformRange(range: ast.Range): Range {
-  return {
-    start: transformPosition(range.start),
-    end: transformPosition({
-      row: range.end.row,
-      column: range.end.column + 1
-    })
-  };
-}
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   let settings = await getDocumentSettings(textDocument.uri);
   let text = textDocument.getText();
@@ -175,7 +158,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       }
       let diagnostic: Diagnostic = {
         severity: DiagnosticSeverity.Error,
-        range: transformRange(error.range),
+        range: error.range,
         message: error.message,
         source: "dsl"
       };

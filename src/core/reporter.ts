@@ -14,35 +14,35 @@ export class Reporter {
   }
   private colorLine(
     line: string,
-    startColumn: number | null,
-    endColumn: number | null
+    startChar: number | null,
+    endChar: number | null
   ) {
-    startColumn = startColumn ?? 1;
-    endColumn = endColumn ?? line.length;
+    startChar = startChar ?? 0;
+    endChar = endChar ?? line.length;
     return (
-      line.slice(0, startColumn - 1) +
-      error(line.slice(startColumn - 1, endColumn)) +
-      line.slice(endColumn)
+      line.slice(0, startChar) +
+      error(line.slice(startChar, endChar)) +
+      line.slice(endChar)
     );
   }
   reportSyntaxError(message: string, position: Position): string {
     const lines = this.getLines();
     const margin = 0;
-    const marginedStartRow = Math.max(position.row - margin, 1);
-    const marginedEndRow = Math.min(position.row + margin, lines.length);
+    const marginedStartLine = Math.max(position.line - margin, 0);
+    const marginedEndLine = Math.min(position.line + 1 + margin, lines.length);
     let text = "";
     text += `${message}\n`;
     text += "\n";
-    for (let r = marginedStartRow; r <= marginedEndRow; r++) {
-      const line = lines[r - 1];
-      const hasError = position.row == r;
+    for (let l = marginedStartLine; l < marginedEndLine; l++) {
+      const line = lines[l];
+      const hasError = position.line == l;
       if (hasError) {
-        const startColumn = position.column;
-        const endColumn = position.column;
-        const coloredLine = this.colorLine(line, startColumn, endColumn);
-        text += `${String(r).padStart(5)}|> ${coloredLine}\n`;
+        const startChar = position.character;
+        const endChar = position.character;
+        const coloredLine = this.colorLine(line, startChar, endChar);
+        text += `${String(l + 1).padStart(5)}|> ${coloredLine}\n`;
       } else {
-        text += `${String(r).padStart(5)}|  ${line}\n`;
+        text += `${String(l + 1).padStart(5)}|  ${line}\n`;
       }
     }
     return text;
@@ -50,21 +50,21 @@ export class Reporter {
   reportValidationError(message: string, { start, end }: Range): string {
     const lines = this.getLines();
     const margin = 0;
-    const marginedStartRow = Math.max(start.row - margin, 1);
-    const marginedEndRow = Math.min(end.row + margin, lines.length);
+    const marginedStartLine = Math.max(start.line - margin, 0);
+    const marginedEndLine = Math.min(end.line + 1 + margin, lines.length);
     let text = "";
     text += `${message}\n`;
     text += "\n";
-    for (let r = marginedStartRow; r <= marginedEndRow; r++) {
-      const line = lines[r - 1];
-      const isInError = start.row <= r && r <= end.row;
+    for (let l = marginedStartLine; l < marginedEndLine; l++) {
+      const line = lines[l];
+      const isInError = start.line <= l && l <= end.line;
       if (isInError) {
-        const startColumn = start.row === r ? start.column : null;
-        const endColumn = end.row === r ? end.column : null;
-        const coloredLine = this.colorLine(line, startColumn, endColumn);
-        text += `${String(r).padStart(5)}|> ${coloredLine}\n`;
+        const startChar = start.line === l ? start.character : null;
+        const endChar = end.line === l ? end.character : null;
+        const coloredLine = this.colorLine(line, startChar, endChar);
+        text += `${String(l + 1).padStart(5)}|> ${coloredLine}\n`;
       } else {
-        text += `${String(r).padStart(5)}|  ${line}\n`;
+        text += `${String(l + 1).padStart(5)}|  ${line}\n`;
       }
     }
     return text;

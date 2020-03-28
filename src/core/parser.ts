@@ -24,23 +24,48 @@ import {
   Range,
   sepBy,
   $1,
-  stringBeforeEndOr
+  stringBeforeEndOr,
+  Position
 } from "../util/typed-parser";
 import * as util from "util";
 import * as log from "./log";
 import * as ast from "./ast";
 
+function transformPosition(pos: Position): ast.Position {
+  return {
+    line: pos.row - 1,
+    character: pos.column - 1
+  };
+}
+function transformRange(range: Range): ast.Range {
+  return {
+    start: transformPosition(range.start),
+    end: transformPosition({
+      row: range.end.row,
+      column: range.end.column + 1
+    })
+  };
+}
+
 const intLiteral = withContext<ast.IntLiteral>(
   "IntLiteral",
   mapWithRange(
-    (value, range) => ({ range, $: "IntLiteral", value }),
+    (value, range) => ({
+      range: transformRange(range),
+      $: "IntLiteral",
+      value
+    }),
     int("-?(0|[1-9][0-9]*)")
   )
 );
 const floatLiteral = withContext<ast.FloatLiteral>(
   "FloatLiteral",
   mapWithRange(
-    (value, range) => ({ range, $: "FloatLiteral", value }),
+    (value, range) => ({
+      range: transformRange(range),
+      $: "FloatLiteral",
+      value
+    }),
     float("-?(0|[1-9][0-9]*)(\\.[0-9]+)")
   )
 );
@@ -73,7 +98,11 @@ const strInner: Parser<string> = seq(
 const stringLiteral = withContext<ast.StringLiteral>(
   "StringLiteral",
   mapWithRange(
-    (value: string, range) => ({ range, $: "StringLiteral", value }),
+    (value: string, range) => ({
+      range: transformRange(range),
+      $: "StringLiteral",
+      value
+    }),
     seq($2, symbol('"'), strInner, symbol('"'), _)
   )
 );
@@ -81,7 +110,11 @@ const itemSep = seq($null, symbol(","), _);
 const arrayLiteral: Parser<ast.ArrayLiteral> = withContext(
   "ArrayLiteral",
   mapWithRange(
-    (items, range) => ({ range, $: "ArrayLiteral", items }),
+    (items, range) => ({
+      range: transformRange(range),
+      $: "ArrayLiteral",
+      items
+    }),
     bracedSep<ast.Expression>(
       "[",
       "]",
@@ -92,7 +125,7 @@ const arrayLiteral: Parser<ast.ArrayLiteral> = withContext(
 );
 const paren: Parser<ast.Expression> = mapWithRange(
   (exp, range) => {
-    exp.range = range;
+    exp.range = transformRange(range);
     return exp;
   },
   braced<ast.Expression>(
@@ -102,7 +135,7 @@ const paren: Parser<ast.Expression> = mapWithRange(
   )
 );
 const identifier: Parser<ast.Identifier> = mapWithRange(
-  (name, range) => ({ range, $: "Identifier", name }),
+  (name, range) => ({ range: transformRange(range), $: "Identifier", name }),
   match("[a-zA-Z]+[a-zA-Z0-9_-]*")
 );
 const singleExpression = oneOf<ast.Expression>(
@@ -162,7 +195,7 @@ function joinAccessors(
   if (accessor.$ === "ArrayAccessor") {
     const range = {
       start: acc.range.start,
-      end: accessor.range.end
+      end: transformRange(accessor.range).end
     };
     return joinAccessors(
       {
@@ -178,7 +211,7 @@ function joinAccessors(
     const args = accessor.args;
     const range = {
       start: acc.range.start,
-      end: accessor.range.end
+      end: transformRange(accessor.range).end
     };
     return joinAccessors(
       {
@@ -287,7 +320,7 @@ const expression: Parser<ast.Expression> = mapWithRange(
       return head;
     }
     return {
-      range,
+      range: transformRange(range),
       $: "CondOp",
       condition: head,
       ifTrue: tail.ifTrue,
@@ -331,11 +364,13 @@ type TypeParts = { primitiveTypeName: ast.PrimitiveTypeName; isArray: boolean };
 const type: Parser<ast.Type> = mapWithRange(
   ({ primitiveTypeName, isArray }: TypeParts, range) => {
     const primitive: ast.PrimitiveType = {
-      range,
+      range: transformRange(range),
       $: "PrimitiveType",
       name: primitiveTypeName
     };
-    return isArray ? { range, $: "ArrayType", type: primitive } : primitive;
+    return isArray
+      ? { range: transformRange(range), $: "ArrayType", type: primitive }
+      : primitive;
   },
   seq(
     (primitiveTypeName, _, isArray) => ({ primitiveTypeName, isArray }),
@@ -366,7 +401,7 @@ const variableDeclarationInner: Parser<[
 );
 const variableDeclarationWithMutableFlag: Parser<ast.VariableDeclaration> = mapWithRange(
   ([type, left, right]: [ast.Type, ast.Identifier, ast.Expression], range) => ({
-    range,
+    range: transformRange(range),
     $: "VariableDeclaration",
     type,
     left,
@@ -388,7 +423,7 @@ const param: Parser<ast.Param> = mapWithRange(
     { type, identifier }: { type: ast.Type; identifier: ast.Identifier },
     range: Range
   ) => ({
-    range,
+    range: transformRange(range),
     $: "Param",
     type,
     name: identifier.name
@@ -405,7 +440,7 @@ const param: Parser<ast.Param> = mapWithRange(
 );
 const paramList: Parser<ast.ParamList> = mapWithRange(
   (items: ast.Param[], range: Range) => ({
-    range,
+    range: transformRange(range),
     $: "ParamList",
     items
   }),
@@ -450,7 +485,7 @@ const declaration: Parser<
   ) => {
     if (tail.$ === "FucntionDeclarationTail") {
       return {
-        range,
+        range: transformRange(range),
         $: "FunctionDeclaration",
         name: identifier,
         params: tail.params,
@@ -459,7 +494,7 @@ const declaration: Parser<
       };
     } else {
       return {
-        range,
+        range: transformRange(range),
         $: "VariableDeclaration",
         type,
         left: identifier,
@@ -482,7 +517,7 @@ const declaration: Parser<
 );
 const loop: Parser<ast.Loop> = mapWithRange(
   (statements: ast.Statement[], range) => ({
-    range,
+    range: transformRange(range),
     $: "Loop",
     statements
   }),
@@ -503,7 +538,7 @@ const returnInner: Parser<ast.Expression | null> = seq(
 );
 const return_: Parser<ast.Return> = mapWithRange(
   (optionalExp, range) => ({
-    range,
+    range: transformRange(range),
     $: "Return",
     value: optionalExp
   }),
@@ -518,7 +553,7 @@ const assignOrExpression: Parser<ast.Assign | ast.Expression> = mapWithRange(
       return left;
     }
     return {
-      range,
+      range: transformRange(range),
       $: "Assign",
       left,
       right
@@ -534,7 +569,7 @@ const assignOrExpression: Parser<ast.Assign | ast.Expression> = mapWithRange(
 );
 const comment: Parser<ast.Comment> = mapWithRange(
   (value: string, range) => ({
-    range,
+    range: transformRange(range),
     $: "Comment",
     value
   }),

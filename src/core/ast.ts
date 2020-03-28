@@ -1,11 +1,7 @@
-// TODO: use LSP's Position where line and charactor are zero-based
-// https://microsoft.github.io/language-server-protocol/specifications/specification-current/#position
 export interface Position {
-  row: number;
-  column: number;
+  line: number;
+  character: number;
 }
-// TODO: So as Range
-// https://microsoft.github.io/language-server-protocol/specifications/specification-current/#range
 export interface Range {
   start: Position;
   end: Position;
