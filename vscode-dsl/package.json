@@ -1,20 +1,18 @@
 {
-  "name": "dsl-ls",
-  "description": "A language server example",
-  "author": "Microsoft Corporation",
+  "name": "vscode-dsl",
+  "description": "vscode extension for audio-dsl",
+  "author": "jinjor",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-extension-samples"
+    "url": "https://github.com/jinjor/audio-dsl"
   },
   "publisher": "jinjor",
   "categories": [
     "Programming Languages"
   ],
-  "keywords": [
-    "multi-root ready"
-  ],
+  "keywords": [],
   "engines": {
     "vscode": "^1.43.0"
   },
