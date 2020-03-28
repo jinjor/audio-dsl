@@ -2,11 +2,9 @@
 
 set -e
 
-# build here
-npm run build
-cd vscode-dsl/server
-npm install ../..
-cd ..
+./sync-vscode.sh
+
+cd vscode-dsl
 npm test
 npm run package
 npm run use

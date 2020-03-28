@@ -15,10 +15,13 @@ import {
   CompletionItemKind,
   TextDocumentPositionParams,
   TextDocumentSyncKind,
-  InitializeResult
+  InitializeResult,
+  Position,
+  Range
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import * as compiler from "audio-dsl/dist/src/core/compiler";
+import * as ast from "audio-dsl/dist/src/core/ast";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -137,51 +140,51 @@ documents.onDidChangeContent(change => {
   validateTextDocument(change.document);
 });
 
+function transformPosition(pos: ast.Position): Position {
+  return {
+    line: pos.row - 1,
+    character: pos.column - 1
+  };
+}
+function transformRange(range: ast.Range): Range {
+  return {
+    start: transformPosition(range.start),
+    end: transformPosition(range.end)
+  };
+}
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-  // In this simple example we get the settings for every validate run.
   let settings = await getDocumentSettings(textDocument.uri);
-
-  // The validator creates diagnostics for all uppercase words length 2 and more
   let text = textDocument.getText();
 
-  let pattern = /\b[A-Z]{2,}\b/g;
-  let m: RegExpExecArray | null;
-
-  let problems = 0;
   let diagnostics: Diagnostic[] = [];
-  while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-    problems++;
-    let diagnostic: Diagnostic = {
-      severity: DiagnosticSeverity.Warning,
-      range: {
-        start: textDocument.positionAt(m.index),
-        end: textDocument.positionAt(m.index + m[0].length)
-      },
-      message: `${m[0]} is all uppercase.`,
-      source: "ex"
-    };
-    if (hasDiagnosticRelatedInformationCapability) {
-      diagnostic.relatedInformation = [
-        {
-          location: {
-            uri: textDocument.uri,
-            range: Object.assign({}, diagnostic.range)
-          },
-          message: "Spelling matters"
-        },
-        {
-          location: {
-            uri: textDocument.uri,
-            range: Object.assign({}, diagnostic.range)
-          },
-          message: "Particularly for names"
-        }
-      ];
-    }
-    diagnostics.push(diagnostic);
-  }
+  try {
+    const result = compiler.parseAndValidate(text);
 
-  // Send the computed diagnostics to VSCode.
+    for (const error of result.errors) {
+      if (error.range == null) {
+        // skipping for now
+        continue;
+      }
+      if (diagnostics.length >= settings.maxNumberOfProblems) {
+        console.log(
+          `exceeded max number of problems: ${settings.maxNumberOfProblems}`
+        );
+        break;
+      }
+      let diagnostic: Diagnostic = {
+        severity: DiagnosticSeverity.Error,
+        range: transformRange(error.range),
+        message: error.message,
+        source: "dsl"
+      };
+      if (hasDiagnosticRelatedInformationCapability) {
+        // diagnostic.relatedInformation = [];
+      }
+      diagnostics.push(diagnostic);
+    }
+  } catch (e) {
+    // TOOD: handle syntax errors
+  }
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 

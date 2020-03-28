@@ -1,7 +1,7 @@
 import * as log from "./log";
 import { Module } from "./generator";
 import { parse } from "./parser";
-import { validate } from "./validate";
+import { validate, ValidationResult } from "./validate";
 import * as util from "util";
 import { Reporter } from "./reporter";
 import { mathModule, utilModule } from "./lib";
@@ -13,8 +13,7 @@ moduleCache.set("builtin", builtInModule);
 moduleCache.set("math", mathModule);
 moduleCache.set("util", utilModule);
 
-export function textToBinary(src: string): Uint8Array {
-  const reporter = new Reporter(src);
+export function parseAndValidate(src: string): ValidationResult {
   let ast;
   try {
     ast = parse(src);
@@ -26,6 +25,12 @@ export function textToBinary(src: string): Uint8Array {
   const validationResult = validate(ast, moduleCache);
   const time = Date.now() - start;
   log.debug(`validated in ${time}ms`);
+  return validationResult;
+}
+
+export function textToBinary(src: string): Uint8Array {
+  const reporter = new Reporter(src);
+  const validationResult = parseAndValidate(src);
 
   if (validationResult.errors.length) {
     log.debug(util.inspect(validationResult, { colors: true, depth: 10 }));
