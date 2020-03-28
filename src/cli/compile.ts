@@ -7,7 +7,7 @@ const targets: string[] = [];
 const options: any = {
   outDir: null
 };
-for (let i = 2; i < process.argv.length; i++) {
+for (let i = 3; i < process.argv.length; i++) {
   const s = process.argv[i];
   if (s.startsWith("--")) {
     if (++i === process.argv.length) {

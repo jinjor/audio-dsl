@@ -1,3 +1,0 @@
-#!/usr/bin/env node -r source-map-support/register
-
-require("../dist/src/cli/compile.js");

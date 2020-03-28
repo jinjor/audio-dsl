@@ -7,7 +7,7 @@
     "server": "http-server -c-1",
     "watch-and-run": "tsc-watch --onSuccess 'npm run on-success'",
     "on-success": "run-s build-runtime example",
-    "example": "npm run bundle-runtime-example && sh -c 'bin/compile example/a.dsl --outDir public/js'",
+    "example": "npm run bundle-runtime-example && sh -c 'bin/dsl compile example/a.dsl --outDir public/js'",
     "build": "run-s build-compiler build-runtime",
     "build-compiler": "tsc",
     "build-runtime": "tsc -p runtime",
