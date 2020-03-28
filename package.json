@@ -17,9 +17,7 @@
   },
   "author": "jinjor",
   "license": "MIT",
-  "files": [
-    "dist/src"
-  ],
+  "main": "dist/src/index.js",
   "bin": {
     "dsl": "bin/dsl"
   },

@@ -20,8 +20,7 @@ import {
   Range
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import * as compiler from "audio-dsl/dist/src/core/compiler";
-import * as ast from "audio-dsl/dist/src/core/ast";
+import { compiler, ast } from "audio-dsl";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -149,7 +148,10 @@ function transformPosition(pos: ast.Position): Position {
 function transformRange(range: ast.Range): Range {
   return {
     start: transformPosition(range.start),
-    end: transformPosition(range.end)
+    end: transformPosition({
+      row: range.end.row,
+      column: range.end.column + 1
+    })
   };
 }
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
