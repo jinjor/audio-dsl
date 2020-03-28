@@ -23,6 +23,7 @@ jobs:
           npm ci
           npm run build
           npm test
+          ./e2e-test.sh
       - name: VSCode Extension
         working-directory: ./vscode-dsl
         run: |
