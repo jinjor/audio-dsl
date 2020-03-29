@@ -154,6 +154,10 @@ export class Module {
     if (exp.$ === "FunctionGet") {
       throw new Error("FunctionGet is not supported in generator");
     }
+    if (exp.$ === "StringGet") {
+      const offset = exp.relativeByteOffset + 2048; // TODO
+      return this.i32Const(offset as N);
+    }
     if (exp.$ === "ArrayAccess") {
       throw new Error("not implemented yet");
     }

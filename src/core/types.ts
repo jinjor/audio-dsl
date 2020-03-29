@@ -176,6 +176,7 @@ export type Expression =
   | FunctionGet
   | ArrayGet
   | ArrayAccess
+  | StringGet
   | Call
   | BinOp
   | CompOp
@@ -207,6 +208,10 @@ export type ArrayAccess = {
   itemType: ItemType;
   name: string;
   index: Expression;
+};
+export type StringGet = {
+  $: "StringGet";
+  relativeByteOffset: number;
 };
 export type FunctionCall = {
   $: "FunctionCall";

@@ -38,7 +38,8 @@ void process() {
   }
 }
 void test() {
-  log_s(2048, 13);// Hello, World!
+  log_s("Hello, World!", 13);
+  log_s("Meow!", 5);
   log_f(angle);
   log_b(1 > 0);
 }

@@ -386,7 +386,7 @@ export function validate(
   for (let statement of ast.statements) {
     validateGlobalStatement(state, scope, statement);
   }
-  state.strings.add("Hello, World!"); // for example
+  // state.strings.add("Hello, World!"); // for example
 
   // string
   const stringRefs = state.strings.createRefs();
@@ -1104,8 +1104,19 @@ function validateExpression(
       primitives.float32Type
     ];
   } else if (ast.$ === "StringLiteral") {
-    state.errors.push(new StringLiteralIsNotSupported(ast.range));
-    return null;
+    if (!state.strings.has(ast.value)) {
+      state.strings.add(ast.value);
+    }
+    const offset = state.strings.getByteOffset(ast.value);
+    return [
+      {
+        $: "StringGet",
+        relativeByteOffset: offset
+      },
+      primitives.int32Type
+    ];
+    // state.errors.push(new StringLiteralIsNotSupported(ast.range));
+    // return null;
   } else if (ast.$ === "ArrayLiteral") {
     state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;

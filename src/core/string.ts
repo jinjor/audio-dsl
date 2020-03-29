@@ -6,8 +6,8 @@ export type StringRefs = {
   data: Uint8Array;
 };
 export class StringRefsBuilder {
-  size = 0;
-  map = new Map<string, { offset: number; data: Uint8Array }>();
+  private size = 0;
+  private map = new Map<string, { offset: number; data: Uint8Array }>();
   constructor() {}
   has(value: string): boolean {
     return this.map.has(value);
@@ -21,6 +21,12 @@ export class StringRefsBuilder {
     this.size += data.byteLength;
     const pos = { offset, data };
     this.map.set(value, pos);
+  }
+  getByteOffset(value: string): number {
+    if (!this.has(value)) {
+      throw new Error("Not found: " + value);
+    }
+    return this.map.get(value)!.offset;
   }
   createRefs(): StringRefs {
     const info = new Map();
