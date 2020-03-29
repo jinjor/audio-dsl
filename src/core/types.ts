@@ -13,8 +13,12 @@ export type VoidType = {
 export type BoolType = {
   $: "BoolType";
 };
-export type StringType = {
-  $: "StringType";
+// export type StringType = {
+//   $: "StringType";
+// };
+export type StructType = {
+  $: "StructType";
+  types: (Int32Type | Float32Type | BoolType)[];
 };
 export type ArrayType = {
   $: "ArrayType";
@@ -28,7 +32,7 @@ export type FunctionType = {
   returnType: ReturnType;
 };
 export type ValueType = Int32Type | Float32Type | BoolType;
-export type VariableType = ValueType | StringType | ArrayType;
+export type VariableType = ValueType | StructType | ArrayType;
 export type ParamType = ValueType;
 export type ItemType = ValueType;
 export type LocalType = Int32Type | Float32Type | BoolType;
@@ -44,7 +48,7 @@ export type DeclaredType = VariableType | FunctionType;
 export type ExpressionType =
   | ValueType
   | VoidType
-  | StringType
+  | StructType
   | ArrayType
   | FunctionType;
 export type AnyType =
@@ -52,7 +56,7 @@ export type AnyType =
   | Float32Type
   | VoidType
   | BoolType
-  | StringType
+  | StructType
   | ArrayType
   | FunctionType;
 export type ExportableType = FunctionType | NumberConst;
@@ -80,7 +84,6 @@ export namespace primitives {
   export const float32Type: Float32Type = { $: "Float32Type" };
   export const voidType: VoidType = { $: "VoidType" };
   export const boolType: BoolType = { $: "BoolType" };
-  export const stringType: StringType = { $: "StringType" };
 }
 export function sizeOf(t: Int32Type | Float32Type | BoolType): number {
   if (t.$ === "Int32Type") {
@@ -108,8 +111,15 @@ export function isTypeEqual<T extends AnyType>(a: AnyType, b: AnyType): b is T {
   if (a.$ === "BoolType" && b.$ === "BoolType") {
     return true;
   }
-  if (a.$ === "StringType" && b.$ === "StringType") {
-    return true;
+  if (a.$ === "StructType" && b.$ === "StructType") {
+    if (a.types.length !== b.types.length) {
+      return false;
+    }
+    for (let i = 0; i < a.types.length; i++) {
+      if (!isTypeEqual(a.types[i], b.types[i])) {
+        return false;
+      }
+    }
   }
   if (a.$ === "ArrayType" && b.$ === "ArrayType") {
     return isTypeEqual(a.itemType, b.itemType);
@@ -143,8 +153,8 @@ export function typeToString(a: AnyType): string {
   if (a.$ === "BoolType") {
     return "bool";
   }
-  if (a.$ === "StringType") {
-    return "string";
+  if (a.$ === "StructType") {
+    return `{ ${a.types.map(typeToString).join(", ")} }`;
   }
   if (a.$ === "ArrayType") {
     return `array<${typeToString(a.itemType)}>`;
