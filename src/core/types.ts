@@ -65,6 +65,10 @@ export type Float32Const = {
   $: "Float32Const";
   value: number;
 };
+export type BoolConst = {
+  $: "BoolConst";
+  value: boolean;
+};
 export type ModuleHeader = {
   types: Map<string, FunctionType | NumberConst>;
 };

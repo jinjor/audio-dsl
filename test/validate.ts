@@ -67,7 +67,70 @@ describe("Validate", function() {
   it("static evaluation", () => {
     assertOk(`int a = 0; int b = a;`);
     assertOk(`int a = 0; var int b = a;`);
+    assertOk(`int a = 0; int b = a + a;`);
+    assertErrorExists(`int a = 0; float b = float(a);`); // maybe need a static function
     assertErrorExists(`var int a = 0; int b = a;`);
     assertErrorExists(`var int a = 0; var int b = a;`);
+    assertErrorExists(`int a = 0; int b = float(a);`);
   });
+  it("op (+)", () => {
+    assertOk(`int a = 0 + 0;`);
+    assertOk(`float a = 0.0 + 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 + 0.0;`);
+    assertErrorExists(`float a = 0 + 0;`);
+    // wrong combination
+    assertErrorExists(`float a = 0 + 0.0;`);
+    assertErrorExists(`float a = 0.0 + 0;`);
+  });
+  it("op (-)", () => {
+    assertOk(`int a = 0 - 0;`);
+    assertOk(`float a = 0.0 - 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 - 0.0;`);
+    assertErrorExists(`float a = 0 - 0;`);
+    // wrong combination
+    assertErrorExists(`float a = 0 - 0.0;`);
+    assertErrorExists(`float a = 0.0 - 0;`);
+  });
+  it("op (*)", () => {
+    assertOk(`int a = 0 * 0;`);
+    assertOk(`float a = 0.0 * 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 * 0.0;`);
+    assertErrorExists(`float a = 0 * 0;`);
+    // wrong combination
+    assertErrorExists(`float a = 0 * 0.0;`);
+    assertErrorExists(`float a = 0.0 * 0;`);
+  });
+  it("op (/)", () => {
+    assertOk(`float a = 0.0 / 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 / 0.0;`);
+    // wrong combination
+    assertErrorExists(`float a = 0 / 0;`);
+    assertErrorExists(`float a = 0 / 0.0;`);
+    assertErrorExists(`float a = 0.0 / 0;`);
+  });
+  it("op (%)", () => {
+    assertOk(`int a = 0 % 0;`);
+    // wrong return type
+    assertErrorExists(`float a = 0 % 0;`);
+    // wrong combination
+    assertErrorExists(`float a = 0 % 0.0;`);
+    assertErrorExists(`float a = 0.0 % 0;`);
+    assertErrorExists(`float a = 0.0 % 0.0;`);
+  });
+  it.skip("op (>)", () => {
+    assertOk(`bool a = 0 > 0;`);
+    assertOk(`bool a = 0.0 > 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 > 0.0;`);
+    // wrong combination
+    assertErrorExists(`bool a = 0 > 0.0;`);
+    assertErrorExists(`bool a = 0.0 > 0;`);
+  });
+  it.skip("op (>=)", () => {});
+  it.skip("op (<)", () => {});
+  it.skip("op (<=)", () => {});
 });

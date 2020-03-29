@@ -36,7 +36,8 @@ import {
   sizeOf,
   FunctionGet,
   ArrayGet,
-  AnyType
+  AnyType,
+  BoolConst
 } from "./types";
 import { ModuleCache } from "./loader";
 import { StringRefsBuilder } from "./string";
@@ -69,6 +70,7 @@ import {
   NonAssignableType,
   AssigningInGlobalIsNotAllowed
 } from "./errors";
+import assert from "assert";
 
 // Scopes
 type FoundExp = LocalGet | GlobalGet | FunctionGet | ArrayGet | NumberConst;
@@ -1583,6 +1585,18 @@ function evaluateGlobalBinOp(
           primitives.int32Type
         ];
       }
+      if (combination.kind === "Int32LT") {
+        throw new Error("not implemented yet");
+      }
+      if (combination.kind === "Int32LE") {
+        throw new Error("not implemented yet");
+      }
+      if (combination.kind === "Int32GT") {
+        throw new Error("not implemented yet");
+      }
+      if (combination.kind === "Int32GE") {
+        throw new Error("not implemented yet");
+      }
       if (combination.kind === "Float32AddOp") {
         return [
           {
@@ -1618,6 +1632,18 @@ function evaluateGlobalBinOp(
           },
           primitives.float32Type
         ];
+      }
+      if (combination.kind === "Float32LT") {
+        throw new Error("not implemented yet");
+      }
+      if (combination.kind === "Float32LE") {
+        throw new Error("not implemented yet");
+      }
+      if (combination.kind === "Float32GT") {
+        throw new Error("not implemented yet");
+      }
+      if (combination.kind === "Float32GE") {
+        throw new Error("not implemented yet");
       }
       throw new Error("unreachable");
     }
