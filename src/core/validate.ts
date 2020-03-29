@@ -86,7 +86,7 @@ interface LocalScope extends Scope {
   lookupLocalTypeByIndex(
     index: number
   ): Int32Type | Float32Type | BoolType | null;
-  lookupReturnType(): ReturnType;
+  lookupReturnType(): ReturnType | null;
 }
 class GlobalScope implements Scope {
   byteOffset = 0;
@@ -95,8 +95,8 @@ class GlobalScope implements Scope {
     Int32Type | Float32Type | BoolType | ArrayType | FunctionType | NumberConst
   >();
   constructor() {}
-  createFunctionScope(returnType: ReturnType) {
-    return new FunctionScope(this, returnType);
+  createFunctionScope() {
+    return new FunctionScope(this);
   }
   isDeclaredInThisScope(name: string): boolean {
     return this.declaredTypesOrStaticValue.has(name);
@@ -166,7 +166,14 @@ class GlobalScope implements Scope {
 class FunctionScope implements LocalScope {
   private declaredTypes = new Map<string, number>();
   private localTypes: (Int32Type | Float32Type | BoolType)[] = [];
-  constructor(private parent: GlobalScope, private returnType: ReturnType) {}
+  private returnType: ReturnType | null = null;
+  constructor(private parent: GlobalScope) {}
+  setReturnType(returnType: ReturnType) {
+    if (this.returnType != null) {
+      throw new Error("return type is already declared");
+    }
+    this.returnType = returnType;
+  }
   createBlockScope(): BlockScope {
     return new BlockScope(this);
   }
@@ -201,7 +208,7 @@ class FunctionScope implements LocalScope {
   ): Int32Type | Float32Type | BoolType | null {
     return this.localTypes[index];
   }
-  lookupReturnType(): ReturnType {
+  lookupReturnType(): ReturnType | null {
     return this.returnType;
   }
 }
@@ -242,7 +249,7 @@ class BlockScope implements LocalScope {
   ): Int32Type | Float32Type | BoolType | null {
     return this.parent.lookupLocalTypeByIndex(index);
   }
-  lookupReturnType(): ReturnType {
+  lookupReturnType(): ReturnType | null {
     return this.parent.lookupReturnType();
   }
 }
@@ -387,6 +394,7 @@ function validateArrayDeclaration(
   if (scope.isDeclaredInThisScope(name)) {
     throw new Error("already declared: " + name);
   }
+  scope.declareArray(name, itemType, numberOfItems);
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
     type: primitives.int32Type,
@@ -398,8 +406,6 @@ function validateArrayDeclaration(
     },
     export: export_
   });
-
-  scope.declareArray(name, itemType, numberOfItems);
 }
 function validateImport(
   state: GlobalState,
@@ -513,17 +519,17 @@ function validateFunctionDeclaration(
   const paramTypes = new Array<ParamType>(ast.params.items.length);
 
   const returnType = validateReturnType(state, scope, ast.returnType);
-  if (returnType == null) {
-    return; // TODO: should be later
+  const functionScope = scope.createFunctionScope();
+  if (returnType != null) {
+    functionScope.setReturnType(returnType);
   }
-  const childScope = scope.createFunctionScope(returnType);
   for (let i = 0; i < ast.params.items.length; i++) {
     const paramAst = ast.params.items[i];
     const paramType = validateParamType(state, scope, paramAst);
     if (paramType == null) {
       continue;
     }
-    if (childScope.isDeclaredInThisScope(paramAst.name)) {
+    if (functionScope.isDeclaredInThisScope(paramAst.name)) {
       state.errors.push(new AlreadyDeclared(paramAst.range, "param", name));
       continue;
     }
@@ -538,20 +544,22 @@ function validateFunctionDeclaration(
       continue;
     }
     paramTypes[i] = paramType;
-    childScope.declareType(paramAst.name, paramType);
+    functionScope.declareType(paramAst.name, paramType);
   }
   for (const statement of ast.statements) {
-    validateLocalStatement(state, childScope, statements, statement);
+    validateLocalStatement(state, functionScope, statements, statement);
   }
   if (paramTypes.some(p => p == null)) {
     return;
   }
-  const localTypes = childScope.getLocalTypes().slice(paramTypes.length);
+  const localTypes = functionScope.getLocalTypes().slice(paramTypes.length);
 
   // TODO:
   // - should return XXX
   // - block
-
+  if (returnType == null) {
+    return;
+  }
   if (scope.isDeclaredInThisScope(ast.name.name)) {
     state.errors.push(
       new AlreadyDeclared(ast.name.range, "function", ast.name.name)
@@ -777,6 +785,9 @@ function validateReturn(
       return;
     }
     [returnExp, returnType] = [_returnExp, _returnType];
+  }
+  if (declaredReturnType == null) {
+    return;
   }
   if (!isTypeEqual(returnType, declaredReturnType)) {
     state.errors.push(
