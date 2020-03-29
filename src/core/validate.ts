@@ -779,6 +779,7 @@ function validateReturn(
   localStatements: LocalStatement[],
   ast: ast.Return
 ): void {
+  scope.coverReturn();
   const declaredReturnType = scope.lookupReturnType();
   let returnExp = null;
   let returnType: AnyType = primitives.voidType;
@@ -798,7 +799,6 @@ function validateReturn(
     );
     return;
   }
-  scope.coverReturn();
   localStatements.push({
     $: "Return",
     value: returnExp
