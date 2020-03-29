@@ -88,7 +88,7 @@ export function sizeOf(t: Int32Type | Float32Type | BoolType): number {
   }
   throw new Error("unreachable");
 }
-export function isTypeEqual(a: AnyType, b: AnyType): boolean {
+export function isTypeEqual<T extends AnyType>(a: AnyType, b: AnyType): b is T {
   if (a === b) {
     return true;
   }

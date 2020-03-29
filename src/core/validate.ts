@@ -35,7 +35,8 @@ import {
   Import,
   sizeOf,
   FunctionGet,
-  ArrayGet
+  ArrayGet,
+  AnyType
 } from "./types";
 import { ModuleCache } from "./loader";
 import { StringRefsBuilder } from "./string";
@@ -768,29 +769,18 @@ function validateReturn(
 ): void {
   const declaredReturnType = scope.lookupReturnType();
   let returnExp = null;
-  let returnType: ReturnType = primitives.voidType;
+  let returnType: AnyType = primitives.voidType;
   if (ast.value != null) {
     const _return = validateExpression(state, scope, ast.value);
     if (_return == null) {
       return;
     }
-    const [_returnExp, _returnType] = _return;
-    if (
-      _returnType.$ === "StringType" ||
-      _returnType.$ === "FunctionType" ||
-      _returnType.$ === "ArrayType"
-    ) {
-      state.errors.push(
-        new Unsupported(ast.range, "returning non-primitive type")
-      );
-      return;
-    }
-    [returnExp, returnType] = [_returnExp, _returnType];
+    [returnExp, returnType] = _return;
   }
   if (declaredReturnType == null) {
     return;
   }
-  if (!isTypeEqual(returnType, declaredReturnType)) {
+  if (!isTypeEqual<ReturnType>(declaredReturnType, returnType)) {
     state.errors.push(
       new ReturnTypeMismatch(ast.range, declaredReturnType.$, returnType.$)
     );
