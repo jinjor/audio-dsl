@@ -85,7 +85,7 @@ interface LocalScope extends Scope {
   lookupLocalTypeByIndex(
     index: number
   ): Int32Type | Float32Type | BoolType | null;
-  lookupReturnType(): ReturnType | null;
+  lookupReturnType(): ReturnType;
 }
 class GlobalScope implements Scope {
   byteOffset = 0;
@@ -241,7 +241,7 @@ class BlockScope implements LocalScope {
   ): Int32Type | Float32Type | BoolType | null {
     return this.parent.lookupLocalTypeByIndex(index);
   }
-  lookupReturnType(): ReturnType | null {
+  lookupReturnType(): ReturnType {
     return this.parent.lookupReturnType();
   }
 }
@@ -604,7 +604,6 @@ function validateFunctionCallStatement(
   localStatements.push(funcExp);
 }
 
-// TODO: share logic with assign
 function validateLocalVariableDeclaration(
   state: State,
   scope: LocalScope,
@@ -617,20 +616,18 @@ function validateLocalVariableDeclaration(
     );
     return;
   }
-  let leftType = null;
+  let leftType: Int32Type | Float32Type | VoidType | BoolType | null = null;
   if (ast.type.$ === "PrimitiveType") {
-    if (ast.type.name === "int") {
-      leftType = primitives.int32Type;
-    } else if (ast.type.name === "float") {
-      leftType = primitives.float32Type;
-    } else if (ast.type.name === "bool") {
-      leftType = primitives.boolType;
-    }
+    leftType = validatePrimitiveType(state, ast.type);
   }
   if (leftType == null) {
     state.errors.push(
-      new Unsupported(ast.type.range, "declaring non-primitive or void type")
+      new Unsupported(ast.type.range, "declaring non-primitive")
     );
+    return;
+  }
+  if (leftType.$ === "VoidType") {
+    state.errors.push(new VoidShouldNotBeDeclaredAsAVariable(ast.left.range));
     return;
   }
   scope.declareType(ast.left.name, leftType);
@@ -657,15 +654,11 @@ function validateLocalVariableDeclarationInternal(
   type: Int32Type | Float32Type,
   name: string,
   value: Expression
-): void {
-  // declare
-  if (scope.isDeclaredInThisScope(name)) {
-    throw new Error("already declared: " + name);
-  }
+): number {
   scope.declareType(name, type);
-  // ...and assign
   const [localGet] = lookupSelfDeclaredLocal(scope, name);
   localStatements.push(makeAssign(localGet, value));
+  return localGet.index;
 }
 function lookupSelfDeclaredLocal(
   scope: LocalScope,
@@ -694,8 +687,7 @@ function validateLoop(
   const childScope = scope.createBlockScope();
   const init: LocalStatement[] = [];
   const body: LocalStatement[] = [];
-  // TODO
-  validateLocalVariableDeclarationInternal(
+  const iIndex = validateLocalVariableDeclarationInternal(
     state,
     childScope,
     init,
@@ -703,20 +695,17 @@ function validateLoop(
     "i",
     { $: "Int32Const", value: 0 }
   );
-  // TODO
-  validateLocalVariableDeclarationInternal(
+  const lenIndex = validateLocalVariableDeclarationInternal(
     state,
     childScope,
     init,
     { $: "Int32Type" },
     "length",
-    { $: "Int32Const", value: 128 }
+    { $: "Int32Const", value: 128 } // TODO
   );
   for (const statement of ast.statements) {
     validateLocalStatement(state, childScope, body, statement);
   }
-  const iIndex = 0; // TODO
-  const lenIndex = 1; // TODO
   // increment
   body.push({
     $: "LocalSet",
@@ -761,9 +750,6 @@ function validateReturn(
   ast: ast.Return
 ): void {
   const declaredReturnType = scope.lookupReturnType();
-  if (declaredReturnType == null) {
-    throw new Error("return type not found");
-  }
   let returnExp = null;
   let returnType: ReturnType = primitives.voidType;
   if (ast.value != null) {
