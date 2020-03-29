@@ -31,6 +31,7 @@ export type ValueType = Int32Type | Float32Type | BoolType;
 export type VariableType = ValueType | StringType | ArrayType;
 export type ParamType = ValueType;
 export type ItemType = ValueType;
+export type LocalType = Int32Type | Float32Type | BoolType;
 export type ReturnType = ValueType | VoidType;
 export type AssignableType = Int32Type | Float32Type | BoolType;
 export type GlobalDeclarableType =
@@ -269,14 +270,12 @@ export type GlobalVariableDeclaration = {
   init: NumberConst;
   export: boolean;
 };
-// TODO: should declare even if right expression is broken
 export type FunctionDeclaration = {
   $: "FunctionDeclaration";
   name: string;
   params: ParamType[];
   returnType: ReturnType;
-  // localTypes: DeclaredType[];
-  localTypes: (Int32Type | Float32Type | BoolType | VoidType)[];
+  localTypes: LocalType[];
   statements: LocalStatement[];
   export: boolean;
 };
