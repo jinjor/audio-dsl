@@ -70,6 +70,10 @@ export class FunctionShouldNotBeCalledAtGlobalScope
   message = "functions should not be called at global scope";
   constructor(public range: ast.Range) {}
 }
+export class FunctionShouldReturnValue implements ValidationErrorType {
+  message = "function should return value";
+  constructor(public range: ast.Range) {}
+}
 export class LoopShouldNotBePlacedAtGlobalScope implements ValidationErrorType {
   message = "loop should not be placed at global scope";
   constructor(public range: ast.Range) {}

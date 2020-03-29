@@ -53,6 +53,7 @@ import {
   DeclareTypeMismatch,
   ReturnTypeMismatch,
   AssignTypeMismatch,
+  FunctionShouldReturnValue,
   NotFound,
   IndexShouldBeAnInteger,
   IndexAccessToNonArray,
@@ -83,6 +84,7 @@ interface LocalScope extends Scope {
   declareType(name: string, type: Int32Type | Float32Type | BoolType): void;
   isDeclaredInThisScope(name: string): boolean;
   addLocalType(type: Int32Type | Float32Type | BoolType): number;
+  coverReturn(): void;
   lookupType(name: string): [FoundExp, ExpressionType] | null;
   lookupLocalTypeByIndex(
     index: number
@@ -168,12 +170,22 @@ class FunctionScope implements LocalScope {
   private declaredTypes = new Map<string, number>();
   private localTypes: (Int32Type | Float32Type | BoolType)[] = [];
   private returnType: ReturnType | null = null;
+  private returned: boolean = false;
   constructor(private parent: GlobalScope) {}
   setReturnType(returnType: ReturnType) {
     if (this.returnType != null) {
       throw new Error("return type is already declared");
     }
     this.returnType = returnType;
+  }
+  resolveReturn() {
+    this.returned = true;
+  }
+  coverReturn() {
+    this.resolveReturn();
+  }
+  isReturnCovered(): boolean {
+    return this.returned;
   }
   createBlockScope(): BlockScope {
     return new BlockScope(this);
@@ -227,6 +239,9 @@ class BlockScope implements LocalScope {
     const index = this.parent.addLocalType(type);
     this.declaredTypes.set(name, index);
     this.lookupLocalTypeByIndex(index);
+  }
+  coverReturn() {
+    // currently, returning in block scope does not affect return coverage
   }
   isDeclaredInThisScope(name: string): boolean {
     return this.declaredTypes.has(name);
@@ -555,12 +570,11 @@ function validateFunctionDeclaration(
     return;
   }
   const localTypes = functionScope.getLocalTypes().slice(paramTypes.length);
-
-  // TODO:
-  // - should return XXX
-  // - block
   if (returnType == null) {
     return;
+  }
+  if (returnType.$ !== "VoidType" && !functionScope.isReturnCovered()) {
+    state.errors.push(new FunctionShouldReturnValue(ast.returnType.range));
   }
   if (scope.isDeclaredInThisScope(ast.name.name)) {
     state.errors.push(
@@ -786,6 +800,7 @@ function validateReturn(
     );
     return;
   }
+  scope.coverReturn();
   localStatements.push({
     $: "Return",
     value: returnExp
