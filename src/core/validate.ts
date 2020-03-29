@@ -46,7 +46,6 @@ import {
   ImportModuleNotFound,
   AlreadyDeclared,
   VoidShouldNotBeDeclaredAsAVariable,
-  Unsupported,
   FunctionShouldNotBeCalledAtGlobalScope,
   LoopShouldNotBePlacedAtGlobalScope,
   ReturnShouldNotBePlacedAtGlobalScope,
@@ -68,9 +67,21 @@ import {
   ConditionShouldBeBool,
   AssigningToConstantValueIsNotAllowed,
   NonAssignableType,
-  AssigningInGlobalIsNotAllowed
+  AssigningInGlobalIsNotAllowed,
+  ComparingInGlobalIsNotSupported,
+  ReturningNonPrimitiveTypesIsNotSupported,
+  ReceivingNonPrimitiveTypesIsNotSupported,
+  DeclaringArrayIsNotSupported,
+  AssigningFunctionIsNotSupported,
+  AssigningArrayIsNotSupported,
+  CallingArbitraryExpressionIsNotSupported,
+  GettingArrayItemInGlobalIsNotSupported,
+  TheLeftHandExpressionMustBeAnIdentifier,
+  ArrayLiteralIsNotSupported,
+  GettingArrayInGlobalIsNotSupported,
+  GettingFunctionInGlobalIsNotSupported,
+  ReferringUndefinedValueInGlobalIsNotAllowed
 } from "./errors";
-import assert from "assert";
 
 // Scopes
 type FoundExp = LocalGet | GlobalGet | FunctionGet | ArrayGet | NumberConst;
@@ -484,9 +495,7 @@ function validateParamType(
     scope.declareType(ast.name, type);
     return type;
   } else {
-    state.errors.push(
-      new Unsupported(ast.range, "passing non-primitive types")
-    );
+    state.errors.push(new ReceivingNonPrimitiveTypesIsNotSupported(ast.range));
     return null;
   }
 }
@@ -498,9 +507,7 @@ function validateReturnType(
   if (ast.$ === "PrimitiveType") {
     return validatePrimitiveType(state, ast);
   } else {
-    state.errors.push(
-      new Unsupported(ast.range, "returning non-primitive types")
-    );
+    state.errors.push(new ReturningNonPrimitiveTypesIsNotSupported(ast.range));
     return null;
   }
 }
@@ -556,7 +563,7 @@ function validateFunctionDeclaration(
       paramType.$ !== "BoolType"
     ) {
       state.errors.push(
-        new Unsupported(paramAst.range, "receiving non-primitive types")
+        new ReceivingNonPrimitiveTypesIsNotSupported(paramAst.range)
       );
       continue;
     }
@@ -648,16 +655,11 @@ function validateLocalVariableDeclaration(
     );
     return;
   }
-  let leftType: Int32Type | Float32Type | VoidType | BoolType | null = null;
-  if (ast.type.$ === "PrimitiveType") {
-    leftType = validatePrimitiveType(state, ast.type);
-  }
-  if (leftType == null) {
-    state.errors.push(
-      new Unsupported(ast.type.range, "declaring non-primitive")
-    );
+  if (ast.type.$ === "ArrayType") {
+    state.errors.push(new DeclaringArrayIsNotSupported(ast.type.range));
     return;
   }
+  const leftType = validatePrimitiveType(state, ast.type);
   if (leftType.$ === "VoidType") {
     state.errors.push(new VoidShouldNotBeDeclaredAsAVariable(ast.left.range));
     return;
@@ -811,11 +813,8 @@ function validateGlobalDeclarableType(
   state: State,
   ast: ast.Type
 ): GlobalDeclarableType | null {
-  // TODO: validate ast first
-  if (ast.$ !== "PrimitiveType") {
-    state.errors.push(
-      new Unsupported(ast.range, "declaring non-primitive type in global")
-    );
+  if (ast.$ === "ArrayType") {
+    state.errors.push(new DeclaringArrayIsNotSupported(ast.range));
     return null;
   }
   if (ast.name.kind === "void") {
@@ -852,7 +851,7 @@ function validateGlobalDeclaration(
   const type = validateGlobalDeclarableType(state, ast.type);
   if (ast.left.$ !== "Identifier") {
     state.errors.push(
-      new Unsupported(ast.left.range, "declaring " + ast.left.$)
+      new TheLeftHandExpressionMustBeAnIdentifier(ast.left.range)
     );
     return;
   }
@@ -1003,11 +1002,11 @@ function validateAssignableIdentifier(
   }
   const [leftExp, leftType] = left;
   if (leftExp.$ === "FunctionGet") {
-    state.errors.push(new Unsupported(leftAst.range, "assigning to function"));
+    state.errors.push(new AssigningFunctionIsNotSupported(leftAst.range));
     return null;
   }
   if (leftExp.$ === "ArrayGet") {
-    state.errors.push(new Unsupported(leftAst.range, "assigning to array"));
+    state.errors.push(new AssigningArrayIsNotSupported(leftAst.range));
     return null;
   }
   if (leftExp.$ === "Int32Const" || leftExp.$ === "Float32Const") {
@@ -1046,9 +1045,6 @@ function validateArrayAccess(
   }
   if (arrayExp.$ !== "ArrayGet") {
     state.errors.push(new IndexAccessToNonArray(ast.range));
-    // state.errors.push(
-    //   new Unsupported(ast.array.range, "accessing to non-global array")
-    // );
     return null;
   }
   if (indexType.$ !== "Int32Type") {
@@ -1109,7 +1105,7 @@ function validateExpression(
   } else if (ast.$ === "StringLiteral") {
     throw new Error("StringLiteral not implemented yet");
   } else if (ast.$ === "ArrayLiteral") {
-    state.errors.push(new Unsupported(ast.range, "array literal"));
+    state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;
   } else if (ast.$ === "Identifier") {
     return validateIdentifier(state, scope, ast);
@@ -1371,7 +1367,7 @@ function validateFunctionCall(
   const [funcExp, funcType] = func;
   if (funcExp.$ !== "FunctionGet") {
     state.errors.push(
-      new Unsupported(ast.func.range, "calling arbitrary expression")
+      new CallingArbitraryExpressionIsNotSupported(ast.func.range)
     );
     return null;
   }
@@ -1471,7 +1467,7 @@ function evaluateGlobalExpression(
   } else if (ast.$ === "StringLiteral") {
     throw new Error("StringLiteral not implemented yet");
   } else if (ast.$ === "ArrayLiteral") {
-    state.errors.push(new Unsupported(ast.range, "array literal"));
+    state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;
   } else if (ast.$ === "Identifier") {
     const id = validateIdentifier(state, scope, ast);
@@ -1483,19 +1479,17 @@ function evaluateGlobalExpression(
       throw new Error("unexpected LocalGet");
     }
     if (idExp.$ === "ArrayGet") {
-      state.errors.push(new Unsupported(ast.range, "getting array in global"));
+      state.errors.push(new GettingArrayInGlobalIsNotSupported(ast.range));
       return null;
     }
     if (idExp.$ === "FunctionGet") {
-      state.errors.push(
-        new Unsupported(ast.range, "getting function in global")
-      );
+      state.errors.push(new GettingFunctionInGlobalIsNotSupported(ast.range));
       return null;
     }
     if (idExp.$ === "GlobalGet") {
-      // TODO: this should be only happen when identifier is from imports
+      // this should be only happen when identifier is from imports
       state.errors.push(
-        new Unsupported(ast.range, "referring undefined value in global")
+        new ReferringUndefinedValueInGlobalIsNotAllowed(ast.range)
       );
       return null;
     }
@@ -1508,20 +1502,18 @@ function evaluateGlobalExpression(
     throw new Error("maybe undeachable");
   }
   if (ast.$ === "ArrayAccess") {
-    state.errors.push(
-      new Unsupported(ast.range, "getting array item in global")
-    );
+    state.errors.push(new GettingArrayItemInGlobalIsNotSupported(ast.range));
     return null;
   }
   if (ast.$ === "FunctionCall") {
-    state.errors.push(new Unsupported(ast.range, "calling in global"));
+    state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
     return null;
   }
   if (ast.$ === "BinOp") {
     return evaluateGlobalBinOp(state, scope, ast);
   }
   if (ast.$ === "CondOp") {
-    state.errors.push(new Unsupported(ast.range, "comparing in global"));
+    state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
     return null;
   }
   throw new Error("unreachable");
@@ -1586,16 +1578,20 @@ function evaluateGlobalBinOp(
         ];
       }
       if (combination.kind === "Int32LT") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       if (combination.kind === "Int32LE") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       if (combination.kind === "Int32GT") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       if (combination.kind === "Int32GE") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       if (combination.kind === "Float32AddOp") {
         return [
@@ -1634,16 +1630,20 @@ function evaluateGlobalBinOp(
         ];
       }
       if (combination.kind === "Float32LT") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       if (combination.kind === "Float32LE") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       if (combination.kind === "Float32GT") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       if (combination.kind === "Float32GE") {
-        throw new Error("not implemented yet");
+        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+        return null;
       }
       throw new Error("unreachable");
     }

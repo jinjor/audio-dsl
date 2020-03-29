@@ -23,12 +23,6 @@ export class Unlabeled implements ValidationErrorType {
     this.message = `UNLABELED ERROR(todo): ${message}`;
   }
 }
-export class Unsupported implements ValidationErrorType {
-  message: string;
-  constructor(public range: ast.Range, what: string) {
-    this.message = `${what} is not supported`;
-  }
-}
 export class AlreadyDeclared implements ValidationErrorType {
   message: string;
   constructor(
@@ -207,5 +201,87 @@ export class AssigningToConstantValueIsNotAllowed
   message: string;
   constructor(public range: ast.Range) {
     this.message = `assigning to constant value is not allowed`;
+  }
+}
+export class TheLeftHandExpressionMustBeAnIdentifier
+  implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range) {
+    this.message = `the left-hand expression must be an identifier`;
+  }
+}
+export class ReferringUndefinedValueInGlobalIsNotAllowed
+  implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range) {
+    this.message = `referring undefined value in global is not allowed`;
+  }
+}
+
+// Unsupported (might be supported in the future)
+class Unsupported implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range, what: string) {
+    this.message = `${what} is not supported`;
+  }
+}
+export class DeclaringArrayIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "declaring array");
+  }
+}
+export class AssigningFunctionIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "assigning function");
+  }
+}
+export class AssigningArrayIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "assigning array");
+  }
+}
+export class CallingArbitraryExpressionIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "calling arbitrary expression");
+  }
+}
+export class ReceivingNonPrimitiveTypesIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "receiving non-primitive types");
+  }
+}
+export class ReturningNonPrimitiveTypesIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "returning non-primitive types");
+  }
+}
+export class CallingInGlobalIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "calling in global");
+  }
+}
+export class ComparingInGlobalIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "comparing in global");
+  }
+}
+export class GettingArrayItemInGlobalIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "getting array item in global");
+  }
+}
+export class ArrayLiteralIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "array literal");
+  }
+}
+export class GettingArrayInGlobalIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "getting array in global");
+  }
+}
+export class GettingFunctionInGlobalIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "getting function in global");
   }
 }
