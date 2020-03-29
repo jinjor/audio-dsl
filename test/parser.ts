@@ -53,19 +53,28 @@ describe("Parser", function() {
     deepEq(parseExpression("a()"), {
       $: "FunctionCall",
       func: { $: "Identifier", name: "a" },
-      args: []
+      args: {
+        $: "FunctionArguments",
+        values: []
+      }
     });
     deepEq(parseExpression("a ( 1 )"), {
       $: "FunctionCall",
       func: { $: "Identifier", name: "a" },
-      args: [{ $: "IntLiteral", value: 1 }]
+      args: {
+        $: "FunctionArguments",
+        values: [{ $: "IntLiteral", value: 1 }]
+      }
     });
     deepEq(parseExpression("a () [ 1 ] "), {
       $: "ArrayAccess",
       array: {
         $: "FunctionCall",
         func: { $: "Identifier", name: "a" },
-        args: []
+        args: {
+          $: "FunctionArguments",
+          values: []
+        }
       },
       index: { $: "IntLiteral", value: 1 }
     });
@@ -79,7 +88,10 @@ describe("Parser", function() {
           left: { $: "Identifier", name: "a" },
           right: { $: "Identifier", name: "b" }
         },
-        args: []
+        args: {
+          $: "FunctionArguments",
+          values: []
+        }
       },
       index: { $: "IntLiteral", value: 1 }
     });
@@ -188,7 +200,10 @@ describe("Parser", function() {
   it("variable declaration", () => {
     deepEq(parseStatement(`int a = 1;`), {
       $: "VariableDeclaration",
-      type: { $: "PrimitiveType", name: "int" },
+      type: {
+        $: "PrimitiveType",
+        name: { $: "PrimitiveTypeName", kind: "int" }
+      },
       left: { $: "Identifier", name: "a" },
       right: { $: "IntLiteral", value: 1 },
       hasMutableFlag: false
@@ -197,7 +212,10 @@ describe("Parser", function() {
       $: "VariableDeclaration",
       type: {
         $: "ArrayType",
-        type: { $: "PrimitiveType", name: "int" }
+        type: {
+          $: "PrimitiveType",
+          name: { $: "PrimitiveTypeName", kind: "int" }
+        }
       },
       left: { $: "Identifier", name: "a" },
       right: { $: "IntLiteral", value: 1 },
@@ -205,7 +223,10 @@ describe("Parser", function() {
     });
     deepEq(parseStatement(`var int a = 1;`), {
       $: "VariableDeclaration",
-      type: { $: "PrimitiveType", name: "int" },
+      type: {
+        $: "PrimitiveType",
+        name: { $: "PrimitiveTypeName", kind: "int" }
+      },
       left: { $: "Identifier", name: "a" },
       right: { $: "IntLiteral", value: 1 },
       hasMutableFlag: true
@@ -244,7 +265,10 @@ describe("Parser", function() {
         $: "ParamList",
         items: []
       },
-      returnType: { $: "PrimitiveType", name: "int" },
+      returnType: {
+        $: "PrimitiveType",
+        name: { $: "PrimitiveTypeName", kind: "int" }
+      },
       statements: []
     });
     deepEq(parseStatement(`void ab ( int a, float b ) { return; }`), {
@@ -253,11 +277,28 @@ describe("Parser", function() {
       params: {
         $: "ParamList",
         items: [
-          { $: "Param", type: { $: "PrimitiveType", name: "int" }, name: "a" },
-          { $: "Param", type: { $: "PrimitiveType", name: "float" }, name: "b" }
+          {
+            $: "Param",
+            type: {
+              $: "PrimitiveType",
+              name: { $: "PrimitiveTypeName", kind: "int" }
+            },
+            name: "a"
+          },
+          {
+            $: "Param",
+            type: {
+              $: "PrimitiveType",
+              name: { $: "PrimitiveTypeName", kind: "float" }
+            },
+            name: "b"
+          }
         ]
       },
-      returnType: { $: "PrimitiveType", name: "void" },
+      returnType: {
+        $: "PrimitiveType",
+        name: { $: "PrimitiveTypeName", kind: "void" }
+      },
       statements: [
         {
           $: "Return",
