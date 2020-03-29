@@ -91,6 +91,13 @@ export class DeclareTypeMismatch implements ValidationErrorType {
     this.message = r + " cannot be declared as " + l;
   }
 }
+export class NonAssignableType implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range, leftType: AnyType) {
+    const l = formatType(leftType);
+    this.message = "assignable to " + l + " is not allowed";
+  }
+}
 export class AssignTypeMismatch implements ValidationErrorType {
   message: string;
   constructor(public range: ast.Range, leftType: AnyType, rightType: AnyType) {

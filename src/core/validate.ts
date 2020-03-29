@@ -66,7 +66,8 @@ import {
   BranchesShouldReturnTheSameType,
   ConditionShouldBeBool,
   Unlabeled,
-  AssigningToConstantValueIsNotAllowed
+  AssigningToConstantValueIsNotAllowed,
+  NonAssignableType
 } from "./errors";
 
 // Scopes
@@ -1065,20 +1066,13 @@ function validateAssignableType(
   leftAst: ast.Expression,
   leftType: ExpressionType
 ): AssignableType | null {
-  if (leftType.$ === "VoidType") {
-    state.errors.push(new Unsupported(leftAst.range, "assigning to void")); // TODO: normal error
-    return null;
-  }
-  if (leftType.$ === "StringType") {
-    state.errors.push(new Unsupported(leftAst.range, "assigning to string"));
-    return null;
-  }
-  if (leftType.$ === "ArrayType") {
-    state.errors.push(new Unsupported(leftAst.range, "assigning to arrray"));
-    return null;
-  }
-  if (leftType.$ === "FunctionType") {
-    state.errors.push(new Unsupported(leftAst.range, "assigning to function"));
+  if (
+    leftType.$ === "VoidType" ||
+    leftType.$ === "StringType" ||
+    leftType.$ === "ArrayType" ||
+    leftType.$ === "FunctionType"
+  ) {
+    state.errors.push(new NonAssignableType(leftAst.range, leftType));
     return null;
   }
   return leftType;
