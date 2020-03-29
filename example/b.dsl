@@ -13,7 +13,7 @@
 //   ];
 // }
 //
-// Note: grammer
+// Note: grammar
 //   <struct-initializer> ::= "{" <assign>* "}"
 //   <param-declaration> ::= "param" <type-name> <identifier> <struct-initializer>
 // Note: struct param { int defaultValue = 0; int minValue = -Infinity; int maxValue = Infinity; }
