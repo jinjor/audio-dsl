@@ -1072,7 +1072,7 @@ function validateAssignableType(
 ): AssignableType | null {
   if (
     leftType.$ === "VoidType" ||
-    leftType.$ === "StringType" ||
+    leftType.$ === "StructType" ||
     leftType.$ === "ArrayType" ||
     leftType.$ === "FunctionType"
   ) {
