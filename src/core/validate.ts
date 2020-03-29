@@ -431,7 +431,7 @@ function validateImport(
     const moduleName = importAst.name;
     const header = state.moduleCache.get(moduleName);
     if (header == null) {
-      state.errors.push(new ImportModuleNotFound(null, name));
+      state.errors.push(new ImportModuleNotFound(null, moduleName));
       return;
     }
     for (const [name, type] of header.types.entries()) {
