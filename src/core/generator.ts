@@ -128,6 +128,10 @@ export class Module {
     if (t.$ === "BoolType") {
       return $bool;
     }
+    // maybe not possible?
+    // if (t.$ === "StructType") {
+    //   return $.createType(t.types.map(this.type.bind(this))) as T;
+    // }
     throw new Error("Unreachable");
   }
   types(

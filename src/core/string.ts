@@ -18,7 +18,7 @@ export class StringRefsBuilder {
     }
     const data = encode(value);
     const offset = this.size;
-    this.size += data.byteLength;
+    this.size += 1 + data.byteLength; // first byte is length
     const pos = { offset, data };
     this.map.set(value, pos);
   }
@@ -32,7 +32,8 @@ export class StringRefsBuilder {
     const info = new Map();
     const data = new Uint8Array(this.size);
     for (const [name, value] of this.map.entries()) {
-      data.set(value.data, value.offset);
+      data.set([value.data.byteLength], value.offset);
+      data.set(value.data, value.offset + 1);
       info.set(name, { offset: value.offset, length: data.byteLength });
     }
     return { size: this.size, info, data };

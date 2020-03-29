@@ -57,7 +57,9 @@ register(moduleName, base64);
   fs.writeFileSync(outFile, processorSourceText);
 
   const runtimeOutputFile = path.join(outDir, RUNTIME_PATH);
-  if (!fs.existsSync(runtimeOutputFile)) {
+  // TODO: cache invalidation
+  // if (!fs.existsSync(runtimeOutputFile)) {
+  {
     const runtimeSourceFile = path.join(__dirname, "../../runtime/bundle.js");
     fs.copyFileSync(runtimeSourceFile, runtimeOutputFile);
   }

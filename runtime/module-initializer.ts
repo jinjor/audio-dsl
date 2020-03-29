@@ -23,12 +23,17 @@ export function createInstance(bytes: Uint8Array): LanguageSpecificInstance {
         console.log("log_b:", arg);
         checkInfiniteLoop();
       },
-      log_s: function(start: number, length: number) {
-        console.log(start, length);
-        const sliced = memory.buffer.slice(start, start + length);
-        // utf-8 is not supported
+      log_s: function(pointerToLength: number) {
+        const pointerToData = pointerToLength + 1;
+        const lenBuf = memory.buffer.slice(pointerToLength, pointerToData);
+        const length = Array.from(new Uint8Array(lenBuf))[0];
+        const sliced = memory.buffer.slice(
+          pointerToData,
+          pointerToData + length
+        );
+        // utf-8 is not supported (because TextDecoder is not here...)
         const s = String.fromCharCode(...new Uint8Array(sliced));
-        console.log("logString:", s);
+        console.log("log_s:", s);
         checkInfiniteLoop();
       }
     },
