@@ -1379,11 +1379,13 @@ function validateFunctionCall(
     state.errors.push(new ShouldNotCallNonFunctionType(ast.range));
     return null;
   }
-  const args = new Array<[Expression, ExpressionType] | null>(ast.args.length);
+  const args = new Array<[Expression, ExpressionType] | null>(
+    ast.args.values.length
+  );
   const argLength = args.length;
   const paramLength = funcType.params.length;
-  for (let i = 0; i < ast.args.length; i++) {
-    const argAst = ast.args[i];
+  for (let i = 0; i < ast.args.values.length; i++) {
+    const argAst = ast.args.values[i];
     const arg = validateExpression(state, scope, argAst);
     if (arg == null) {
       args[i] = null;
@@ -1405,8 +1407,9 @@ function validateFunctionCall(
     args[i] = arg;
   }
   if (args.length < paramLength) {
-    // TODO: ArgumentList's range
-    state.errors.push(new TooFewArguments(ast.range, paramLength, argLength));
+    state.errors.push(
+      new TooFewArguments(ast.args.range, paramLength, argLength)
+    );
     return null;
   }
   if (args.some(a => a == null)) {

@@ -129,10 +129,20 @@ export type ArrayAccess = SourceInfo & {
   array: Expression;
   index: Expression;
 };
+export type ArrayAccessor = {
+  range: Range;
+  $: "ArrayAccessor";
+  value: Expression;
+};
+export type FunctionArguments = {
+  range: Range;
+  $: "FunctionArguments";
+  values: Expression[];
+};
 export type FunctionCall = SourceInfo & {
   $: "FunctionCall";
   func: Expression;
-  args: Expression[];
+  args: FunctionArguments;
 };
 export type BinOp = SourceInfo & {
   $: "BinOp";

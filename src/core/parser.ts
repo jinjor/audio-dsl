@@ -146,17 +146,6 @@ const singleExpression = oneOf<ast.Expression>(
   // arrayLiteral,
   identifier
 );
-// intermediate type
-type ArrayAccessor = {
-  range: Range;
-  $: "ArrayAccessor";
-  value: ast.Expression;
-};
-type FunctionArgs = {
-  range: Range;
-  $: "FunctionArgs";
-  args: ast.Expression[];
-};
 const arrayIndex: Parser<ast.Expression> = seq(
   $3,
   symbol("["),
@@ -173,19 +162,27 @@ const functionArgs: Parser<ast.Expression[]> = seq(
   _,
   symbol(")")
 );
-const accessor = oneOf<ArrayAccessor | FunctionArgs>(
+const accessor = oneOf<ast.ArrayAccessor | ast.FunctionArguments>(
   mapWithRange(
-    (args, range) => ({ range, $: "FunctionArgs", args }),
+    (values, range) => ({
+      range: transformRange(range),
+      $: "FunctionArguments",
+      values
+    }),
     functionArgs
   ),
   mapWithRange(
-    (value, range) => ({ range, $: "ArrayAccessor", value }),
+    (value, range) => ({
+      range: transformRange(range),
+      $: "ArrayAccessor",
+      value
+    }),
     arrayIndex
   )
 );
 function joinAccessors(
   acc: ast.Expression,
-  tail: (ArrayAccessor | FunctionArgs)[],
+  tail: (ast.ArrayAccessor | ast.FunctionArguments)[],
   i: number
 ): ast.Expression {
   if (i >= tail.length) {
@@ -195,7 +192,7 @@ function joinAccessors(
   if (accessor.$ === "ArrayAccessor") {
     const range = {
       start: acc.range.start,
-      end: transformRange(accessor.range).end
+      end: accessor.range.end
     };
     return joinAccessors(
       {
@@ -207,18 +204,17 @@ function joinAccessors(
       tail,
       i + 1
     );
-  } else if (accessor.$ === "FunctionArgs") {
-    const args = accessor.args;
+  } else if (accessor.$ === "FunctionArguments") {
     const range = {
       start: acc.range.start,
-      end: transformRange(accessor.range).end
+      end: accessor.range.end
     };
     return joinAccessors(
       {
         range,
         $: "FunctionCall",
         func: acc,
-        args
+        args: accessor
       },
       tail,
       i + 1
