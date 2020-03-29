@@ -30,7 +30,6 @@ import {
   Assign,
   LocalStatement,
   GlobalStatement,
-  // ArrayDeclaration,
   FunctionDeclaration,
   GlobalVariableDeclaration,
   Import,
@@ -256,6 +255,7 @@ class BlockScope implements LocalScope {
 }
 
 type GlobalState = {
+  numSamples: number;
   moduleCache: ModuleCache;
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
@@ -264,7 +264,7 @@ type GlobalState = {
   strings: StringRefsBuilder;
   errors: ValidationErrorType[];
 };
-type State = Pick<GlobalState, "strings" | "errors">;
+type State = Pick<GlobalState, "numSamples" | "strings" | "errors">;
 export type ValidationResult = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
@@ -278,6 +278,7 @@ export function validate(
   moduleCache: ModuleCache
 ): ValidationResult {
   const state: GlobalState = {
+    numSamples: 128,
     moduleCache,
     imports: [],
     globalVariableDeclarations: [],
@@ -321,13 +322,12 @@ export function validate(
     },
     export: true
   });
-  const numSamples = 128;
   validateArrayDeclaration(
     state,
     scope,
     "in_0",
     primitives.float32Type,
-    numSamples,
+    state.numSamples,
     true
   );
   validateArrayDeclaration(
@@ -335,7 +335,7 @@ export function validate(
     scope,
     "in_1",
     primitives.float32Type,
-    numSamples,
+    state.numSamples,
     true
   );
   validateArrayDeclaration(
@@ -343,7 +343,7 @@ export function validate(
     scope,
     "out_0",
     primitives.float32Type,
-    numSamples,
+    state.numSamples,
     true
   );
   validateArrayDeclaration(
@@ -351,7 +351,7 @@ export function validate(
     scope,
     "out_1",
     primitives.float32Type,
-    numSamples,
+    state.numSamples,
     true
   );
   // user definitions
@@ -718,7 +718,7 @@ function validateLoop(
     init,
     { $: "Int32Type" },
     "length",
-    { $: "Int32Const", value: 128 } // TODO
+    { $: "Int32Const", value: state.numSamples }
   );
   for (const statement of ast.statements) {
     validateLocalStatement(state, childScope, body, statement);
