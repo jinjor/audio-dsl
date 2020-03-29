@@ -350,16 +350,13 @@ const expression: Parser<ast.Expression> = mapWithRange(
     )
   )
 );
-type PrimitiveTypeNameWithRange = {
-  range: ast.Range;
-  name: ast.PrimitiveTypeName;
-};
-const primitiveTypeName: Parser<PrimitiveTypeNameWithRange> = mapWithRange(
-  (name: ast.PrimitiveTypeName, range) => ({
+const primitiveTypeName: Parser<ast.PrimitiveTypeName> = mapWithRange(
+  (kind: ast.PrimitiveTypeNameKind, range) => ({
     range: transformRange(range),
-    name
+    $: "PrimitiveTypeName",
+    kind
   }),
-  oneOf<ast.PrimitiveTypeName>(
+  oneOf<ast.PrimitiveTypeNameKind>(
     keyword("int", "int"),
     keyword("float", "float"),
     keyword("void", "void"),
@@ -367,25 +364,22 @@ const primitiveTypeName: Parser<PrimitiveTypeNameWithRange> = mapWithRange(
   )
 );
 type TypeParts = {
-  primitiveTypeNameWithRange: PrimitiveTypeNameWithRange;
+  primitiveTypeName: ast.PrimitiveTypeName;
   isArray: boolean;
 };
 const type: Parser<ast.Type> = mapWithRange(
-  ({ primitiveTypeNameWithRange, isArray }: TypeParts, range) => {
+  ({ primitiveTypeName, isArray }: TypeParts, range) => {
     const primitive: ast.PrimitiveType = {
-      range: primitiveTypeNameWithRange.range,
+      range: primitiveTypeName.range,
       $: "PrimitiveType",
-      name: primitiveTypeNameWithRange.name
+      name: primitiveTypeName
     };
     return isArray
       ? { range: transformRange(range), $: "ArrayType", type: primitive }
       : primitive;
   },
   seq(
-    (primitiveTypeNameWithRange, _, isArray) => ({
-      primitiveTypeNameWithRange,
-      isArray
-    }),
+    (primitiveTypeName, _, isArray) => ({ primitiveTypeName, isArray }),
     primitiveTypeName,
     _,
     oneOf(

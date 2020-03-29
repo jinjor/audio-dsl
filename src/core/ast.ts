@@ -165,7 +165,11 @@ export type MulOpKind = "*" | "/" | "%";
 export type CompOpKind = "<" | "<=" | ">" | ">=";
 export type BinOpKind = AddOpKind | MulOpKind | CompOpKind;
 export type Type = PrimitiveType | ArrayType;
-export type PrimitiveTypeName = "int" | "float" | "void" | "bool";
+export type PrimitiveTypeNameKind = "int" | "float" | "void" | "bool";
+export type PrimitiveTypeName = SourceInfo & {
+  $: "PrimitiveTypeName";
+  kind: PrimitiveTypeNameKind;
+};
 export type PrimitiveType = SourceInfo & {
   $: "PrimitiveType";
   name: PrimitiveTypeName;

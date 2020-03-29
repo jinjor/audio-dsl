@@ -816,7 +816,7 @@ function validateGlobalDeclarableType(
     );
     return null;
   }
-  if (ast.name === "void") {
+  if (ast.name.kind === "void") {
     state.errors.push(new VoidShouldNotBeDeclaredAsAVariable(ast.range));
     return null;
   }
@@ -827,16 +827,16 @@ function validatePrimitiveType(
   state: State,
   ast: ast.PrimitiveType
 ): Int32Type | Float32Type | VoidType | BoolType {
-  if (ast.name === "int") {
+  if (ast.name.kind === "int") {
     return primitives.int32Type;
   }
-  if (ast.name === "float") {
+  if (ast.name.kind === "float") {
     return primitives.float32Type;
   }
-  if (ast.name === "void") {
+  if (ast.name.kind === "void") {
     return primitives.voidType;
   }
-  if (ast.name === "bool") {
+  if (ast.name.kind === "bool") {
     return primitives.boolType;
   }
   throw new Error("not implemented yet: " + ast.name);
