@@ -23,11 +23,28 @@ param int note {
   minValue = 0;
   maxValue = 127;
 }
-param array<float> note {
-  defaultValue = 69;
-  minValue = 0;
-  maxValue = 127;
+param array<float> a {
+  defaultValue = 0;
+  minValue = -1;
+  maxValue = 1; 
 }
+// expanded (1)
+// int<@isParam = true, @minValue = 0, @maxValue = 127, @defaultValue = 69> note;
+// array<float<@minValue = -1, @maxValue = 1, @defaultValue = 0>, @isParam = true>;
+
+// expanded (2)
+// int { isParam = true, minValue = 0, maxValue = 127, defaultValue = 69 } note;
+// array<float { minValue = -1, maxValue = 1, defaultValue = 0 }> { isParam = true };
+
+// expanded (3)
+struct string { int offset; int length; }
+struct param { string name; int defaultValue; int minValue; int maxValue; string automationRate; }
+array<param, 2> params = [
+  { name = "note"; defaultValue = 69; minValue = 0; maxValue = 127; automationRate: "k-rate"; },
+  { name = "a"; defaultValue = 0; minValue = -1; maxValue = 1; automationRate: "a-rate"; }
+];
+int note;
+array<float, 128> a;
 
 void test() {
 }
