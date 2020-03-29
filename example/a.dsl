@@ -17,6 +17,7 @@ float angle_per_sample(float hz) {
 
 float gain = 0.2;
 var float angle = 1.0;
+
 float calc_sin() {
   return sin(angle);
 }

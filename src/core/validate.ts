@@ -67,7 +67,8 @@ import {
   ConditionShouldBeBool,
   Unlabeled,
   AssigningToConstantValueIsNotAllowed,
-  NonAssignableType
+  NonAssignableType,
+  AssigningInGlobalIsNotAllowed
 } from "./errors";
 
 // Scopes
@@ -495,7 +496,7 @@ function validateGlobalStatement(
   if (ast.$ === "VariableDeclaration") {
     validateGlobalDeclaration(state, scope, ast);
   } else if (ast.$ === "Assign") {
-    validateGlobalAssign(state, scope, ast);
+    state.errors.push(new AssigningInGlobalIsNotAllowed(ast.range));
   } else if (ast.$ === "FunctionDeclaration") {
     validateFunctionDeclaration(state, scope, ast);
   } else if (ast.$ === "FunctionCall") {
@@ -886,24 +887,7 @@ function validateGlobalDeclaration(
     export: !ast.hasMutableFlag // by design
   });
 }
-function validateGlobalAssign(
-  state: GlobalState,
-  scope: Scope,
-  ast: ast.Assign
-): void {
-  const assign = validateAssign(state, scope, ast);
-  if (assign == null) {
-    return;
-  }
-  if (assign.$ === "LocalSet") {
-    throw new Error("unexpected LocalSet at global scope");
-  }
-  if (assign.$ === "GlobalSet") {
-    state.globalStatements.push(assign);
-    return;
-  }
-  throw new Error("Unreachable");
-}
+
 function validateLocalAssign(
   state: State,
   scope: Scope,

@@ -191,6 +191,13 @@ export class BranchesShouldReturnTheSameType implements ValidationErrorType {
     this.message = `branches should return the same type: left = ${l}, right: ${r}`;
   }
 }
+export class AssigningInGlobalIsNotAllowed implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range) {
+    this.message = `assigning in global is not allowed`;
+  }
+}
+
 export class AssigningToConstantValueIsNotAllowed
   implements ValidationErrorType {
   message: string;
