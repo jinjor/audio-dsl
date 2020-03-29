@@ -55,9 +55,6 @@ export function textToBinary(src: string): Uint8Array {
   for (const declaration of validationResult.globalVariableDeclarations) {
     m.globalDeclaration(declaration);
   }
-  for (const arrayDeclaration of validationResult.arrayDeclarations) {
-    m.arrayDeclaration(arrayDeclaration);
-  }
   for (const declaration of validationResult.functionDeclarations) {
     m.functionDeclaration(declaration);
   }

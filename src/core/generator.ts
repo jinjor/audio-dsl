@@ -355,17 +355,17 @@ export class Module {
       this.raw.addFunctionExport(func.name, func.name);
     }
   }
-  arrayDeclaration(array: types.ArrayDeclaration): void {
-    this.raw.addGlobal(
-      array.name,
-      $i32,
-      false,
-      this.i32Const(array.offset as N)
-    );
-    if (array.export) {
-      this.raw.addGlobalExport(array.name, array.name);
-    }
-  }
+  // arrayDeclaration(array: types.ArrayDeclaration): void {
+  //   this.raw.addGlobal(
+  //     array.name,
+  //     $i32,
+  //     false,
+  //     this.i32Const(array.offset as N)
+  //   );
+  //   if (array.export) {
+  //     this.raw.addGlobalExport(array.name, array.name);
+  //   }
+  // }
   // ------
   // memory
   // ------

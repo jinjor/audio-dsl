@@ -30,7 +30,7 @@ import {
   Assign,
   LocalStatement,
   GlobalStatement,
-  ArrayDeclaration,
+  // ArrayDeclaration,
   FunctionDeclaration,
   GlobalVariableDeclaration,
   Import,
@@ -252,7 +252,6 @@ type GlobalState = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
-  arrayDeclarations: ArrayDeclaration[];
   globalStatements: GlobalStatement[];
   strings: StringRefsBuilder;
   errors: ValidationErrorType[];
@@ -262,7 +261,6 @@ export type ValidationResult = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
-  arrayDeclarations: ArrayDeclaration[];
   globalStatements: GlobalStatement[];
   data: Uint8Array;
   errors: ValidationErrorType[];
@@ -276,7 +274,6 @@ export function validate(
     imports: [],
     globalVariableDeclarations: [],
     functionDeclarations: [],
-    arrayDeclarations: [],
     globalStatements: [],
     strings: new StringRefsBuilder(),
     errors: []
@@ -357,10 +354,15 @@ export function validate(
 
   // string
   const stringRefs = state.strings.createRefs();
-  state.arrayDeclarations.push({
-    $: "ArrayDeclaration",
+  state.globalVariableDeclarations.push({
+    $: "GlobalVariableDeclaration",
+    type: primitives.int32Type,
     name: "string",
-    offset: scope.byteOffset, // ok?
+    mutable: false,
+    init: {
+      $: "Int32Const",
+      value: scope.byteOffset
+    },
     export: true
   });
 
@@ -369,7 +371,6 @@ export function validate(
     imports: state.imports,
     globalVariableDeclarations: state.globalVariableDeclarations,
     functionDeclarations: state.functionDeclarations,
-    arrayDeclarations: state.arrayDeclarations,
     globalStatements: state.globalStatements,
     data: stringRefs.data,
     errors: state.errors
@@ -386,12 +387,18 @@ function validateArrayDeclaration(
   if (scope.isDeclaredInThisScope(name)) {
     throw new Error("already declared: " + name);
   }
-  state.arrayDeclarations.push({
-    $: "ArrayDeclaration",
+  state.globalVariableDeclarations.push({
+    $: "GlobalVariableDeclaration",
+    type: primitives.int32Type,
     name,
-    offset: scope.byteOffset,
+    mutable: false,
+    init: {
+      $: "Int32Const",
+      value: scope.byteOffset
+    },
     export: export_
   });
+
   scope.declareArray(name, itemType, numberOfItems);
 }
 function validateImport(

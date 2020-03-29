@@ -280,14 +280,6 @@ export type FunctionDeclaration = {
   statements: LocalStatement[];
   export: boolean;
 };
-export type ArrayDeclaration = {
-  $: "ArrayDeclaration";
-  name: string;
-  // itemType: Int32Type | Float32Type;
-  // numberOfItems: number;
-  offset: number;
-  export: boolean;
-};
 export type Assign = LocalSet | GlobalSet | ArraySet;
 export type GetForAssign = LocalGet | GlobalGet;
 export type LocalSet = {
