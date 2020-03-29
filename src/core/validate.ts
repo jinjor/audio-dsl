@@ -63,10 +63,8 @@ import {
   ArgTypeMismatch,
   ExtraArgument,
   TooFewArguments,
-  formatType,
   BranchesShouldReturnTheSameType,
   ConditionShouldBeBool,
-  Unlabeled,
   AssigningToConstantValueIsNotAllowed,
   NonAssignableType,
   AssigningInGlobalIsNotAllowed
