@@ -75,16 +75,3 @@ export function textToBinary(src: string): Uint8Array {
 
   return m.raw.emitBinary();
 }
-
-// TODO: export this
-// static get parameterDescriptors() {
-//   return [
-//     {
-//       name: "note",
-//       defaultValue: 69,
-//       minValue: 0,
-//       maxValue: 127,
-//       automationRate: "k-rate"
-//     }
-//   ];
-// }
