@@ -607,7 +607,7 @@ function validateFunctionCallStatement(
 // TODO: share logic with assign
 function validateLocalVariableDeclaration(
   state: State,
-  scope: Scope,
+  scope: LocalScope,
   localStatements: LocalStatement[],
   ast: ast.VariableDeclaration
 ): void {
@@ -636,20 +636,7 @@ function validateLocalVariableDeclaration(
   scope.declareType(ast.left.name, leftType);
 
   // assign
-  const lookupResult = scope.lookupType(ast.left.name)!;
-  if (lookupResult == null) {
-    throw new Error("Unexpected lookup not found: " + ast.left.name);
-  }
-  const [localGet, type] = lookupResult;
-  if (
-    localGet.$ === "GlobalGet" ||
-    localGet.$ === "FunctionGet" ||
-    localGet.$ === "ArrayGet" ||
-    localGet.$ === "Int32Const" ||
-    localGet.$ === "Float32Const"
-  ) {
-    throw new Error("unexpected " + localGet.$);
-  }
+  const [localGet] = lookupSelfDeclaredLocal(scope, ast.left.name);
   const right = validateExpression(state, scope, ast.right);
   if (leftType == null || right == null) {
     return;
@@ -661,17 +648,11 @@ function validateLocalVariableDeclaration(
     );
     return;
   }
-  if (rightType.$ === "VoidType" || rightType.$ === "FunctionType") {
-    state.errors.push(
-      new Unsupported(ast.right.range, "declaring " + formatType(rightType))
-    );
-    return;
-  }
   localStatements.push(makeAssign(localGet, rightExp));
 }
 function validateLocalVariableDeclarationInternal(
   state: State,
-  scope: Scope,
+  scope: LocalScope,
   localStatements: LocalStatement[],
   type: Int32Type | Float32Type,
   name: string,
@@ -683,21 +664,25 @@ function validateLocalVariableDeclarationInternal(
   }
   scope.declareType(name, type);
   // ...and assign
-  const lookupResult = scope.lookupType(name);
-  if (lookupResult == null) {
+  const [localGet] = lookupSelfDeclaredLocal(scope, name);
+  localStatements.push(makeAssign(localGet, value));
+}
+function lookupSelfDeclaredLocal(
+  scope: LocalScope,
+  name: string
+): [LocalGet, ExpressionType] {
+  const found = scope.lookupType(name);
+  if (found == null) {
     throw new Error("Unexpected lookup not found: " + name);
   }
-  const [localGet, _type] = lookupResult;
-  if (
-    localGet.$ === "GlobalGet" ||
-    localGet.$ === "FunctionGet" ||
-    localGet.$ === "ArrayGet" ||
-    localGet.$ === "Int32Const" ||
-    localGet.$ === "Float32Const"
-  ) {
-    throw new Error("unexpected " + localGet.$);
+  const [exp, type] = found;
+  assertLocalGet(exp);
+  return [exp, type];
+}
+function assertLocalGet(exp: FoundExp): asserts exp is LocalGet {
+  if (exp.$ !== "LocalGet") {
+    throw new Error("unexpected " + exp.$);
   }
-  localStatements.push(makeAssign(localGet, value));
 }
 
 function validateLoop(
