@@ -270,6 +270,11 @@ export class GettingArrayItemInGlobalIsNotSupported extends Unsupported {
     super(range, "getting array item in global");
   }
 }
+export class StringLiteralIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "string literal");
+  }
+}
 export class ArrayLiteralIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
     super(range, "array literal");

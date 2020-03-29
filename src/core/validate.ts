@@ -80,7 +80,8 @@ import {
   ArrayLiteralIsNotSupported,
   GettingArrayInGlobalIsNotSupported,
   GettingFunctionInGlobalIsNotSupported,
-  ReferringUndefinedValueInGlobalIsNotAllowed
+  ReferringUndefinedValueInGlobalIsNotAllowed,
+  StringLiteralIsNotSupported
 } from "./errors";
 
 // Scopes
@@ -1103,7 +1104,8 @@ function validateExpression(
       primitives.float32Type
     ];
   } else if (ast.$ === "StringLiteral") {
-    throw new Error("StringLiteral not implemented yet");
+    state.errors.push(new StringLiteralIsNotSupported(ast.range));
+    return null;
   } else if (ast.$ === "ArrayLiteral") {
     state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;
