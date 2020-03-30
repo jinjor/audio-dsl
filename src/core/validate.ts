@@ -423,7 +423,6 @@ function validateArrayDeclaration(
   if (scope.isDeclaredInThisScope(name)) {
     throw new Error("already declared: " + name);
   }
-  scope.declareArray(name, itemType, numberOfItems);
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
     type: primitives.int32Type,
@@ -435,6 +434,7 @@ function validateArrayDeclaration(
     },
     export: export_
   });
+  scope.declareArray(name, itemType, numberOfItems);
 }
 function validateImport(
   state: GlobalState,

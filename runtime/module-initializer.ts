@@ -88,7 +88,7 @@ export function createInstance(bytes: Uint8Array): LanguageSpecificInstance {
   );
   console.log(
     "in_1",
-    memory.buffer.slice(exp.in_0.value, exp.in_1.value + 128 * 4)
+    memory.buffer.slice(exp.in_1.value, exp.in_1.value + 128 * 4)
   );
   console.log(
     "out_0",
