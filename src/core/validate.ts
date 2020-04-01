@@ -72,7 +72,7 @@ import {
   UsingConditionalOperatorInGlobalIsNotSupported,
   ReturningNonPrimitiveTypesIsNotSupported,
   ReceivingNonPrimitiveTypesIsNotSupported,
-  DeclaringArrayIsNotSupported,
+  DeclaringArrayInLocalIsNotSupported,
   AssigningFunctionIsNotSupported,
   AssigningArrayIsNotSupported,
   CallingArbitraryExpressionIsNotSupported,
@@ -82,7 +82,9 @@ import {
   GettingArrayInGlobalIsNotSupported,
   GettingFunctionInGlobalIsNotSupported,
   ReferringUndefinedValueInGlobalIsNotAllowed,
-  CallingInGlobalIsNotSupported
+  CallingInGlobalIsNotSupported,
+  VoidCannotBeAnArrayItem,
+  DeclaringArrayWithInitialValueNotSupported
 } from "./errors";
 
 // Scopes
@@ -666,7 +668,7 @@ function validateLocalVariableDeclaration(
     return;
   }
   if (ast.type.$ === "ArrayType") {
-    state.errors.push(new DeclaringArrayIsNotSupported(ast.type.range));
+    state.errors.push(new DeclaringArrayInLocalIsNotSupported(ast.type.range));
     return;
   }
   const leftType = validatePrimitiveType(state, ast.type);
@@ -829,21 +831,6 @@ function validateReturn(
   });
 }
 
-function validateGlobalDeclarableType(
-  state: State,
-  ast: ast.Type
-): GlobalDeclarableType | null {
-  if (ast.$ === "ArrayType") {
-    state.errors.push(new DeclaringArrayIsNotSupported(ast.range));
-    return null;
-  }
-  if (ast.name.kind === "void") {
-    state.errors.push(new VoidShouldNotBeDeclaredAsAVariable(ast.range));
-    return null;
-  }
-  return validatePrimitiveType(state, ast);
-}
-
 function validatePrimitiveType(
   state: State,
   ast: ast.PrimitiveType
@@ -868,7 +855,21 @@ function validateGlobalDeclaration(
   scope: GlobalScope,
   ast: ast.VariableDeclaration
 ): void {
-  const type = validateGlobalDeclarableType(state, ast.type);
+  if (ast.type.$ === "ArrayType") {
+    const itemType = validatePrimitiveType(state, ast.type.type);
+    if (itemType.$ === "VoidType") {
+      state.errors.push(new VoidCannotBeAnArrayItem(ast.type.range));
+    } else {
+      scope.declareArray(ast.left.name, itemType, state.numSamples);
+    }
+    if (ast.right != null) {
+      state.errors.push(
+        new DeclaringArrayWithInitialValueNotSupported(ast.right.range)
+      );
+    }
+    return;
+  }
+  const type = validatePrimitiveType(state, ast.type);
   if (ast.left.$ !== "Identifier") {
     state.errors.push(
       new TheLeftHandExpressionMustBeAnIdentifier(ast.left.range)

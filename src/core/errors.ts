@@ -218,6 +218,13 @@ export class ReferringUndefinedValueInGlobalIsNotAllowed
   }
 }
 
+export class VoidCannotBeAnArrayItem implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range) {
+    this.message = `void cannot not be an array item`;
+  }
+}
+
 // Unsupported (might be supported in the future)
 class Unsupported implements ValidationErrorType {
   message: string;
@@ -225,7 +232,7 @@ class Unsupported implements ValidationErrorType {
     this.message = `${what} is not supported`;
   }
 }
-export class DeclaringArrayIsNotSupported extends Unsupported {
+export class DeclaringArrayInLocalIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
     super(range, "declaring array");
   }

@@ -37,11 +37,16 @@ describe("Validate", function() {
     assertOk(`float a = 0.0;`);
     assertOk(`bool a = 1 > 0;`);
     assertOk(`var int a = 0;`);
+    assertOk(`int a;`);
+    assertOk(`var int a;`);
     assertErrorExists(`int a = 0.0;`);
     assertErrorExists(`float a = 0;`);
     assertErrorExists(`void a = 0;`);
     assertErrorExists(`bool a = 0;`);
     assertErrorExists(`int a = 0; int a = 1;`);
+    assertErrorExists(`void[] a;`);
+    assertErrorExists(`var int[] a;`);
+    assertErrorExists(`var void[] a;`);
   });
   it("function declaration", () => {
     assertOk(`void f() {}`);
