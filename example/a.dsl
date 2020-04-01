@@ -1,5 +1,5 @@
 float base_hz = 442.0;
-int base_note = 69;
+float base_note = 69.0;
 int sample_rate = 48000;
 float HALF_PI = PI * 0.5;
 float TWO_PI = PI * 2.0;
@@ -11,8 +11,8 @@ float[] note;
 bool flag;
 
 // util
-float note_to_hz(int note) {
-  return base_hz * pow(2.0, float(note - base_note) / 12.0);
+float note_to_hz(float note) {
+  return base_hz * pow(2.0, (note - base_note) / 12.0);
 }
 float angle_per_sample(float hz) {
   return TWO_PI * hz / float(sample_rate);
@@ -36,7 +36,7 @@ float calc_triangle() {
 void process() {
   loop {
     out_0[i] = calc_saw() * gain;
-    angle = angle + angle_per_sample(note_to_hz(60));
+    angle = angle + angle_per_sample(note_to_hz(note[i]));
     angle = angle > TWO_PI ? angle - TWO_PI : angle;
   }
 }
@@ -45,4 +45,6 @@ void test() {
   log_s("Meow!");
   log_f(angle);
   log_b(1 > 0);
+  note[0] = 69.0;
+  log_f(note[0]);
 }

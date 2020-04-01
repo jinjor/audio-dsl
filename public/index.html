@@ -1,11 +1,24 @@
 <button id="start">Start</button>
+<button class="note" data-note="60">C3</button>
+<button class="note" data-note="72">C4</button>
 <script type="module">
   const context = new AudioContext();
+  let node = null;
   context.audioWorklet.addModule("js/a.js").then(() => {
     document.getElementById("start").onclick = e => {
       context.resume();
-      const node = new AudioWorkletNode(context, "a");
+      node = new AudioWorkletNode(context, "a");
       node.connect(context.destination);
     };
   });
+  for (const el of document.getElementsByClassName("note")) {
+    el.addEventListener("click", e => {
+      const noteParam = node.parameters.get("note");
+      const note = parseInt(e.target.dataset.note);
+      // noteParam.value = note
+      // noteParam.setValueAtTime(note, context.currentTime + 0.3);
+      // noteParam.linearRampToValueAtTime(note, context.currentTime + 0.3);
+      noteParam.exponentialRampToValueAtTime(note, context.currentTime + 0.3);
+    });
+  }
 </script>
