@@ -141,6 +141,15 @@ class GlobalScope implements Scope {
     });
     this.byteOffset += sizeOf(itemType) * numberOfItems;
   }
+  getAllArrays(): [string, ArrayType][] {
+    const arrays: [string, ArrayType][] = [];
+    for (const [name, type] of this.declaredTypesOrStaticValue) {
+      if (type.$ === "ArrayType") {
+        arrays.push([name, type]);
+      }
+    }
+    return arrays;
+  }
   lookupType(name: string): [FoundExp, ExpressionType] | null {
     const typeOrStaticValue = this.declaredTypesOrStaticValue.get(name);
     if (!typeOrStaticValue) {
@@ -357,7 +366,7 @@ export function validate(
     "in_0",
     primitives.float32Type,
     state.numSamples,
-    true
+    null
   );
   validateArrayDeclaration(
     state,
@@ -365,7 +374,7 @@ export function validate(
     "in_1",
     primitives.float32Type,
     state.numSamples,
-    true
+    null
   );
   validateArrayDeclaration(
     state,
@@ -373,7 +382,7 @@ export function validate(
     "out_0",
     primitives.float32Type,
     state.numSamples,
-    true
+    null
   );
   validateArrayDeclaration(
     state,
@@ -381,15 +390,29 @@ export function validate(
     "out_1",
     primitives.float32Type,
     state.numSamples,
-    true
+    null
   );
   // user definitions
   for (let statement of ast.statements) {
     validateGlobalStatement(state, scope, statement);
   }
-  // state.strings.add("Hello, World!"); // for example
 
-  // string
+  // array pointers
+  for (const [name, array] of scope.getAllArrays()) {
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      type: primitives.int32Type,
+      name,
+      mutable: false,
+      init: {
+        $: "Int32Const",
+        value: array.byteOffset
+      },
+      export: true
+    });
+  }
+
+  // string pointers
   const stringRefs = state.strings.createRefs();
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
@@ -419,22 +442,15 @@ function validateArrayDeclaration(
   name: string,
   itemType: ItemType,
   numberOfItems: number,
-  export_: boolean
+  ast: ast.VariableDeclaration | null
 ): void {
   if (scope.isDeclaredInThisScope(name)) {
-    throw new Error("already declared: " + name);
+    if (ast == null) {
+      throw new Error("already declared: " + name);
+    }
+    state.errors.push(new AlreadyDeclared(ast.range, "variable", name));
+    return;
   }
-  state.globalVariableDeclarations.push({
-    $: "GlobalVariableDeclaration",
-    type: primitives.int32Type,
-    name,
-    mutable: false,
-    init: {
-      $: "Int32Const",
-      value: scope.byteOffset
-    },
-    export: export_
-  });
   scope.declareArray(name, itemType, numberOfItems);
 }
 function validateImport(
