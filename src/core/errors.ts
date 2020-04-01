@@ -228,6 +228,20 @@ export class DeclaringMutableArraysIsNotAllowed implements ValidationErrorType {
     this.message = `declaring mutable arrays`;
   }
 }
+export class ParametersShouldBeDeclaredAtTopLevel
+  implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range) {
+    this.message = `parameters should be declared at top level`;
+  }
+}
+export class ParametersShouldBeNumberOrArrayOfNumbers
+  implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range) {
+    this.message = `parameters should be one of int, float, int[] or float[]`;
+  }
+}
 
 // Unsupported (might be supported in the future)
 class Unsupported implements ValidationErrorType {

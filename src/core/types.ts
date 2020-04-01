@@ -13,12 +13,12 @@ export type VoidType = {
 export type BoolType = {
   $: "BoolType";
 };
-// export type StringType = {
-//   $: "StringType";
-// };
+export type StringType = {
+  $: "StringType";
+};
 export type StructType = {
   $: "StructType";
-  types: (Int32Type | Float32Type | BoolType)[];
+  types: { name: string; type: Int32Type | Float32Type | StringType }[];
 };
 export type ArrayType = {
   $: "ArrayType";
@@ -56,6 +56,7 @@ export type AnyType =
   | Float32Type
   | VoidType
   | BoolType
+  | StringType
   | StructType
   | ArrayType
   | FunctionType;
@@ -117,6 +118,9 @@ export function isTypeEqual<T extends AnyType>(a: AnyType, b: AnyType): b is T {
   if (a.$ === "Float32Type" && b.$ === "Float32Type") {
     return true;
   }
+  if (a.$ === "StringType" && b.$ === "StringType") {
+    return true;
+  }
   if (a.$ === "VoidType" && b.$ === "VoidType") {
     return true;
   }
@@ -128,7 +132,7 @@ export function isTypeEqual<T extends AnyType>(a: AnyType, b: AnyType): b is T {
       return false;
     }
     for (let i = 0; i < a.types.length; i++) {
-      if (!isTypeEqual(a.types[i], b.types[i])) {
+      if (!isTypeEqual(a.types[i].type, b.types[i].type)) {
         return false;
       }
     }
@@ -165,8 +169,11 @@ export function typeToString(a: AnyType): string {
   if (a.$ === "BoolType") {
     return "bool";
   }
+  if (a.$ === "StringType") {
+    return "string";
+  }
   if (a.$ === "StructType") {
-    return `{ ${a.types.map(typeToString).join(", ")} }`;
+    return `{ ${a.types.map(({ type }) => typeToString(type)).join(", ")} }`;
   }
   if (a.$ === "ArrayType") {
     return `array<${typeToString(a.itemType)}>`;
@@ -177,6 +184,31 @@ export function typeToString(a: AnyType): string {
   }
   throw new Error("unreachable");
 }
+export function paramOptionsType(
+  type: "Int32Type" | "Float32Type"
+): StructType {
+  return {
+    $: "StructType",
+    types: [
+      { name: "defaultValue", type: { $: type } },
+      { name: "minValue", type: { $: type } },
+      { name: "maxValue", type: { $: type } }
+    ]
+  };
+}
+export function paramType(type: "Int32Type" | "Float32Type"): StructType {
+  return {
+    $: "StructType",
+    types: [
+      { name: "name", type: { $: "StringType" } },
+      { name: "defaultValue", type: { $: type } },
+      { name: "minValue", type: { $: type } },
+      { name: "maxValue", type: { $: type } },
+      { name: "automationRate", type: { $: "StringType" } } // "a-rate" | "k-rate"
+    ]
+  };
+}
+
 // --------------------
 //  Expressions
 // --------------------

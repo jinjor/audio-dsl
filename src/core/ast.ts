@@ -38,6 +38,7 @@ export type FileImport = {
 export type Statement =
   | VariableDeclaration
   | FunctionDeclaration
+  | ParamDeclaration
   | Assign
   | Expression
   | Loop
@@ -66,6 +67,12 @@ export type FunctionDeclaration = SourceInfo & {
   params: ParamList;
   returnType: Type;
   statements: Statement[];
+};
+export type ParamDeclaration = SourceInfo & {
+  $: "ParamDeclaration";
+  name: string;
+  type: Type;
+  struct: StructLiteral[];
 };
 export type Assign = SourceInfo & {
   $: "Assign";
@@ -118,6 +125,10 @@ export type StringLiteral = SourceInfo & {
 export type ArrayLiteral = SourceInfo & {
   $: "ArrayLiteral";
   items: Expression[];
+};
+export type StructLiteral = SourceInfo & {
+  $: "StructLiteral";
+  items: Assign[];
 };
 // Other Expressions
 export type Identifier = SourceInfo & {
