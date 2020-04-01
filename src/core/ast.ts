@@ -70,9 +70,9 @@ export type FunctionDeclaration = SourceInfo & {
 };
 export type ParamDeclaration = SourceInfo & {
   $: "ParamDeclaration";
-  name: string;
   type: Type;
-  struct: StructLiteral[];
+  name: Identifier;
+  struct: StructLiteral;
 };
 export type Assign = SourceInfo & {
   $: "Assign";

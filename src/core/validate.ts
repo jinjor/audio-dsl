@@ -38,8 +38,9 @@ import {
   AnyType,
   defaultValueOf,
   StringGet,
-  MemberType,
-  StructTypeWithOffset
+  FieldType,
+  StructTypeWithOffset,
+  paramOptionsType
 } from "./types";
 import { ModuleCache } from "./loader";
 import { StringRefsBuilder } from "./string";
@@ -86,7 +87,11 @@ import {
   CallingInGlobalIsNotSupported,
   VoidCannotBeAnArrayItem,
   DeclaringArrayWithInitialValueNotSupported,
-  DeclaringMutableArraysIsNotAllowed
+  DeclaringMutableArraysIsNotAllowed,
+  ParametersShouldBeDeclaredInGlobal,
+  ParametersShouldBeNumberOrArrayOfNumbers,
+  UnknownField,
+  MissingFields
 } from "./errors";
 
 // Scopes
@@ -150,7 +155,7 @@ class GlobalScope implements Scope {
   }
   declareStruct(
     name: string,
-    types: { name: string; type: MemberType }[]
+    types: { name: string; type: FieldType }[]
   ): void {
     this.declareType(name, {
       $: "StructTypeWithOffset",
@@ -681,7 +686,109 @@ function validateParamDeclaration(
   scope: GlobalScope,
   ast: ast.ParamDeclaration
 ) {
-  throw new Error("not implemented yet");
+  let valueType: Int32Type | Float32Type | null = null;
+  if (ast.type.$ === "PrimitiveType") {
+    const type = validatePrimitiveType(state, ast.type);
+    if (type.$ === "Int32Type") {
+      valueType = type;
+    } else if (type.$ === "Float32Type") {
+      valueType = type;
+    } else {
+      state.errors.push(
+        new ParametersShouldBeNumberOrArrayOfNumbers(ast.type.range)
+      );
+    }
+  } else if (ast.type.$ === "ArrayType") {
+    const type = validatePrimitiveType(state, ast.type.type);
+    if (type.$ === "Int32Type") {
+      valueType = type;
+    } else if (type.$ === "Float32Type") {
+      valueType = type;
+    } else {
+      state.errors.push(
+        new ParametersShouldBeNumberOrArrayOfNumbers(ast.type.range)
+      );
+    }
+  }
+  const optionType = valueType == null ? null : paramOptionsType(valueType.$);
+
+  const fields: {
+    name: string;
+    type: FieldType;
+    init: Expression;
+  }[] = new Array(ast.struct.items.length);
+  for (let i = 0; i < ast.struct.items.length; i++) {
+    const itemAst = ast.struct.items[i];
+    if (itemAst.left.$ !== "Identifier") {
+      state.errors.push();
+      continue;
+    }
+    const right = validateExpression(state, scope, itemAst.right);
+    if (right == null) {
+      continue;
+    }
+    const [rightExp, rightType] = right;
+    if (optionType == null) {
+      continue;
+    }
+    let matchedField: [FieldType, number] | null = null;
+    for (let i = 0; i < optionType.types.length; i++) {
+      const optionFieldTypeType = optionType.types[i];
+      if (optionFieldTypeType.name === itemAst.left.name) {
+        matchedField = [optionFieldTypeType.type, i];
+        break;
+      }
+    }
+    if (matchedField == null) {
+      state.errors.push(
+        new UnknownField(
+          itemAst.left.range,
+          itemAst.left.name,
+          optionType.types
+        )
+      );
+      continue;
+    }
+    const [fieldType, fieldIndex] = matchedField;
+    if (!isTypeEqual(fieldType, rightType)) {
+      state.errors.push(
+        new AssignTypeMismatch(itemAst.range, fieldType, rightType)
+      );
+      continue;
+    }
+    fields[fieldIndex] = {
+      name: itemAst.left.name,
+      type: fieldType,
+      init: rightExp
+    };
+  }
+  if (scope.isDeclaredInThisScope(ast.name.name)) {
+    state.errors.push(
+      new AlreadyDeclared(ast.name.range, "variable", ast.name.name)
+    );
+    return;
+  }
+  if (optionType == null) {
+    return;
+  }
+  let missingFields: string[] = [];
+  for (let i = 0; i < optionType.types.length; i++) {
+    const field = fields[i];
+    if (field == null) {
+      missingFields.push(optionType.types[i].name);
+    }
+  }
+  if (missingFields.length > 0) {
+    state.errors.push(
+      new MissingFields(
+        ast.range, // too wide?
+        missingFields,
+        optionType.types
+      )
+    );
+    return;
+  }
+  scope.declareStruct(ast.name.name, fields);
 }
 function validateLocalStatement(
   state: State,
@@ -693,6 +800,8 @@ function validateLocalStatement(
     validateLocalVariableDeclaration(state, scope, localStatements, ast);
   } else if (ast.$ === "FunctionDeclaration") {
     state.errors.push(new FunctionShouldBeDeclaredInGlobal(ast.range));
+  } else if (ast.$ === "ParamDeclaration") {
+    state.errors.push(new ParametersShouldBeDeclaredInGlobal(ast.range));
   } else if (ast.$ === "Assign") {
     validateLocalAssign(state, scope, localStatements, ast);
   } else if (ast.$ === "FunctionCall") {
@@ -989,7 +1098,6 @@ function validateGlobalDeclaration(
     export: !ast.hasMutableFlag // by design
   });
 }
-
 function validateLocalAssign(
   state: State,
   scope: Scope,

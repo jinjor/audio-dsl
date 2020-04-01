@@ -1,5 +1,5 @@
 import * as ast from "./ast";
-import { AnyType, typeToString } from "./types";
+import { AnyType, typeToString, FieldType } from "./types";
 import chalk from "chalk";
 
 export function formatType(t: AnyType): string {
@@ -151,6 +151,26 @@ export class InvlaidAssignTarget implements ValidationErrorType {
     this.message = "cannot assignable to " + expressionName;
   }
 }
+export class UnknownField implements ValidationErrorType {
+  message: string;
+  constructor(
+    public range: ast.Range,
+    fieldName: string,
+    expectedTypes: { name: string; type: FieldType }[]
+  ) {
+    this.message = "unknown field `" + fieldName + "`";
+  }
+}
+export class MissingFields implements ValidationErrorType {
+  message: string;
+  constructor(
+    public range: ast.Range | null,
+    missingFieldNames: string[],
+    expectedTypes: { name: string; type: FieldType }[]
+  ) {
+    this.message = "field " + missingFieldNames.join(", ") + " is missing";
+  }
+}
 export class IndexAccessToNonArray implements ValidationErrorType {
   message = "index access is only allowed to arrays";
   constructor(public range: ast.Range | null) {}
@@ -228,8 +248,7 @@ export class DeclaringMutableArraysIsNotAllowed implements ValidationErrorType {
     this.message = `declaring mutable arrays`;
   }
 }
-export class ParametersShouldBeDeclaredAtTopLevel
-  implements ValidationErrorType {
+export class ParametersShouldBeDeclaredInGlobal implements ValidationErrorType {
   message: string;
   constructor(public range: ast.Range) {
     this.message = `parameters should be declared at top level`;
