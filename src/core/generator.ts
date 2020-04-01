@@ -291,6 +291,7 @@ export class Module {
     throw new Error("unreachable");
   }
   fieldSet(statement: types.FieldSet): X {
+    // console.log("fieldSet", statement);
     const pointer = this.structFieldPointer(statement.pointer);
     const value = this.expression(statement.value);
     if (statement.pointer.fieldType.$ === "Int32Type") {

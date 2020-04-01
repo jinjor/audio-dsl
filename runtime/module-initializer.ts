@@ -76,6 +76,8 @@ export function createInstance(bytes: Uint8Array): LanguageSpecificInstance {
   }
   console.log("number_of_in_channels:", exp.number_of_in_channels.value);
   console.log("number_of_out_channels:", exp.number_of_out_channels.value);
+  console.log("params:", exp.params.value);
+  console.log("number_of_params:", exp.number_of_params.value);
   console.log("string:", exp.string.value);
   console.log("in_0:", exp.in_0.value);
   console.log("in_1:", exp.in_1.value);
@@ -97,6 +99,10 @@ export function createInstance(bytes: Uint8Array): LanguageSpecificInstance {
   console.log(
     "out_1",
     memory.buffer.slice(exp.out_1.value, exp.out_1.value + 128 * 4)
+  );
+  console.log(
+    "params",
+    memory.buffer.slice(exp.params.value, exp.params.value + 4 + 4 + 4 + 4 + 4) // TODO
   );
   console.log(
     "string",

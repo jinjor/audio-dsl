@@ -454,8 +454,6 @@ export function validate(
     state.numSamples,
     null
   );
-  validateStringLiteral(state, scope, "a-rate");
-  validateStringLiteral(state, scope, "k-rate");
 
   // user definitions
   for (let statement of ast.statements) {
@@ -477,24 +475,16 @@ export function validate(
     });
   }
 
-  // struct
-  for (const [name, struct] of scope.getAllStructs()) {
-    // pointer
-    state.globalVariableDeclarations.push({
-      $: "GlobalVariableDeclaration",
-      type: primitives.int32Type,
-      name,
-      mutable: false,
-      init: {
-        $: "Int32Const",
-        value: struct.byteOffset
-      },
-      export: true
-    });
+  // struct (currently, struct == param info)
+  const structs = scope.getAllStructs();
+  const structOffsets = [];
+  for (const [name, struct] of structs) {
+    structOffsets.push(struct.byteOffset);
     let fieldOffset = 0;
     // assign to fields
     for (const field of struct.types) {
       if (field.init != null) {
+        // TODO: this does not work
         state.globalStatements.push({
           $: "FieldSet",
           pointer: {
@@ -507,6 +497,30 @@ export function validate(
       }
       fieldOffset += sizeOf(field.type);
     }
+  }
+  if (structs.length > 0) {
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      type: primitives.int32Type,
+      name: "params",
+      mutable: false,
+      init: {
+        $: "Int32Const",
+        value: structOffsets[0]
+      },
+      export: true
+    });
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      type: primitives.int32Type,
+      name: "number_of_params",
+      mutable: false,
+      init: {
+        $: "Int32Const",
+        value: structs.length
+      },
+      export: true
+    });
   }
 
   // string pointers
@@ -748,7 +762,6 @@ function validateParamDeclaration(
   const optionType = valueType == null ? null : paramOptionsType(valueType.$);
 
   const foundFields = new Set<string>();
-  let defaultValue = 0;
   const fields: {
     name: string;
     type: FieldType;
@@ -881,7 +894,30 @@ function validateParamDeclaration(
       return;
     }
   }
-  // scope.declareStruct(ast.name.name, fields);
+
+  const [paramNameExp, paramNameType] = validateStringLiteral(
+    state,
+    scope,
+    ast.name.name
+  );
+  const [automationExp, automationType] = validateStringLiteral(
+    state,
+    scope,
+    isArray ? "a-rate" : "k-rate"
+  );
+  scope.declareStruct("param_" + ast.name.name, [
+    {
+      name: "name",
+      type: paramNameType,
+      init: paramNameExp
+    },
+    ...fields,
+    {
+      name: "automationRate",
+      type: automationType,
+      init: automationExp
+    }
+  ]);
 }
 function validateLocalStatement(
   state: State,
