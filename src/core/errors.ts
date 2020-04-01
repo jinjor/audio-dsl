@@ -265,9 +265,9 @@ export class CallingInGlobalIsNotSupported extends Unsupported {
     super(range, "calling in global");
   }
 }
-export class ComparingInGlobalIsNotSupported extends Unsupported {
+export class UsingConditionalOperatorInGlobalIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
-    super(range, "comparing in global");
+    super(range, "using conditional operator in global");
   }
 }
 export class GettingArrayItemInGlobalIsNotSupported extends Unsupported {

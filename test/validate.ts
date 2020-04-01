@@ -35,6 +35,7 @@ describe("Validate", function() {
   it("global variable declaration", () => {
     assertOk(`int a = 0;`);
     assertOk(`float a = 0.0;`);
+    assertOk(`bool a = 1 > 0;`);
     assertOk(`var int a = 0;`);
     assertErrorExists(`int a = 0.0;`);
     assertErrorExists(`float a = 0;`);
@@ -68,10 +69,12 @@ describe("Validate", function() {
     assertOk(`int a = 0; int b = a;`);
     assertOk(`int a = 0; var int b = a;`);
     assertOk(`int a = 0; int b = a + a;`);
+    assertOk(`int a = 0; bool b = 1 > a;`);
     assertErrorExists(`int a = 0; float b = float(a);`); // maybe need a static function
     assertErrorExists(`var int a = 0; int b = a;`);
     assertErrorExists(`var int a = 0; var int b = a;`);
     assertErrorExists(`int a = 0; int b = float(a);`);
+    assertErrorExists(`var int a = 0; bool b = 1 > a;`);
   });
   it("op (+)", () => {
     assertOk(`int a = 0 + 0;`);
@@ -121,7 +124,7 @@ describe("Validate", function() {
     assertErrorExists(`float a = 0.0 % 0;`);
     assertErrorExists(`float a = 0.0 % 0.0;`);
   });
-  it.skip("op (>)", () => {
+  it("op (>)", () => {
     assertOk(`bool a = 0 > 0;`);
     assertOk(`bool a = 0.0 > 0.0;`);
     // wrong return type
@@ -130,7 +133,31 @@ describe("Validate", function() {
     assertErrorExists(`bool a = 0 > 0.0;`);
     assertErrorExists(`bool a = 0.0 > 0;`);
   });
-  it.skip("op (>=)", () => {});
-  it.skip("op (<)", () => {});
-  it.skip("op (<=)", () => {});
+  it("op (>=)", () => {
+    assertOk(`bool a = 0 >= 0;`);
+    assertOk(`bool a = 0.0 >= 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 >= 0.0;`);
+    // wrong combination
+    assertErrorExists(`bool a = 0 >= 0.0;`);
+    assertErrorExists(`bool a = 0.0 >= 0;`);
+  });
+  it("op (<)", () => {
+    assertOk(`bool a = 0 < 0;`);
+    assertOk(`bool a = 0.0 < 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 < 0.0;`);
+    // wrong combination
+    assertErrorExists(`bool a = 0 < 0.0;`);
+    assertErrorExists(`bool a = 0.0 < 0;`);
+  });
+  it("op (<=)", () => {
+    assertOk(`bool a = 0 <= 0;`);
+    assertOk(`bool a = 0.0 <= 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 <= 0.0;`);
+    // wrong combination
+    assertErrorExists(`bool a = 0 <= 0.0;`);
+    assertErrorExists(`bool a = 0.0 <= 0;`);
+  });
 });

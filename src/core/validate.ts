@@ -69,7 +69,7 @@ import {
   AssigningToConstantValueIsNotAllowed,
   NonAssignableType,
   AssigningInGlobalIsNotAllowed,
-  ComparingInGlobalIsNotSupported,
+  UsingConditionalOperatorInGlobalIsNotSupported,
   ReturningNonPrimitiveTypesIsNotSupported,
   ReceivingNonPrimitiveTypesIsNotSupported,
   DeclaringArrayIsNotSupported,
@@ -81,7 +81,8 @@ import {
   ArrayLiteralIsNotSupported,
   GettingArrayInGlobalIsNotSupported,
   GettingFunctionInGlobalIsNotSupported,
-  ReferringUndefinedValueInGlobalIsNotAllowed
+  ReferringUndefinedValueInGlobalIsNotAllowed,
+  CallingInGlobalIsNotSupported
 } from "./errors";
 
 // Scopes
@@ -1536,14 +1537,16 @@ function evaluateGlobalExpression(
     return null;
   }
   if (ast.$ === "FunctionCall") {
-    state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+    state.errors.push(new CallingInGlobalIsNotSupported(ast.range));
     return null;
   }
   if (ast.$ === "BinOp") {
     return evaluateGlobalBinOp(state, scope, ast);
   }
   if (ast.$ === "CondOp") {
-    state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
+    state.errors.push(
+      new UsingConditionalOperatorInGlobalIsNotSupported(ast.range)
+    );
     return null;
   }
   throw new Error("unreachable");
@@ -1553,7 +1556,7 @@ function evaluateGlobalBinOp(
   state: GlobalState,
   scope: GlobalScope,
   ast: ast.BinOp
-): [NumberConst, Int32Type | Float32Type] | null {
+): [NumberConst, Int32Type | Float32Type | BoolType] | null {
   const bin = validateBinOp(state, scope, ast);
   if (bin == null) {
     return null;
@@ -1608,20 +1611,40 @@ function evaluateGlobalBinOp(
         ];
       }
       if (combination.kind === "Int32LT") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value < rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       if (combination.kind === "Int32LE") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value <= rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       if (combination.kind === "Int32GT") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value > rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       if (combination.kind === "Int32GE") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value >= rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       if (combination.kind === "Float32AddOp") {
         return [
@@ -1660,20 +1683,40 @@ function evaluateGlobalBinOp(
         ];
       }
       if (combination.kind === "Float32LT") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value < rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       if (combination.kind === "Float32LE") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value <= rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       if (combination.kind === "Float32GT") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value > rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       if (combination.kind === "Float32GE") {
-        state.errors.push(new ComparingInGlobalIsNotSupported(ast.range));
-        return null;
+        return [
+          {
+            $: "BoolConst",
+            value: leftExp.value >= rightExp.value ? 1 : 0
+          },
+          primitives.boolType
+        ];
       }
       throw new Error("unreachable");
     }
