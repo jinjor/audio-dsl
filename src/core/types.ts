@@ -22,7 +22,7 @@ export type StructType = {
 };
 export type StructTypeWithOffset = {
   $: "StructTypeWithOffset";
-  types: { name: string; type: FieldType }[];
+  types: { name: string; type: FieldType; init: Expression | null }[];
   byteOffset: number;
 };
 export type ArrayType = {
@@ -339,7 +339,7 @@ export type FunctionImport = {
 // --------------------
 //  Statements
 // --------------------
-export type GlobalStatement = GlobalSet;
+export type GlobalStatement = GlobalSet | FieldSet;
 export type LocalStatement = Assign | Call | Loop | Return;
 export type GlobalVariableDeclaration = {
   $: "GlobalVariableDeclaration";
@@ -368,6 +368,16 @@ export type LocalSet = {
 export type GlobalSet = {
   $: "GlobalSet";
   name: string;
+  value: Expression;
+};
+export type StructFieldPointer = {
+  byteOffset: number;
+  fieldOffset: number;
+  fieldType: FieldType;
+};
+export type FieldSet = {
+  $: "FieldSet";
+  pointer: StructFieldPointer;
   value: Expression;
 };
 export type ArrayItemPointer = {

@@ -155,7 +155,7 @@ class GlobalScope implements Scope {
   }
   declareStruct(
     name: string,
-    types: { name: string; type: FieldType }[]
+    types: { name: string; type: FieldType; init: Expression }[]
   ): void {
     this.declareType(name, {
       $: "StructTypeWithOffset",
@@ -461,8 +461,9 @@ export function validate(
     });
   }
 
-  // struct pointers
+  // struct
   for (const [name, struct] of scope.getAllStructs()) {
+    // pointer
     state.globalVariableDeclarations.push({
       $: "GlobalVariableDeclaration",
       type: primitives.int32Type,
@@ -474,6 +475,21 @@ export function validate(
       },
       export: true
     });
+    let fieldOffset = 0;
+    for (const field of struct.types) {
+      if (field.init != null) {
+        state.globalStatements.push({
+          $: "FieldSet",
+          pointer: {
+            byteOffset: struct.byteOffset,
+            fieldOffset,
+            fieldType: field.type
+          },
+          value: field.init
+        });
+      }
+      fieldOffset += sizeOf(field.type);
+    }
   }
 
   // string pointers

@@ -290,6 +290,23 @@ export class Module {
     }
     throw new Error("unreachable");
   }
+  fieldSet(statement: types.FieldSet): X {
+    const pointer = this.structFieldPointer(statement.pointer);
+    const value = this.expression(statement.value);
+    if (statement.pointer.fieldType.$ === "Int32Type") {
+      return this.i32Store(pointer, value);
+    }
+    if (statement.pointer.fieldType.$ === "Float32Type") {
+      return this.f32Store(pointer, value);
+    }
+    throw new Error("unreachable");
+  }
+  structFieldPointer(pointer: types.StructFieldPointer): X {
+    return this.i32Add(
+      this.i32Const(pointer.byteOffset as N),
+      this.i32Const(pointer.fieldOffset as N)
+    );
+  }
   arraySet(statement: types.ArraySet): X {
     const pointer = this.arrayItemPointer(statement.pointer);
     const value = this.expression(statement.value);
@@ -320,6 +337,9 @@ export class Module {
   globalStatement(statement: types.GlobalStatement): X {
     if (statement.$ === "GlobalSet") {
       return this.globalSet(statement.name, this.expression(statement.value));
+    }
+    if (statement.$ === "FieldSet") {
+      return this.fieldSet(statement);
     }
     throw new Error("not implemented yet");
   }
