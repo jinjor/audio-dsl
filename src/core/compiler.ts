@@ -45,10 +45,7 @@ export function textToBinary(src: string): Uint8Array {
   }
 
   const m = new Module();
-  m.setMemory(1, 1, "memory", {
-    offset: 2048, // TODO
-    data: validationResult.data
-  });
+  m.setMemory(1, 1, "memory", validationResult.segment);
   for (const imp of validationResult.imports) {
     m.addImport(imp);
   }

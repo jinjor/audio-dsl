@@ -311,7 +311,10 @@ export type ValidationResult = {
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
   globalStatements: GlobalStatement[];
-  data: Uint8Array;
+  segment: {
+    offset: number;
+    data: Uint8Array;
+  };
   errors: ValidationErrorType[];
 };
 export function validate(
@@ -417,6 +420,7 @@ export function validate(
 
   // string pointers
   const stringRefs = state.strings.createRefs();
+  const stringSegmentOffset = scope.byteOffset;
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
     type: primitives.int32Type,
@@ -424,7 +428,7 @@ export function validate(
     mutable: false,
     init: {
       $: "Int32Const",
-      value: scope.byteOffset
+      value: stringSegmentOffset
     },
     export: true
   });
@@ -435,7 +439,7 @@ export function validate(
     globalVariableDeclarations: state.globalVariableDeclarations,
     functionDeclarations: state.functionDeclarations,
     globalStatements: state.globalStatements,
-    data: stringRefs.data,
+    segment: { offset: stringSegmentOffset, data: stringRefs.data },
     errors: state.errors
   };
 }
