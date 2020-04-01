@@ -84,7 +84,8 @@ import {
   ReferringUndefinedValueInGlobalIsNotAllowed,
   CallingInGlobalIsNotSupported,
   VoidCannotBeAnArrayItem,
-  DeclaringArrayWithInitialValueNotSupported
+  DeclaringArrayWithInitialValueNotSupported,
+  DeclaringMutableArraysIsNotAllowed
 } from "./errors";
 
 // Scopes
@@ -866,6 +867,9 @@ function validateGlobalDeclaration(
       state.errors.push(
         new DeclaringArrayWithInitialValueNotSupported(ast.right.range)
       );
+    }
+    if (ast.hasMutableFlag) {
+      state.errors.push(new DeclaringMutableArraysIsNotAllowed(ast.type.range));
     }
     return;
   }

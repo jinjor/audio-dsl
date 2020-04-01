@@ -195,7 +195,6 @@ export class AssigningInGlobalIsNotAllowed implements ValidationErrorType {
     this.message = `assigning in global is not allowed`;
   }
 }
-
 export class AssigningToConstantValueIsNotAllowed
   implements ValidationErrorType {
   message: string;
@@ -217,11 +216,16 @@ export class ReferringUndefinedValueInGlobalIsNotAllowed
     this.message = `referring undefined value in global is not allowed`;
   }
 }
-
 export class VoidCannotBeAnArrayItem implements ValidationErrorType {
   message: string;
   constructor(public range: ast.Range) {
     this.message = `void cannot not be an array item`;
+  }
+}
+export class DeclaringMutableArraysIsNotAllowed implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range) {
+    this.message = `declaring mutable arrays`;
   }
 }
 

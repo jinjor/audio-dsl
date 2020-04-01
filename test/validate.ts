@@ -44,9 +44,11 @@ describe("Validate", function() {
     assertErrorExists(`void a = 0;`);
     assertErrorExists(`bool a = 0;`);
     assertErrorExists(`int a = 0; int a = 1;`);
-    assertErrorExists(`void[] a;`);
     assertErrorExists(`var int[] a;`);
+    assertErrorExists(`void[] a;`);
     assertErrorExists(`var void[] a;`);
+    // assertErrorExists(`string[] a;`);
+    // assertErrorExists(`var string[] a;`);
   });
   it("function declaration", () => {
     assertOk(`void f() {}`);
@@ -64,6 +66,8 @@ describe("Validate", function() {
     assertErrorExists(`void f(void a) {}`);
     assertErrorExists(`void f() {} void f() {}`);
     assertErrorExists(`void f() { return f; }`);
+    assertErrorExists(`int[] f() { return f; }`);
+    // assertErrorExists(`string f() { return f; }`);
   });
   it("global assign", () => {
     assertErrorExists(`int a = 0; a = 1;`);
