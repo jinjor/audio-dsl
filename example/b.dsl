@@ -23,7 +23,7 @@ param int note {
   minValue = 0;
   maxValue = 127;
 }
-param array<float> a {
+param float[] a {
   defaultValue = 0;
   minValue = -1;
   maxValue = 1; 
