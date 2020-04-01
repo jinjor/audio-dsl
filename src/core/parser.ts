@@ -472,6 +472,69 @@ const fucntionDeclarationTail: Parser<FucntionDeclarationTail> = seq(
   _,
   block
 );
+
+const structLiteral: Parser<ast.StructLiteral> = mapWithRange(
+  (fields: ast.Assign[], range) => ({
+    range: transformRange(range),
+    $: "StructLiteral",
+    fields
+  }),
+  seq(
+    $3,
+    symbol("{"),
+    _,
+    many(
+      seq(
+        $1,
+        lazy(() => assign),
+        _
+      )
+    ),
+    symbol("}")
+  )
+);
+
+const paramDeclaration: Parser<ast.ParamDeclaration> = mapWithRange(
+  (
+    {
+      type,
+      name,
+      struct
+    }: { type: ast.Type; name: ast.Identifier; struct: ast.StructLiteral },
+    range
+  ) => ({
+    range: transformRange(range),
+    $: "ParamDeclaration",
+    type,
+    name,
+    struct
+  }),
+  seq(
+    (
+      _1,
+      _2,
+      _3: ast.Type,
+      _4,
+      _5: ast.Identifier,
+      _6,
+      _7: ast.StructLiteral
+    ) => {
+      return {
+        type: _3,
+        name: _5,
+        struct: _7
+      };
+    },
+    keyword("param"),
+    _,
+    type,
+    _,
+    identifier,
+    _,
+    structLiteral
+  )
+);
+
 const declaration: Parser<
   ast.VariableDeclaration | ast.FunctionDeclaration
 > = mapWithRange(
@@ -558,6 +621,26 @@ const return_: Parser<ast.Return> = mapWithRange(
   }),
   returnInner
 );
+
+const assignTail: Parser<ast.Expression> = seq(
+  $3,
+  symbol("="),
+  _,
+  expression,
+  _,
+  symbol(";")
+);
+const assign: Parser<ast.Assign> = mapWithRange(
+  ({ left, right }: { left: ast.Expression; right: ast.Expression }, range) => {
+    return {
+      range: transformRange(range),
+      $: "Assign",
+      left,
+      right
+    };
+  },
+  seq((left, _, right) => ({ left, right }), expression, _, assignTail)
+);
 const assignOrExpression: Parser<ast.Assign | ast.Expression> = mapWithRange(
   (
     { left, right }: { left: ast.Expression; right: ast.Expression | null },
@@ -577,8 +660,7 @@ const assignOrExpression: Parser<ast.Assign | ast.Expression> = mapWithRange(
     (left, _, right) => ({ left, right }),
     expression,
     _,
-    oneOf(seq($3, symbol("="), _, expression, _), constant(null)),
-    symbol(";")
+    oneOf(symbol(";"), assignTail)
   )
 );
 const comment: Parser<ast.Comment> = mapWithRange(
@@ -592,6 +674,7 @@ const comment: Parser<ast.Comment> = mapWithRange(
 const statement: Parser<ast.Statement> = oneOf<ast.Statement>(
   comment,
   variableDeclarationWithMutableFlag,
+  paramDeclaration,
   declaration,
   loop,
   return_,
