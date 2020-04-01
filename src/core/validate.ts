@@ -549,26 +549,11 @@ function validateFunctionDeclaration(
   }
   for (let i = 0; i < ast.params.items.length; i++) {
     const paramAst = ast.params.items[i];
-    const paramType = validateParamType(state, scope, paramAst);
+    const paramType = validateParamType(state, functionScope, paramAst);
     if (paramType == null) {
       continue;
     }
-    if (functionScope.isDeclaredInThisScope(paramAst.name)) {
-      state.errors.push(new AlreadyDeclared(paramAst.range, "param", name));
-      continue;
-    }
-    if (
-      paramType.$ !== "Int32Type" &&
-      paramType.$ !== "Float32Type" &&
-      paramType.$ !== "BoolType"
-    ) {
-      state.errors.push(
-        new ReceivingNonPrimitiveTypesIsNotSupported(paramAst.range)
-      );
-      continue;
-    }
     paramTypes[i] = paramType;
-    functionScope.declareType(paramAst.name, paramType);
   }
   for (const statement of ast.statements) {
     validateLocalStatement(state, functionScope, statements, statement);
