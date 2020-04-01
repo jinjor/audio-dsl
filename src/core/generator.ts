@@ -166,8 +166,8 @@ export class Module {
       const offset = info.offset + exp.relativeByteOffset;
       return this.i32Const(offset as N);
     }
-    if (exp.$ === "ArrayAccess") {
-      return this.arrayAccess(exp);
+    if (exp.$ === "ItemGet") {
+      return this.itemGet(exp);
     }
     if (exp.$ === "FunctionCall") {
       return this.functionCall(exp);
@@ -260,8 +260,8 @@ export class Module {
     if (statement.$ === "GlobalSet") {
       return this.globalSet(statement.name, this.expression(statement.value));
     }
-    if (statement.$ === "ArraySet") {
-      return this.arraySet(statement);
+    if (statement.$ === "ItemSet") {
+      return this.itemSet(statement);
     }
     if (statement.$ === "FunctionCall") {
       return this.functionCall(statement);
@@ -280,7 +280,7 @@ export class Module {
     }
     throw new Error("not implemented yet: " + statement);
   }
-  arrayAccess(statement: types.ArrayAccess): X {
+  itemGet(statement: types.ItemGet): X {
     const pointer = this.arrayItemPointer(statement.pointer);
     if (statement.pointer.itemType.$ === "Int32Type") {
       return this.i32Load(pointer);
@@ -307,7 +307,7 @@ export class Module {
       this.i32Const(pointer.fieldOffset as N)
     );
   }
-  arraySet(statement: types.ArraySet): X {
+  itemSet(statement: types.ItemSet): X {
     const pointer = this.arrayItemPointer(statement.pointer);
     const value = this.expression(statement.value);
     if (statement.pointer.itemType.$ === "Int32Type") {

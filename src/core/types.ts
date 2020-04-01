@@ -239,7 +239,7 @@ export type Expression =
   | FunctionGet
   | StructTypeWithOffset
   | ArrayGet
-  | ArrayAccess
+  | ItemGet
   | StringGet
   | Call
   | BinOp
@@ -266,8 +266,8 @@ export type ArrayGet = {
   byteOffset: number;
   itemType: ItemType;
 };
-export type ArrayAccess = {
-  $: "ArrayAccess";
+export type ItemGet = {
+  $: "ItemGet";
   pointer: ArrayItemPointer;
 };
 export type StringGet = {
@@ -359,7 +359,7 @@ export type FunctionDeclaration = {
   statements: LocalStatement[];
   export: boolean;
 };
-export type Assign = LocalSet | GlobalSet | ArraySet;
+export type Assign = LocalSet | GlobalSet | ItemSet;
 export type GetForAssign = LocalGet | GlobalGet;
 export type LocalSet = {
   $: "LocalSet";
@@ -387,8 +387,8 @@ export type ArrayItemPointer = {
   name: string;
   index: Expression;
 };
-export type ArraySet = {
-  $: "ArraySet";
+export type ItemSet = {
+  $: "ItemSet";
   pointer: ArrayItemPointer;
   value: Expression;
 };

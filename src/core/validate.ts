@@ -22,7 +22,7 @@ import {
   Expression,
   Call,
   BinOp,
-  ArrayAccess,
+  ItemGet,
   LocalGet,
   GlobalGet,
   GetForAssign,
@@ -1209,7 +1209,7 @@ function validateLocalAssign(
     statements.push(assign);
     return;
   }
-  if (assign.$ === "ArraySet") {
+  if (assign.$ === "ItemSet") {
     statements.push(assign);
     return;
   }
@@ -1259,10 +1259,7 @@ function validateAssign(
   return null;
 }
 
-function makeAssign(
-  left: GetForAssign | ArrayAccess,
-  right: Expression
-): Assign {
+function makeAssign(left: GetForAssign | ItemGet, right: Expression): Assign {
   if (left.$ === "LocalGet") {
     return {
       $: "LocalSet",
@@ -1275,9 +1272,9 @@ function makeAssign(
       name: left.name,
       value: right
     };
-  } else if (left.$ === "ArrayAccess") {
+  } else if (left.$ === "ItemGet") {
     return {
-      $: "ArraySet",
+      $: "ItemSet",
       pointer: left.pointer,
       value: right
     };
@@ -1333,7 +1330,7 @@ function validateArrayAccess(
   state: State,
   scope: Scope,
   ast: ast.ArrayAccess
-): [ArrayAccess, ItemType] | null {
+): [ItemGet, ItemType] | null {
   const array = validateExpression(state, scope, ast.array);
   const index = validateExpression(state, scope, ast.index);
   if (array == null || index == null) {
@@ -1355,7 +1352,7 @@ function validateArrayAccess(
   }
   return [
     {
-      $: "ArrayAccess",
+      $: "ItemGet",
       pointer: {
         byteOffset: arrayExp.byteOffset,
         itemType: arrayType.itemType,

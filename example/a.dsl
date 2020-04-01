@@ -9,7 +9,6 @@ param float[] note {
   minValue = 0.0;
   maxValue = 127.0;
 }
-bool flag;
 
 // util
 float note_to_hz(float note) {
