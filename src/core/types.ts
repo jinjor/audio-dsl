@@ -217,10 +217,7 @@ export type ArrayGet = {
 };
 export type ArrayAccess = {
   $: "ArrayAccess";
-  byteOffset: number;
-  itemType: ItemType;
-  name: string;
-  index: Expression;
+  pointer: ArrayItemPointer;
 };
 export type StringGet = {
   $: "StringGet";

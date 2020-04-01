@@ -167,7 +167,7 @@ export class Module {
       return this.i32Const(offset as N);
     }
     if (exp.$ === "ArrayAccess") {
-      throw new Error("not implemented yet");
+      return this.arrayAccess(exp);
     }
     if (exp.$ === "FunctionCall") {
       return this.functionCall(exp);
@@ -279,6 +279,16 @@ export class Module {
       return this.return(statement);
     }
     throw new Error("not implemented yet: " + statement);
+  }
+  arrayAccess(statement: types.ArrayAccess): X {
+    const pointer = this.arrayItemPointer(statement.pointer);
+    if (statement.pointer.itemType.$ === "Int32Type") {
+      return this.i32Load(pointer);
+    }
+    if (statement.pointer.itemType.$ === "Float32Type") {
+      return this.f32Load(pointer);
+    }
+    throw new Error("unreachable");
   }
   arraySet(statement: types.ArraySet): X {
     const pointer = this.arrayItemPointer(statement.pointer);

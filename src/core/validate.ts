@@ -1015,12 +1015,7 @@ function makeAssign(
   } else if (left.$ === "ArrayAccess") {
     return {
       $: "ArraySet",
-      pointer: {
-        byteOffset: left.byteOffset,
-        itemType: left.itemType,
-        name: left.name,
-        index: left.index
-      },
+      pointer: left.pointer,
       value: right
     };
   }
@@ -1094,10 +1089,12 @@ function validateArrayAccess(
   return [
     {
       $: "ArrayAccess",
-      byteOffset: arrayExp.byteOffset,
-      itemType: arrayType.itemType,
-      name: arrayExp.name,
-      index: indexExp
+      pointer: {
+        byteOffset: arrayExp.byteOffset,
+        itemType: arrayType.itemType,
+        name: arrayExp.name,
+        index: indexExp
+      }
     },
     arrayType.itemType
   ];
@@ -1154,8 +1151,6 @@ function validateExpression(
       },
       primitives.int32Type
     ];
-    // state.errors.push(new StringLiteralIsNotSupported(ast.range));
-    // return null;
   } else if (ast.$ === "ArrayLiteral") {
     state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;
