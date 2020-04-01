@@ -18,7 +18,7 @@ export type StringType = {
 };
 export type StructType = {
   $: "StructType";
-  types: { name: string; type: Int32Type | Float32Type | StringType }[];
+  types: { name: string; type: Int32Type | Float32Type }[];
 };
 export type ArrayType = {
   $: "ArrayType";
@@ -86,13 +86,21 @@ export namespace primitives {
   export const voidType: VoidType = { $: "VoidType" };
   export const boolType: BoolType = { $: "BoolType" };
 }
-export function sizeOf(t: Int32Type | Float32Type | BoolType): number {
+export function sizeOf(
+  t: Int32Type | Float32Type | BoolType | StructType
+): number {
   if (t.$ === "Int32Type") {
     return 4;
   } else if (t.$ === "Float32Type") {
     return 4;
   } else if (t.$ === "BoolType") {
     return 4;
+  } else if (t.$ === "StructType") {
+    let size = 0;
+    for (const type of t.types) {
+      size += sizeOf(type.type);
+    }
+    return size;
   }
   throw new Error("unreachable");
 }
@@ -200,11 +208,11 @@ export function paramType(type: "Int32Type" | "Float32Type"): StructType {
   return {
     $: "StructType",
     types: [
-      { name: "name", type: { $: "StringType" } },
+      { name: "name", type: { $: "Int32Type" } }, // pointer to string
       { name: "defaultValue", type: { $: type } },
       { name: "minValue", type: { $: type } },
       { name: "maxValue", type: { $: type } },
-      { name: "automationRate", type: { $: "StringType" } } // "a-rate" | "k-rate"
+      { name: "automationRate", type: { $: "Int32Type" } } // pointer to "a-rate" | "k-rate"
     ]
   };
 }
