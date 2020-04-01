@@ -83,7 +83,7 @@ import {
   ArrayLiteralIsNotSupported,
   GettingArrayInGlobalIsNotSupported,
   GettingFunctionInGlobalIsNotSupported,
-  ReferringUndefinedValueInGlobalIsNotAllowed,
+  ReferringMutableValueInGlobalIsNotAllowed,
   CallingInGlobalIsNotSupported,
   VoidCannotBeAnArrayItem,
   DeclaringArrayWithInitialValueNotSupported,
@@ -1809,7 +1809,7 @@ function evaluateGlobalExpression(
     if (idExp.$ === "GlobalGet") {
       // this should be only happen when identifier is from imports
       state.errors.push(
-        new ReferringUndefinedValueInGlobalIsNotAllowed(ast.range)
+        new ReferringMutableValueInGlobalIsNotAllowed(ast.range)
       );
       return null;
     }

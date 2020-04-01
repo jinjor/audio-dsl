@@ -229,11 +229,11 @@ export class TheLeftHandExpressionMustBeAnIdentifier
     this.message = `the left-hand expression must be an identifier`;
   }
 }
-export class ReferringUndefinedValueInGlobalIsNotAllowed
+export class ReferringMutableValueInGlobalIsNotAllowed
   implements ValidationErrorType {
   message: string;
   constructor(public range: ast.Range) {
-    this.message = `referring undefined value in global is not allowed`;
+    this.message = `referring mutable value in global is not allowed`;
   }
 }
 export class VoidCannotBeAnArrayItem implements ValidationErrorType {
