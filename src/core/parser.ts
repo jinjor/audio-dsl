@@ -391,21 +391,20 @@ const type: Parser<ast.Type> = mapWithRange(
 const variableDeclarationInner: Parser<[
   ast.Type,
   ast.Identifier,
-  ast.Expression
+  ast.Expression | null
 ]> = seq(
-  (type, _1, left, _2, _3, _4, right) => [type, left, right],
+  (type, _1, left, _2, right) => [type, left, right],
   type,
   _,
   identifier,
   _,
-  symbol("="),
-  _,
-  expression,
-  _,
-  symbol(";")
+  oneOf(symbol(";"), seq($3, symbol("="), _, expression, _, symbol(";")))
 );
 const variableDeclarationWithMutableFlag: Parser<ast.VariableDeclaration> = mapWithRange(
-  ([type, left, right]: [ast.Type, ast.Identifier, ast.Expression], range) => ({
+  (
+    [type, left, right]: [ast.Type, ast.Identifier, ast.Expression | null],
+    range
+  ) => ({
     range: transformRange(range),
     $: "VariableDeclaration",
     type,
@@ -484,10 +483,20 @@ const declaration: Parser<
     }: {
       type: ast.Type;
       identifier: ast.Identifier;
-      tail: ast.Expression | FucntionDeclarationTail;
+      tail: ast.Expression | FucntionDeclarationTail | null;
     },
     range
   ) => {
+    if (tail == null) {
+      return {
+        range: transformRange(range),
+        $: "VariableDeclaration",
+        type,
+        left: identifier,
+        right: null,
+        hasMutableFlag: false
+      };
+    }
     if (tail.$ === "FucntionDeclarationTail") {
       return {
         range: transformRange(range),
@@ -497,16 +506,15 @@ const declaration: Parser<
         returnType: type,
         statements: tail.statements
       };
-    } else {
-      return {
-        range: transformRange(range),
-        $: "VariableDeclaration",
-        type,
-        left: identifier,
-        right: tail,
-        hasMutableFlag: false
-      };
     }
+    return {
+      range: transformRange(range),
+      $: "VariableDeclaration",
+      type,
+      left: identifier,
+      right: tail,
+      hasMutableFlag: false
+    };
   },
   seq(
     (type, _1, identifier, _2, tail) => ({ type, identifier, tail }),
@@ -514,7 +522,8 @@ const declaration: Parser<
     _,
     identifier,
     _,
-    oneOf<ast.Expression | FucntionDeclarationTail>(
+    oneOf<ast.Expression | FucntionDeclarationTail | null>(
+      symbol(";"),
       fucntionDeclarationTail,
       variableDeclarationTail
     )

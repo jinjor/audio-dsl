@@ -230,6 +230,11 @@ export class DeclaringArrayIsNotSupported extends Unsupported {
     super(range, "declaring array");
   }
 }
+export class DeclaringArrayWithInitialValueNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "declaring array with initial value");
+  }
+}
 export class AssigningFunctionIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
     super(range, "assigning function");
@@ -283,5 +288,10 @@ export class GettingArrayInGlobalIsNotSupported extends Unsupported {
 export class GettingFunctionInGlobalIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
     super(range, "getting function in global");
+  }
+}
+export class DeclaringBoolInGlobalIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "declaring bool in global");
   }
 }

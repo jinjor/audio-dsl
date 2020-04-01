@@ -37,7 +37,8 @@ import {
   FunctionGet,
   ArrayGet,
   AnyType,
-  BoolConst
+  BoolConst,
+  defaultValueOf
 } from "./types";
 import { ModuleCache } from "./loader";
 import { StringRefsBuilder } from "./string";
@@ -80,7 +81,8 @@ import {
   ArrayLiteralIsNotSupported,
   GettingArrayInGlobalIsNotSupported,
   GettingFunctionInGlobalIsNotSupported,
-  ReferringUndefinedValueInGlobalIsNotAllowed
+  ReferringUndefinedValueInGlobalIsNotAllowed,
+  DeclaringBoolInGlobalIsNotSupported
 } from "./errors";
 
 // Scopes
@@ -655,11 +657,20 @@ function validateLocalVariableDeclaration(
 
   // assign
   const [localGet] = lookupSelfDeclaredLocal(scope, ast.left.name);
-  const right = validateExpression(state, scope, ast.right);
-  if (leftType == null || right == null) {
+  let rightExp: Expression | null = null;
+  let rightType = null;
+  if (ast.right == null) {
+    [rightExp, rightType] = [defaultValueOf(leftType), leftType];
+  } else {
+    const right = validateExpression(state, scope, ast.right);
+    if (right == null) {
+      return;
+    }
+    [rightExp, rightType] = right;
+  }
+  if (leftType == null) {
     return;
   }
-  const [rightExp, rightType] = right;
   if (!isTypeEqual(leftType, rightType)) {
     state.errors.push(
       new DeclareTypeMismatch(ast.type.range, leftType, rightType)
@@ -668,6 +679,7 @@ function validateLocalVariableDeclaration(
   }
   localStatements.push(makeAssign(localGet, rightExp));
 }
+
 function validateLocalVariableDeclarationInternal(
   state: State,
   scope: LocalScope,
@@ -848,7 +860,6 @@ function validateGlobalDeclaration(
     );
     return;
   }
-  const right = evaluateGlobalExpression(state, scope, ast.right);
   if (type == null) {
     return;
   }
@@ -856,10 +867,24 @@ function validateGlobalDeclaration(
     state.errors.push(new VoidShouldNotBeDeclaredAsAVariable(ast.type.range));
     return;
   }
-  if (right == null) {
-    return;
+  let rightExp: NumberConst | null = null;
+  let rightType: Int32Type | Float32Type | BoolType | null = null;
+  if (ast.right == null) {
+    const _rightExp = defaultValueOf(type);
+    if (_rightExp.$ === "BoolConst") {
+      state.errors.push(
+        new DeclaringBoolInGlobalIsNotSupported(ast.left.range)
+      );
+      return;
+    }
+    [rightExp, rightType] = [_rightExp, type];
+  } else {
+    const right = evaluateGlobalExpression(state, scope, ast.right);
+    if (right == null) {
+      return;
+    }
+    [rightExp, rightType] = right;
   }
-  const [rightExp, rightType] = right;
   if (!isTypeEqual(type, rightType)) {
     state.errors.push(new DeclareTypeMismatch(ast.type.range, type, rightType));
     return;

@@ -95,6 +95,18 @@ export function sizeOf(t: Int32Type | Float32Type | BoolType): number {
   }
   throw new Error("unreachable");
 }
+export function defaultValueOf(
+  t: Int32Type | Float32Type | BoolType
+): NumberConst | BoolConst {
+  if (t.$ === "Int32Type") {
+    return { $: "Int32Const", value: 0 };
+  } else if (t.$ === "Float32Type") {
+    return { $: "Float32Const", value: 0 };
+  } else if (t.$ === "BoolType") {
+    return { $: "BoolConst", value: false };
+  }
+  throw new Error("unreachable");
+}
 export function isTypeEqual<T extends AnyType>(a: AnyType, b: AnyType): b is T {
   if (a === b) {
     return true;
@@ -171,6 +183,7 @@ export function typeToString(a: AnyType): string {
 export type AssignableExpression = LocalGet | GlobalGet;
 export type Expression =
   | NumberConst
+  | BoolConst
   | LocalGet
   | GlobalGet
   | FunctionGet

@@ -48,7 +48,7 @@ export type VariableDeclaration = SourceInfo & {
   $: "VariableDeclaration";
   type: Type;
   left: Identifier;
-  right: Expression;
+  right: Expression | null;
   hasMutableFlag: boolean;
 };
 export type Param = SourceInfo & {

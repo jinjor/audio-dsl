@@ -7,6 +7,8 @@ float TWO_PI = PI * 2.0;
 int frame_samples = 128;
 // array<float, frame_samples> param;
 
+float note;
+
 // util
 float note_to_hz(int note) {
   return base_hz * pow(2.0, float(note - base_note) / 12.0);
