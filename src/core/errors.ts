@@ -290,8 +290,3 @@ export class GettingFunctionInGlobalIsNotSupported extends Unsupported {
     super(range, "getting function in global");
   }
 }
-export class DeclaringBoolInGlobalIsNotSupported extends Unsupported {
-  constructor(public range: ast.Range) {
-    super(range, "declaring bool in global");
-  }
-}

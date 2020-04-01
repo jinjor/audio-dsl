@@ -81,8 +81,7 @@ import {
   ArrayLiteralIsNotSupported,
   GettingArrayInGlobalIsNotSupported,
   GettingFunctionInGlobalIsNotSupported,
-  ReferringUndefinedValueInGlobalIsNotAllowed,
-  DeclaringBoolInGlobalIsNotSupported
+  ReferringUndefinedValueInGlobalIsNotAllowed
 } from "./errors";
 
 // Scopes
