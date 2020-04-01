@@ -470,6 +470,11 @@ function validateImport(
         // TODO: push to state?
         continue;
       }
+      if (type.$ === "BoolConst") {
+        scope.declareConst(name, type);
+        // TODO: push to state?
+        continue;
+      }
       throw new Error("unreachable");
     }
     return;
@@ -871,12 +876,6 @@ function validateGlobalDeclaration(
   let rightType: Int32Type | Float32Type | BoolType | null = null;
   if (ast.right == null) {
     const _rightExp = defaultValueOf(type);
-    if (_rightExp.$ === "BoolConst") {
-      state.errors.push(
-        new DeclaringBoolInGlobalIsNotSupported(ast.left.range)
-      );
-      return;
-    }
     [rightExp, rightType] = [_rightExp, type];
   } else {
     const right = evaluateGlobalExpression(state, scope, ast.right);
@@ -1021,7 +1020,11 @@ function validateAssignableIdentifier(
     state.errors.push(new AssigningArrayIsNotSupported(leftAst.range));
     return null;
   }
-  if (leftExp.$ === "Int32Const" || leftExp.$ === "Float32Const") {
+  if (
+    leftExp.$ === "Int32Const" ||
+    leftExp.$ === "Float32Const" ||
+    leftExp.$ === "BoolConst"
+  ) {
     state.errors.push(new AssigningToConstantValueIsNotAllowed(leftAst.range));
     return null;
   }
@@ -1472,7 +1475,7 @@ function evaluateGlobalExpression(
   state: GlobalState,
   scope: GlobalScope,
   ast: ast.Expression
-): [NumberConst, Int32Type | Float32Type] | null {
+): [NumberConst, Int32Type | Float32Type | BoolType] | null {
   if (ast.$ === "IntLiteral") {
     return [
       {
@@ -1523,6 +1526,9 @@ function evaluateGlobalExpression(
     }
     if (idExp.$ === "Float32Const") {
       return [idExp, primitives.float32Type];
+    }
+    if (idExp.$ === "BoolConst") {
+      return [idExp, primitives.boolType];
     }
     throw new Error("maybe undeachable");
   }

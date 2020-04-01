@@ -60,7 +60,7 @@ export type AnyType =
   | ArrayType
   | FunctionType;
 export type ExportableType = FunctionType | NumberConst;
-export type NumberConst = Int32Const | Float32Const;
+export type NumberConst = Int32Const | Float32Const | BoolConst;
 export type Int32Const = {
   $: "Int32Const";
   value: number;
@@ -71,7 +71,7 @@ export type Float32Const = {
 };
 export type BoolConst = {
   $: "BoolConst";
-  value: boolean;
+  value: number; // 0 | 1
 };
 export type ModuleHeader = {
   types: Map<string, FunctionType | NumberConst>;
@@ -97,13 +97,13 @@ export function sizeOf(t: Int32Type | Float32Type | BoolType): number {
 }
 export function defaultValueOf(
   t: Int32Type | Float32Type | BoolType
-): NumberConst | BoolConst {
+): NumberConst {
   if (t.$ === "Int32Type") {
     return { $: "Int32Const", value: 0 };
   } else if (t.$ === "Float32Type") {
     return { $: "Float32Const", value: 0 };
   } else if (t.$ === "BoolType") {
-    return { $: "BoolConst", value: false };
+    return { $: "BoolConst", value: 0 };
   }
   throw new Error("unreachable");
 }

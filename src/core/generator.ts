@@ -149,6 +149,9 @@ export class Module {
     if (exp.$ === "Float32Const") {
       return this.f32Const(exp.value as N);
     }
+    if (exp.$ === "BoolConst") {
+      return this.i32Const(exp.value as N);
+    }
     if (exp.$ === "LocalGet") {
       return this.localGet(exp.index as N, this.type(exp.type));
     }
@@ -338,14 +341,22 @@ export class Module {
         declaration.mutable,
         this.expression(declaration.init)
       );
-    }
-    if (declaration.type.$ === "Float32Type") {
+    } else if (declaration.type.$ === "Float32Type") {
       this.raw.addGlobal(
         declaration.name,
         $f32,
         declaration.mutable,
         this.expression(declaration.init)
       );
+    } else if (declaration.type.$ === "BoolType") {
+      this.raw.addGlobal(
+        declaration.name,
+        $i32,
+        declaration.mutable,
+        this.expression(declaration.init)
+      );
+    } else {
+      throw new Error("unreachable");
     }
     if (declaration.export) {
       this.raw.addGlobalExport(declaration.name, declaration.name);

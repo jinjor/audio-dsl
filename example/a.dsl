@@ -7,7 +7,7 @@ float TWO_PI = PI * 2.0;
 int frame_samples = 128;
 // array<float, frame_samples> param;
 
-float note;
+bool flag;
 
 // util
 float note_to_hz(int note) {
@@ -42,6 +42,6 @@ void process() {
 void test() {
   log_s("Hello, World!");
   log_s("Meow!");
-  log_f(angle);
+  // log_f(angle);
   log_b(1 > 0);
 }
