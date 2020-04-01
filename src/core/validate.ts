@@ -91,11 +91,18 @@ import {
   ParametersShouldBeDeclaredInGlobal,
   ParametersShouldBeNumberOrArrayOfNumbers,
   UnknownField,
-  MissingFields
+  MissingFields,
+  AssigningStructIsNotSupported
 } from "./errors";
 
 // Scopes
-type FoundExp = LocalGet | GlobalGet | FunctionGet | ArrayGet | NumberConst;
+type FoundExp =
+  | LocalGet
+  | GlobalGet
+  | FunctionGet
+  | ArrayGet
+  | StructTypeWithOffset
+  | NumberConst;
 interface Scope {
   declareType(name: string, type: DeclaredType): void;
   isDeclaredInThisScope(name: string): boolean;
@@ -215,6 +222,15 @@ class GlobalScope implements Scope {
     }
     if (typeOrStaticValue.$ === "FunctionType") {
       return [{ $: "FunctionGet", name }, typeOrStaticValue];
+    }
+    if (typeOrStaticValue.$ === "StructTypeWithOffset") {
+      return [
+        typeOrStaticValue,
+        {
+          $: "StructType",
+          types: typeOrStaticValue.types
+        }
+      ];
     }
     if (typeOrStaticValue.$ === "ArrayType") {
       return [
@@ -476,6 +492,7 @@ export function validate(
       export: true
     });
     let fieldOffset = 0;
+    console.log(struct.types);
     for (const field of struct.types) {
       if (field.init != null) {
         state.globalStatements.push({
@@ -728,18 +745,20 @@ function validateParamDeclaration(
   }
   const optionType = valueType == null ? null : paramOptionsType(valueType.$);
 
+  const foundFields = new Set<string>();
   const fields: {
     name: string;
     type: FieldType;
     init: Expression;
-  }[] = new Array(ast.struct.items.length);
-  for (let i = 0; i < ast.struct.items.length; i++) {
-    const itemAst = ast.struct.items[i];
-    if (itemAst.left.$ !== "Identifier") {
+  }[] = new Array(ast.struct.fields.length);
+  for (let i = 0; i < ast.struct.fields.length; i++) {
+    const fieldAst = ast.struct.fields[i];
+    if (fieldAst.left.$ !== "Identifier") {
       state.errors.push();
       continue;
     }
-    const right = validateExpression(state, scope, itemAst.right);
+    foundFields.add(fieldAst.left.name);
+    const right = validateExpression(state, scope, fieldAst.right);
     if (right == null) {
       continue;
     }
@@ -750,7 +769,7 @@ function validateParamDeclaration(
     let matchedField: [FieldType, number] | null = null;
     for (let i = 0; i < optionType.types.length; i++) {
       const optionFieldTypeType = optionType.types[i];
-      if (optionFieldTypeType.name === itemAst.left.name) {
+      if (optionFieldTypeType.name === fieldAst.left.name) {
         matchedField = [optionFieldTypeType.type, i];
         break;
       }
@@ -758,8 +777,8 @@ function validateParamDeclaration(
     if (matchedField == null) {
       state.errors.push(
         new UnknownField(
-          itemAst.left.range,
-          itemAst.left.name,
+          fieldAst.left.range,
+          fieldAst.left.name,
           optionType.types
         )
       );
@@ -768,12 +787,12 @@ function validateParamDeclaration(
     const [fieldType, fieldIndex] = matchedField;
     if (!isTypeEqual(fieldType, rightType)) {
       state.errors.push(
-        new AssignTypeMismatch(itemAst.range, fieldType, rightType)
+        new AssignTypeMismatch(fieldAst.range, fieldType, rightType)
       );
       continue;
     }
     fields[fieldIndex] = {
-      name: itemAst.left.name,
+      name: fieldAst.left.name,
       type: fieldType,
       init: rightExp
     };
@@ -789,9 +808,9 @@ function validateParamDeclaration(
   }
   let missingFields: string[] = [];
   for (let i = 0; i < optionType.types.length; i++) {
-    const field = fields[i];
-    if (field == null) {
-      missingFields.push(optionType.types[i].name);
+    const name = optionType.types[i].name;
+    if (!foundFields.has(name)) {
+      missingFields.push(name);
     }
   }
   if (missingFields.length > 0) {
@@ -803,6 +822,11 @@ function validateParamDeclaration(
       )
     );
     return;
+  }
+  for (const field of fields) {
+    if (field == null) {
+      return;
+    }
   }
   scope.declareStruct(ast.name.name, fields);
 }
@@ -1220,6 +1244,10 @@ function validateAssignableIdentifier(
   const [leftExp, leftType] = left;
   if (leftExp.$ === "FunctionGet") {
     state.errors.push(new AssigningFunctionIsNotSupported(leftAst.range));
+    return null;
+  }
+  if (leftExp.$ === "StructTypeWithOffset") {
+    state.errors.push(new AssigningStructIsNotSupported(leftAst.range));
     return null;
   }
   if (leftExp.$ === "ArrayGet") {

@@ -237,6 +237,7 @@ export type Expression =
   | LocalGet
   | GlobalGet
   | FunctionGet
+  | StructTypeWithOffset
   | ArrayGet
   | ArrayAccess
   | StringGet

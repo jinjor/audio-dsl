@@ -128,7 +128,7 @@ export type ArrayLiteral = SourceInfo & {
 };
 export type StructLiteral = SourceInfo & {
   $: "StructLiteral";
-  items: Assign[];
+  fields: Assign[];
 };
 // Other Expressions
 export type Identifier = SourceInfo & {

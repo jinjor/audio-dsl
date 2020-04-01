@@ -7,7 +7,12 @@ float TWO_PI = PI * 2.0;
 int frame_samples = 128;
 // array<float, frame_samples> param;
 
-float[] note;
+// float[] note;
+param float[] note {
+  defaultValue = 69.0;
+  minValue = 0.0;
+  maxValue = 127.0;
+}
 bool flag;
 
 // util

@@ -284,6 +284,11 @@ export class AssigningFunctionIsNotSupported extends Unsupported {
     super(range, "assigning function");
   }
 }
+export class AssigningStructIsNotSupported extends Unsupported {
+  constructor(public range: ast.Range) {
+    super(range, "assigning struct");
+  }
+}
 export class AssigningArrayIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
     super(range, "assigning array");
