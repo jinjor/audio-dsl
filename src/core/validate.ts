@@ -492,7 +492,7 @@ export function validate(
       export: true
     });
     let fieldOffset = 0;
-    console.log(struct.types);
+    // assign to fields
     for (const field of struct.types) {
       if (field.init != null) {
         state.globalStatements.push({
@@ -720,6 +720,7 @@ function validateParamDeclaration(
   ast: ast.ParamDeclaration
 ) {
   let valueType: Int32Type | Float32Type | null = null;
+  let isArray = false;
   if (ast.type.$ === "PrimitiveType") {
     const type = validatePrimitiveType(state, ast.type);
     if (type.$ === "Int32Type") {
@@ -732,6 +733,7 @@ function validateParamDeclaration(
       );
     }
   } else if (ast.type.$ === "ArrayType") {
+    isArray = true;
     const type = validatePrimitiveType(state, ast.type.type);
     if (type.$ === "Int32Type") {
       valueType = type;
@@ -746,6 +748,7 @@ function validateParamDeclaration(
   const optionType = valueType == null ? null : paramOptionsType(valueType.$);
 
   const foundFields = new Set<string>();
+  let defaultValue = 0;
   const fields: {
     name: string;
     type: FieldType;
@@ -803,6 +806,56 @@ function validateParamDeclaration(
     );
     return;
   }
+  if (valueType) {
+    if (isArray) {
+      if (valueType.$ === "Int32Type") {
+        validateArrayDeclaration(
+          state,
+          scope,
+          ast.name.name,
+          primitives.int32Type,
+          state.numSamples,
+          null
+        );
+      } else {
+        validateArrayDeclaration(
+          state,
+          scope,
+          ast.name.name,
+          primitives.float32Type,
+          state.numSamples,
+          null
+        );
+      }
+    } else {
+      if (valueType.$ === "Int32Type") {
+        state.globalVariableDeclarations.push({
+          $: "GlobalVariableDeclaration",
+          type: primitives.int32Type,
+          name: ast.name.name,
+          mutable: false,
+          init: {
+            $: "Int32Const",
+            value: 0
+          },
+          export: true
+        });
+      } else if (valueType.$ === "Float32Type") {
+        state.globalVariableDeclarations.push({
+          $: "GlobalVariableDeclaration",
+          type: primitives.float32Type,
+          name: ast.name.name,
+          mutable: false,
+          init: {
+            $: "Float32Const",
+            value: 0
+          },
+          export: true
+        });
+      }
+    }
+  }
+
   if (optionType == null) {
     return;
   }
@@ -828,7 +881,7 @@ function validateParamDeclaration(
       return;
     }
   }
-  scope.declareStruct(ast.name.name, fields);
+  // scope.declareStruct(ast.name.name, fields);
 }
 function validateLocalStatement(
   state: State,

@@ -4,10 +4,6 @@ int sample_rate = 48000;
 float HALF_PI = PI * 0.5;
 float TWO_PI = PI * 2.0;
 
-int frame_samples = 128;
-// array<float, frame_samples> param;
-
-// float[] note;
 param float[] note {
   defaultValue = 69.0;
   minValue = 0.0;
