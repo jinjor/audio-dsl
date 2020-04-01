@@ -761,7 +761,7 @@ function validateParamDeclaration(
       continue;
     }
     foundFields.add(fieldAst.left.name);
-    const right = validateExpression(state, scope, fieldAst.right);
+    const right = evaluateGlobalExpression(state, scope, fieldAst.right);
     if (right == null) {
       continue;
     }

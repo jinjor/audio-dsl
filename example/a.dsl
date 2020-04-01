@@ -5,7 +5,7 @@ float HALF_PI = PI * 0.5;
 float TWO_PI = PI * 2.0;
 
 param float[] note {
-  defaultValue = 69.0;
+  defaultValue = base_note;
   minValue = 0.0;
   maxValue = 127.0;
 }
