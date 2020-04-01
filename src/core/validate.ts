@@ -558,8 +558,10 @@ function validateFunctionDeclaration(
   for (const statement of ast.statements) {
     validateLocalStatement(state, functionScope, statements, statement);
   }
-  if (paramTypes.some(p => p == null)) {
-    return;
+  for (const p of paramTypes) {
+    if (p == null) {
+      return;
+    }
   }
   const localTypes = functionScope.getLocalTypes().slice(paramTypes.length);
   if (returnType == null) {
@@ -1405,10 +1407,11 @@ function validateFunctionCall(
     );
     return null;
   }
-  if (args.some(a => a == null)) {
-    return null;
+  for (let a of args) {
+    if (a == null) {
+      return null;
+    }
   }
-
   if (funcExp.name === "float") {
     return [
       {
