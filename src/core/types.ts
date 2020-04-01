@@ -18,7 +18,12 @@ export type StringType = {
 };
 export type StructType = {
   $: "StructType";
-  types: { name: string; type: Int32Type | Float32Type }[];
+  types: { name: string; type: MemberType }[];
+};
+export type StructTypeWithOffset = {
+  $: "StructTypeWithOffset";
+  types: { name: string; type: MemberType }[];
+  byteOffset: number;
 };
 export type ArrayType = {
   $: "ArrayType";
@@ -32,8 +37,13 @@ export type FunctionType = {
   returnType: ReturnType;
 };
 export type ValueType = Int32Type | Float32Type | BoolType;
-export type VariableType = ValueType | StructType | ArrayType;
+export type VariableType =
+  | ValueType
+  | StructType
+  | StructTypeWithOffset
+  | ArrayType;
 export type ParamType = ValueType;
+export type MemberType = Int32Type | Float32Type | BoolType;
 export type ItemType = ValueType;
 export type LocalType = Int32Type | Float32Type | BoolType;
 export type ReturnType = ValueType | VoidType;

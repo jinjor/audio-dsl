@@ -6,7 +6,6 @@ import {
   ReturnType,
   DeclaredType,
   VoidType,
-  GlobalDeclarableType,
   Int32Type,
   Float32Type,
   ExpressionType,
@@ -37,8 +36,10 @@ import {
   FunctionGet,
   ArrayGet,
   AnyType,
-  BoolConst,
-  defaultValueOf
+  defaultValueOf,
+  StringGet,
+  MemberType,
+  StructTypeWithOffset
 } from "./types";
 import { ModuleCache } from "./loader";
 import { StringRefsBuilder } from "./string";
@@ -111,7 +112,13 @@ class GlobalScope implements Scope {
   byteOffset = 0;
   private declaredTypesOrStaticValue = new Map<
     string,
-    Int32Type | Float32Type | BoolType | ArrayType | FunctionType | NumberConst
+    | Int32Type
+    | Float32Type
+    | BoolType
+    | StructTypeWithOffset
+    | ArrayType
+    | FunctionType
+    | NumberConst
   >();
   constructor() {}
   createFunctionScope() {
@@ -128,12 +135,40 @@ class GlobalScope implements Scope {
   }
   declareType(
     name: string,
-    type: Int32Type | Float32Type | BoolType | ArrayType | FunctionType
+    type:
+      | Int32Type
+      | Float32Type
+      | BoolType
+      | StructTypeWithOffset
+      | ArrayType
+      | FunctionType
   ): void {
     if (this.isDeclaredInThisScope(name)) {
       throw new Error(name + " is already declared in this scope");
     }
     this.declaredTypesOrStaticValue.set(name, type);
+  }
+  declareStruct(
+    name: string,
+    types: { name: string; type: MemberType }[]
+  ): void {
+    this.declareType(name, {
+      $: "StructTypeWithOffset",
+      types,
+      byteOffset: this.byteOffset
+    });
+    this.byteOffset += types
+      .map(({ type }) => sizeOf(type))
+      .reduce((prev, curr) => prev + curr, 0);
+  }
+  getAllStructs(): [string, StructTypeWithOffset][] {
+    const arrays: [string, StructTypeWithOffset][] = [];
+    for (const [name, type] of this.declaredTypesOrStaticValue) {
+      if (type.$ === "StructTypeWithOffset") {
+        arrays.push([name, type]);
+      }
+    }
+    return arrays;
   }
   declareArray(name: string, itemType: ItemType, numberOfItems: number): void {
     this.declareType(name, {
@@ -398,6 +433,9 @@ export function validate(
     state.numSamples,
     null
   );
+  validateStringLiteral(state, scope, "a-rate");
+  validateStringLiteral(state, scope, "k-rate");
+
   // user definitions
   for (let statement of ast.statements) {
     validateGlobalStatement(state, scope, statement);
@@ -413,6 +451,21 @@ export function validate(
       init: {
         $: "Int32Const",
         value: array.byteOffset
+      },
+      export: true
+    });
+  }
+
+  // struct pointers
+  for (const [name, struct] of scope.getAllStructs()) {
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      type: primitives.int32Type,
+      name,
+      mutable: false,
+      init: {
+        $: "Int32Const",
+        value: struct.byteOffset
       },
       export: true
     });
@@ -552,6 +605,8 @@ function validateGlobalStatement(
     state.errors.push(new AssigningInGlobalIsNotAllowed(ast.range));
   } else if (ast.$ === "FunctionDeclaration") {
     validateFunctionDeclaration(state, scope, ast);
+  } else if (ast.$ === "ParamDeclaration") {
+    validateParamDeclaration(state, scope, ast);
   } else if (ast.$ === "FunctionCall") {
     state.errors.push(new FunctionShouldNotBeCalledAtGlobalScope(ast.range));
   } else if (ast.$ === "Loop") {
@@ -620,6 +675,13 @@ function validateFunctionDeclaration(
     statements,
     export: true // ?
   });
+}
+function validateParamDeclaration(
+  state: GlobalState,
+  scope: GlobalScope,
+  ast: ast.ParamDeclaration
+) {
+  throw new Error("not implemented yet");
 }
 function validateLocalStatement(
   state: State,
@@ -1140,17 +1202,7 @@ function validateExpression(
       primitives.float32Type
     ];
   } else if (ast.$ === "StringLiteral") {
-    if (!state.strings.has(ast.value)) {
-      state.strings.add(ast.value);
-    }
-    const offset = state.strings.getByteOffset(ast.value);
-    return [
-      {
-        $: "StringGet",
-        relativeByteOffset: offset
-      },
-      primitives.int32Type
-    ];
+    return validateStringLiteral(state, scope, ast.value);
   } else if (ast.$ === "ArrayLiteral") {
     state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;
@@ -1176,6 +1228,24 @@ function validateExpression(
   } else {
     throw new Error("unreachable");
   }
+}
+
+function validateStringLiteral(
+  state: State,
+  scope: Scope,
+  value: string
+): [StringGet, Int32Type] {
+  if (!state.strings.has(value)) {
+    state.strings.add(value);
+  }
+  const offset = state.strings.getByteOffset(value);
+  return [
+    {
+      $: "StringGet",
+      relativeByteOffset: offset
+    },
+    primitives.int32Type
+  ];
 }
 
 function validateBinOp(
