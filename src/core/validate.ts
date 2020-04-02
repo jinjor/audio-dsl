@@ -343,6 +343,7 @@ type GlobalState = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
+  numberOfParams: number;
   dataBuilder: DataBuilder;
   strings: StringBuilder;
   errors: ValidationErrorType[];
@@ -372,6 +373,7 @@ export function validate(
     imports: [],
     globalVariableDeclarations: [],
     functionDeclarations: [],
+    numberOfParams: 0,
     dataBuilder,
     strings: new StringBuilder(dataBuilder),
     errors: []
@@ -471,7 +473,7 @@ export function validate(
     mutable: false,
     init: {
       $: "Int32Const",
-      value: 1 // TODO
+      value: state.numberOfParams
     },
     export: true
   });
@@ -712,13 +714,22 @@ function validateParamDeclaration(
   }
   const optionType = valueType == null ? null : paramOptionsType(valueType.$);
 
-  const nameOffset = state.strings.set(ast.name.name);
-  const automationRateOffset = state.strings.set(isArray ? "a-rate" : "k-rate");
-
-  // 1st field of info
-  console.log("nameOffset", nameOffset);
-  const offset = state.dataBuilder.pushInt32(nameOffset);
-  console.log("pushed nameOffset: int32", offset);
+  // TODO: refactor
+  const infoStruct: {
+    name: number | null;
+    defaultValue: number | null;
+    minValue: number | null;
+    maxValue: number | null;
+    automationRate: number | null;
+  } = {
+    name: null,
+    defaultValue: null,
+    minValue: null,
+    maxValue: null,
+    automationRate: null
+  };
+  infoStruct.name = state.strings.set(ast.name.name);
+  infoStruct.automationRate = state.strings.set(isArray ? "a-rate" : "k-rate");
 
   const foundFields = new Set<string>();
   const fields: {
@@ -771,19 +782,12 @@ function validateParamDeclaration(
       type: fieldType,
       init: rightExp
     };
-
-    // 2-4th field of info
-    // TODO: this order depends on ast, fix the loop
-    if (rightExp.$ === "Int32Const") {
-      const offset = state.dataBuilder.pushInt32(rightExp.value);
-      console.log("pushed a field: int32", offset);
-    } else if (rightExp.$ === "Float32Const") {
-      const offset = state.dataBuilder.pushFloat32(rightExp.value);
-      console.log("pushed a field: float32", offset);
-    } else if (rightExp.$ === "BoolConst") {
-      // should be unreachable
-      const offset = state.dataBuilder.pushInt32(rightExp.value);
-      console.log("pushed a field: bool", offset);
+    if (fieldAst.left.name === "defaultValue") {
+      infoStruct[fieldAst.left.name] = rightExp.value;
+    } else if (fieldAst.left.name === "minValue") {
+      infoStruct[fieldAst.left.name] = rightExp.value;
+    } else if (fieldAst.left.name === "maxValue") {
+      infoStruct[fieldAst.left.name] = rightExp.value;
     } else {
       throw new Error("unreachable");
     }
@@ -843,10 +847,6 @@ function validateParamDeclaration(
       }
     }
   }
-  console.log("automationRateOffset", automationRateOffset);
-  const offset_ = state.dataBuilder.pushInt32(automationRateOffset); // 5th field of info
-  console.log("pushed automationRateOffset: int32", offset_);
-
   if (optionType == null) {
     return;
   }
@@ -873,19 +873,37 @@ function validateParamDeclaration(
     }
   }
 
-  const infoStructOffset = offset;
-  // TODO
-  state.globalVariableDeclarations.push({
-    $: "GlobalVariableDeclaration",
-    type: primitives.int32Type,
-    name: "params",
-    mutable: false,
-    init: {
-      $: "Int32Const",
-      value: infoStructOffset
-    },
-    export: true
-  });
+  if (valueType == null) {
+    return;
+  }
+  // info struct
+  // TODO: use param type, generalize logic, etc.
+  const infoStructOffset = state.dataBuilder.pushInt32(infoStruct.name);
+  if (valueType.$ === "Int32Type") {
+    state.dataBuilder.pushInt32(infoStruct.defaultValue!);
+    state.dataBuilder.pushInt32(infoStruct.minValue!);
+    state.dataBuilder.pushInt32(infoStruct.maxValue!);
+  } else if (valueType.$ === "Float32Type") {
+    state.dataBuilder.pushFloat32(infoStruct.defaultValue!);
+    state.dataBuilder.pushFloat32(infoStruct.minValue!);
+    state.dataBuilder.pushFloat32(infoStruct.maxValue!);
+  }
+  state.dataBuilder.pushInt32(infoStruct.automationRate);
+
+  if (state.numberOfParams === 0) {
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      type: primitives.int32Type,
+      name: "params",
+      mutable: false,
+      init: {
+        $: "Int32Const",
+        value: infoStructOffset
+      },
+      export: true
+    });
+  }
+  state.numberOfParams++;
 }
 function validateLocalStatement(
   state: State,
