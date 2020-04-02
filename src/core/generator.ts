@@ -335,15 +335,6 @@ export class Module {
       resultType === $none ? undefined : resultType
     ) as X;
   }
-  globalStatement(statement: types.GlobalStatement): X {
-    if (statement.$ === "GlobalSet") {
-      return this.globalSet(statement.name, this.expression(statement.value));
-    }
-    if (statement.$ === "FieldSet") {
-      return this.fieldSet(statement);
-    }
-    throw new Error("not implemented yet");
-  }
   loop(loop: types.Loop): X {
     const loopId = genId();
     return this.raw.block(genId(), [

@@ -54,12 +54,9 @@ const encode = textEncoder.encode.bind(textEncoder);
 export class StringBuilder {
   private offsetMap = new Map<string, number>();
   constructor(private dataBuilder: DataBuilder) {}
-  has(value: string): boolean {
-    return this.offsetMap.has(value);
-  }
-  push(value: string): number {
-    if (this.has(value)) {
-      throw new Error("Already have " + value);
+  set(value: string): number {
+    if (this.offsetMap.has(value)) {
+      return this.offsetMap.get(value)!;
     }
     const stringData = encode(value);
     // first byte is length
@@ -69,9 +66,6 @@ export class StringBuilder {
     return offset;
   }
   getByteOffset(value: string): number {
-    if (!this.has(value)) {
-      throw new Error("Not found: " + value);
-    }
     return this.offsetMap.get(value)!;
   }
 }

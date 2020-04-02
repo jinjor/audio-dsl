@@ -340,7 +340,6 @@ export type FunctionImport = {
 // --------------------
 //  Statements
 // --------------------
-export type GlobalStatement = GlobalSet | FieldSet;
 export type LocalStatement = Assign | Call | Loop | Return;
 export type GlobalVariableDeclaration = {
   $: "GlobalVariableDeclaration";

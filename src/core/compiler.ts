@@ -55,9 +55,6 @@ export function textToBinary(src: string): Uint8Array {
   for (const declaration of validationResult.functionDeclarations) {
     m.functionDeclaration(declaration);
   }
-  for (const statement of validationResult.globalStatements) {
-    m.globalStatement(statement);
-  }
 
   if (!m.raw.validate()) {
     throw new Error("binaryen validation error");

@@ -28,7 +28,6 @@ import {
   GetForAssign,
   Assign,
   LocalStatement,
-  GlobalStatement,
   FunctionDeclaration,
   GlobalVariableDeclaration,
   Import,
@@ -159,19 +158,6 @@ class GlobalScope implements Scope {
       throw new Error(name + " is already declared in this scope");
     }
     this.declaredTypesOrStaticValue.set(name, type);
-  }
-  declareStruct(
-    name: string,
-    types: { name: string; type: FieldType; init: Expression }[]
-  ): void {
-    this.declareType(name, {
-      $: "StructTypeWithOffset",
-      types,
-      byteOffset: this.byteOffset
-    });
-    this.byteOffset += types
-      .map(({ type }) => sizeOf(type))
-      .reduce((prev, curr) => prev + curr, 0);
   }
   getAllStructs(): [string, StructTypeWithOffset][] {
     const arrays: [string, StructTypeWithOffset][] = [];
@@ -357,7 +343,6 @@ type GlobalState = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
-  globalStatements: GlobalStatement[];
   dataBuilder: DataBuilder;
   strings: StringBuilder;
   errors: ValidationErrorType[];
@@ -370,7 +355,6 @@ export type ValidationResult = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
-  globalStatements: GlobalStatement[];
   segment: {
     offset: number;
     data: Uint8Array;
@@ -388,7 +372,6 @@ export function validate(
     imports: [],
     globalVariableDeclarations: [],
     functionDeclarations: [],
-    globalStatements: [],
     dataBuilder,
     strings: new StringBuilder(dataBuilder),
     errors: []
@@ -481,41 +464,6 @@ export function validate(
     });
   }
 
-  // struct (currently, struct == param info)
-  const structs = scope.getAllStructs();
-  const structOffsets = [];
-  for (const [name, struct] of structs) {
-    structOffsets.push(struct.byteOffset);
-    let fieldOffset = 0;
-    // assign to fields
-    for (const field of struct.types) {
-      if (field.init != null) {
-        // TODO: this does not work
-        state.globalStatements.push({
-          $: "FieldSet",
-          pointer: {
-            byteOffset: struct.byteOffset,
-            fieldOffset,
-            fieldType: field.type
-          },
-          value: field.init
-        });
-      }
-      fieldOffset += sizeOf(field.type);
-    }
-  }
-  // if (structs.length > 0) {
-  //   state.globalVariableDeclarations.push({
-  //     $: "GlobalVariableDeclaration",
-  //     type: primitives.int32Type,
-  //     name: "params",
-  //     mutable: false,
-  //     init: {
-  //       $: "Int32Const",
-  //       value: structOffsets[0]
-  //     },
-  //     export: true
-  //   });
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
     type: primitives.int32Type,
@@ -527,10 +475,8 @@ export function validate(
     },
     export: true
   });
-  // }
 
   // string pointers
-  // const stringRefs = state.strings.createRefs();
   const staticSegmentOffset = scope.byteOffset;
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
@@ -549,7 +495,6 @@ export function validate(
     imports: state.imports,
     globalVariableDeclarations: state.globalVariableDeclarations,
     functionDeclarations: state.functionDeclarations,
-    globalStatements: state.globalStatements,
     segment: { offset: staticSegmentOffset, data: dataBuilder.createData() },
     errors: state.errors
   };
@@ -767,10 +712,8 @@ function validateParamDeclaration(
   }
   const optionType = valueType == null ? null : paramOptionsType(valueType.$);
 
-  const nameOffset = state.strings.push(ast.name.name); // TODO: have to check existance
-  const automationRateOffset = state.strings.push(
-    isArray ? "a-rate" : "k-rate"
-  ); // TODO: have to check existance
+  const nameOffset = state.strings.set(ast.name.name);
+  const automationRateOffset = state.strings.set(isArray ? "a-rate" : "k-rate");
 
   // 1st field of info
   console.log("nameOffset", nameOffset);
@@ -943,33 +886,6 @@ function validateParamDeclaration(
     },
     export: true
   });
-
-  // const [paramNameExp, paramNameType] = validateStringLiteral(
-  //   state,
-  //   scope,
-  //   ast.name.name
-  // );
-  // const [automationExp, automationType] = validateStringLiteral(
-  //   state,
-  //   scope,
-  //   isArray ? "a-rate" : "k-rate"
-  // );
-
-  // info struct
-
-  // scope.declareStruct("param_" + ast.name.name, [
-  //   {
-  //     name: "name",
-  //     type: paramNameType,
-  //     init: paramNameExp
-  //   },
-  //   ...fields,
-  //   {
-  //     name: "automationRate",
-  //     type: automationType,
-  //     init: automationExp
-  //   }
-  // ]);
 }
 function validateLocalStatement(
   state: State,
@@ -1525,10 +1441,7 @@ function validateStringLiteral(
   scope: Scope,
   value: string
 ): [StringGet, Int32Type] {
-  if (!state.strings.has(value)) {
-    state.strings.push(value);
-  }
-  const offset = state.strings.getByteOffset(value);
+  const offset = state.strings.set(value);
   return [
     {
       $: "StringGet",
