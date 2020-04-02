@@ -43,7 +43,6 @@ import {
   paramOptionsType
 } from "./types";
 import { ModuleCache } from "./loader";
-import { StringRefsBuilder } from "./string";
 import {
   ValidationErrorType,
   ImportModuleNotFound,
@@ -94,6 +93,7 @@ import {
   MissingFields,
   AssigningStructIsNotSupported
 } from "./errors";
+import { DataBuilder, StringBuilder } from "./data-builder";
 
 // Scopes
 type FoundExp =
@@ -358,7 +358,7 @@ type GlobalState = {
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
   globalStatements: GlobalStatement[];
-  strings: StringRefsBuilder;
+  strings: StringBuilder;
   errors: ValidationErrorType[];
 };
 type State = Pick<GlobalState, "numSamples" | "strings" | "errors">;
@@ -377,6 +377,7 @@ export function validate(
   ast: ast.Module,
   moduleCache: ModuleCache
 ): ValidationResult {
+  const dataBuilder = new DataBuilder();
   const state: GlobalState = {
     numSamples: 128,
     moduleCache,
@@ -384,7 +385,7 @@ export function validate(
     globalVariableDeclarations: [],
     functionDeclarations: [],
     globalStatements: [],
-    strings: new StringRefsBuilder(),
+    strings: new StringBuilder(dataBuilder),
     errors: []
   };
   const scope = new GlobalScope();
@@ -524,7 +525,7 @@ export function validate(
   }
 
   // string pointers
-  const stringRefs = state.strings.createRefs();
+  // const stringRefs = state.strings.createRefs();
   const stringSegmentOffset = scope.byteOffset;
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
@@ -544,7 +545,7 @@ export function validate(
     globalVariableDeclarations: state.globalVariableDeclarations,
     functionDeclarations: state.functionDeclarations,
     globalStatements: state.globalStatements,
-    segment: { offset: stringSegmentOffset, data: stringRefs.data },
+    segment: { offset: stringSegmentOffset, data: dataBuilder.createData() },
     errors: state.errors
   };
 }
