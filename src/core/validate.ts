@@ -358,10 +358,14 @@ type GlobalState = {
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
   globalStatements: GlobalStatement[];
+  dataBuilder: DataBuilder;
   strings: StringBuilder;
   errors: ValidationErrorType[];
 };
-type State = Pick<GlobalState, "numSamples" | "strings" | "errors">;
+type State = Pick<
+  GlobalState,
+  "numSamples" | "dataBuilder" | "strings" | "errors"
+>;
 export type ValidationResult = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
@@ -385,6 +389,7 @@ export function validate(
     globalVariableDeclarations: [],
     functionDeclarations: [],
     globalStatements: [],
+    dataBuilder,
     strings: new StringBuilder(dataBuilder),
     errors: []
   };
@@ -499,53 +504,53 @@ export function validate(
       fieldOffset += sizeOf(field.type);
     }
   }
-  if (structs.length > 0) {
-    state.globalVariableDeclarations.push({
-      $: "GlobalVariableDeclaration",
-      type: primitives.int32Type,
-      name: "params",
-      mutable: false,
-      init: {
-        $: "Int32Const",
-        value: structOffsets[0]
-      },
-      export: true
-    });
-    state.globalVariableDeclarations.push({
-      $: "GlobalVariableDeclaration",
-      type: primitives.int32Type,
-      name: "number_of_params",
-      mutable: false,
-      init: {
-        $: "Int32Const",
-        value: structs.length
-      },
-      export: true
-    });
-  }
-
-  // string pointers
-  // const stringRefs = state.strings.createRefs();
-  const stringSegmentOffset = scope.byteOffset;
+  // if (structs.length > 0) {
+  //   state.globalVariableDeclarations.push({
+  //     $: "GlobalVariableDeclaration",
+  //     type: primitives.int32Type,
+  //     name: "params",
+  //     mutable: false,
+  //     init: {
+  //       $: "Int32Const",
+  //       value: structOffsets[0]
+  //     },
+  //     export: true
+  //   });
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
     type: primitives.int32Type,
-    name: "string",
+    name: "number_of_params",
     mutable: false,
     init: {
       $: "Int32Const",
-      value: stringSegmentOffset
+      value: 1 // TODO
+    },
+    export: true
+  });
+  // }
+
+  // string pointers
+  // const stringRefs = state.strings.createRefs();
+  const staticSegmentOffset = scope.byteOffset;
+  state.globalVariableDeclarations.push({
+    $: "GlobalVariableDeclaration",
+    type: primitives.int32Type,
+    name: "static",
+    mutable: false,
+    init: {
+      $: "Int32Const",
+      value: staticSegmentOffset
     },
     export: true
   });
 
-  log.debug(util.inspect(state, { colors: true, depth: 10 }));
+  // log.debug(util.inspect(state, { colors: true, depth: 10 }));
   return {
     imports: state.imports,
     globalVariableDeclarations: state.globalVariableDeclarations,
     functionDeclarations: state.functionDeclarations,
     globalStatements: state.globalStatements,
-    segment: { offset: stringSegmentOffset, data: dataBuilder.createData() },
+    segment: { offset: staticSegmentOffset, data: dataBuilder.createData() },
     errors: state.errors
   };
 }
@@ -762,6 +767,16 @@ function validateParamDeclaration(
   }
   const optionType = valueType == null ? null : paramOptionsType(valueType.$);
 
+  const nameOffset = state.strings.push(ast.name.name); // TODO: have to check existance
+  const automationRateOffset = state.strings.push(
+    isArray ? "a-rate" : "k-rate"
+  ); // TODO: have to check existance
+
+  // 1st field of info
+  console.log("nameOffset", nameOffset);
+  const offset = state.dataBuilder.pushInt32(nameOffset);
+  console.log("pushed nameOffset: int32", offset);
+
   const foundFields = new Set<string>();
   const fields: {
     name: string;
@@ -813,6 +828,22 @@ function validateParamDeclaration(
       type: fieldType,
       init: rightExp
     };
+
+    // 2-4th field of info
+    // TODO: this order depends on ast, fix the loop
+    if (rightExp.$ === "Int32Const") {
+      const offset = state.dataBuilder.pushInt32(rightExp.value);
+      console.log("pushed a field: int32", offset);
+    } else if (rightExp.$ === "Float32Const") {
+      const offset = state.dataBuilder.pushFloat32(rightExp.value);
+      console.log("pushed a field: float32", offset);
+    } else if (rightExp.$ === "BoolConst") {
+      // should be unreachable
+      const offset = state.dataBuilder.pushInt32(rightExp.value);
+      console.log("pushed a field: bool", offset);
+    } else {
+      throw new Error("unreachable");
+    }
   }
   if (scope.isDeclaredInThisScope(ast.name.name)) {
     state.errors.push(
@@ -869,6 +900,9 @@ function validateParamDeclaration(
       }
     }
   }
+  console.log("automationRateOffset", automationRateOffset);
+  const offset_ = state.dataBuilder.pushInt32(automationRateOffset); // 5th field of info
+  console.log("pushed automationRateOffset: int32", offset_);
 
   if (optionType == null) {
     return;
@@ -896,29 +930,46 @@ function validateParamDeclaration(
     }
   }
 
-  const [paramNameExp, paramNameType] = validateStringLiteral(
-    state,
-    scope,
-    ast.name.name
-  );
-  const [automationExp, automationType] = validateStringLiteral(
-    state,
-    scope,
-    isArray ? "a-rate" : "k-rate"
-  );
-  scope.declareStruct("param_" + ast.name.name, [
-    {
-      name: "name",
-      type: paramNameType,
-      init: paramNameExp
+  const infoStructOffset = offset;
+  // TODO
+  state.globalVariableDeclarations.push({
+    $: "GlobalVariableDeclaration",
+    type: primitives.int32Type,
+    name: "params",
+    mutable: false,
+    init: {
+      $: "Int32Const",
+      value: infoStructOffset
     },
-    ...fields,
-    {
-      name: "automationRate",
-      type: automationType,
-      init: automationExp
-    }
-  ]);
+    export: true
+  });
+
+  // const [paramNameExp, paramNameType] = validateStringLiteral(
+  //   state,
+  //   scope,
+  //   ast.name.name
+  // );
+  // const [automationExp, automationType] = validateStringLiteral(
+  //   state,
+  //   scope,
+  //   isArray ? "a-rate" : "k-rate"
+  // );
+
+  // info struct
+
+  // scope.declareStruct("param_" + ast.name.name, [
+  //   {
+  //     name: "name",
+  //     type: paramNameType,
+  //     init: paramNameExp
+  //   },
+  //   ...fields,
+  //   {
+  //     name: "automationRate",
+  //     type: automationType,
+  //     init: automationExp
+  //   }
+  // ]);
 }
 function validateLocalStatement(
   state: State,
@@ -1475,7 +1526,7 @@ function validateStringLiteral(
   value: string
 ): [StringGet, Int32Type] {
   if (!state.strings.has(value)) {
-    state.strings.add(value);
+    state.strings.push(value);
   }
   const offset = state.strings.getByteOffset(value);
   return [

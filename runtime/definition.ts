@@ -7,7 +7,7 @@ export type LanguageSpecificExports = WebAssembly.Exports & {
   out_1: WebAssembly.Global;
   params: WebAssembly.Global;
   number_of_params: WebAssembly.Global;
-  string: WebAssembly.Global;
+  static: WebAssembly.Global;
   memory: WebAssembly.Memory;
   test: Function | null;
   process: Function;

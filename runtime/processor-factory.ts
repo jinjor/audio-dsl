@@ -12,6 +12,41 @@ export function createProcessorClass(exports: LanguageSpecificExports) {
   const inPtrs = [exports.in_0.value, exports.in_1.value];
   const outPtrs = [exports.out_0.value, exports.out_1.value];
 
+  const staticPtr = exports.static.value;
+  const paramInfoRelativeOffset = exports.params.value;
+
+  // TODO: string should be a struct
+  const namePtr = pointerToInt(staticPtr + paramInfoRelativeOffset);
+  const name = pointerToString(staticPtr + namePtr);
+  const defaultValue = pointerToFloat(staticPtr + paramInfoRelativeOffset + 4);
+  const minValue = pointerToFloat(staticPtr + paramInfoRelativeOffset + 8);
+  const maxValue = pointerToFloat(staticPtr + paramInfoRelativeOffset + 12);
+  const automationRatePtr = pointerToInt(
+    staticPtr + paramInfoRelativeOffset + 16
+  );
+  const automationRate = pointerToString(staticPtr + automationRatePtr);
+  console.log(namePtr, automationRatePtr);
+  console.log(name, defaultValue, minValue, maxValue, automationRate);
+
+  function pointerToInt(pointer: number): number {
+    const buf = memory.buffer.slice(pointer, pointer + 4);
+    const view = new DataView(buf);
+    return view.getInt32(0);
+  }
+  function pointerToFloat(pointer: number): number {
+    const buf = memory.buffer.slice(pointer, pointer + 4);
+    const view = new DataView(buf);
+    return view.getFloat32(0);
+  }
+  function pointerToString(pointerToLength: number): string {
+    const pointerToData = pointerToLength + 1;
+    const lenBuf = memory.buffer.slice(pointerToLength, pointerToData);
+    const length = Array.from(new Uint8Array(lenBuf))[0];
+    const sliced = memory.buffer.slice(pointerToData, pointerToData + length);
+    // utf-8 is not supported (because TextDecoder is not here...)
+    return String.fromCharCode(...new Uint8Array(sliced));
+  }
+
   // TODO: get from module
   const params = [
     {

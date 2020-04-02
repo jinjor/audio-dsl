@@ -57,7 +57,7 @@ export class StringBuilder {
   has(value: string): boolean {
     return this.offsetMap.has(value);
   }
-  add(value: string): void {
+  push(value: string): number {
     if (this.has(value)) {
       throw new Error("Already have " + value);
     }
@@ -66,6 +66,7 @@ export class StringBuilder {
     const offset = this.dataBuilder.pushUint8(stringData.byteLength);
     this.dataBuilder.push(stringData);
     this.offsetMap.set(value, offset);
+    return offset;
   }
   getByteOffset(value: string): number {
     if (!this.has(value)) {
