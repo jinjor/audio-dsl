@@ -11,7 +11,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "preserveWatchOutput": true
   },
   "include": ["src/**/*.ts", "test/**/*.ts"]
 }

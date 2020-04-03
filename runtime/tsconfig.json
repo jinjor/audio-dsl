@@ -5,12 +5,13 @@
     "lib": ["dom", "es2015"],
     "declaration": true,
     "sourceMap": true,
-    "outDir": "../dist/runtime",
+    "outDir": "dist",
     "removeComments": true,
     "strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "preserveWatchOutput": true
   }
 }
