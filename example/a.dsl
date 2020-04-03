@@ -18,7 +18,7 @@ float angle_per_sample(float hz) {
   return TWO_PI * hz / float(sample_rate);
 }
 
-float gain = 0.2;
+float gain = 0.1;
 var float angle = 1.0;
 
 float calc_sin() {
