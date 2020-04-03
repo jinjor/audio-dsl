@@ -2,6 +2,59 @@ import { LanguageSpecificExports } from "./definition.js";
 
 declare const AudioWorkletProcessor: any;
 
+function pointerToInt(memory: WebAssembly.Memory, pointer: number): number {
+  const buf = memory.buffer.slice(pointer, pointer + 4);
+  const view = new DataView(buf);
+  return view.getInt32(0);
+}
+function pointerToFloat(memory: WebAssembly.Memory, pointer: number): number {
+  const buf = memory.buffer.slice(pointer, pointer + 4);
+  const view = new DataView(buf);
+  return view.getFloat32(0);
+}
+function pointerToString(
+  memory: WebAssembly.Memory,
+  pointerToLength: number
+): string {
+  const pointerToData = pointerToLength + 1;
+  const lenBuf = memory.buffer.slice(pointerToLength, pointerToData);
+  const length = Array.from(new Uint8Array(lenBuf))[0];
+  const sliced = memory.buffer.slice(pointerToData, pointerToData + length);
+  // utf-8 is not supported (because TextDecoder is not here...)
+  return String.fromCharCode(...new Uint8Array(sliced));
+}
+
+type Descriptor = {
+  name: string;
+  defaultValue: number;
+  minValue: number;
+  maxValue: number;
+  automationRate: string; // "a-rate" | "k-rate"
+};
+function getDescriptor(
+  memory: WebAssembly.Memory,
+  staticPtr: number,
+  paramInfoRelativeOffset: number
+): Descriptor {
+  const paramInfoOffset = staticPtr + paramInfoRelativeOffset;
+  // get struct
+  const namePtr = pointerToInt(memory, paramInfoOffset);
+  const defaultValue = pointerToFloat(memory, paramInfoOffset + 4);
+  const minValue = pointerToFloat(memory, paramInfoOffset + 8);
+  const maxValue = pointerToFloat(memory, paramInfoOffset + 12);
+  const automationRatePtr = pointerToInt(memory, paramInfoOffset + 16);
+  // get string
+  const name = pointerToString(memory, staticPtr + namePtr);
+  const automationRate = pointerToString(memory, staticPtr + automationRatePtr);
+  return {
+    name,
+    defaultValue,
+    minValue,
+    maxValue,
+    automationRate
+  };
+}
+
 export function createProcessorClass(exports: LanguageSpecificExports) {
   const memory = exports.memory;
   // const numInputs = exports.number_of_in_channels.value;
@@ -14,52 +67,15 @@ export function createProcessorClass(exports: LanguageSpecificExports) {
 
   const staticPtr = exports.static.value;
   const paramInfoRelativeOffset = exports.params.value;
-
-  // TODO: string should be a struct
-  const namePtr = pointerToInt(staticPtr + paramInfoRelativeOffset);
-  const name = pointerToString(staticPtr + namePtr);
-  const defaultValue = pointerToFloat(staticPtr + paramInfoRelativeOffset + 4);
-  const minValue = pointerToFloat(staticPtr + paramInfoRelativeOffset + 8);
-  const maxValue = pointerToFloat(staticPtr + paramInfoRelativeOffset + 12);
-  const automationRatePtr = pointerToInt(
-    staticPtr + paramInfoRelativeOffset + 16
-  );
-  const automationRate = pointerToString(staticPtr + automationRatePtr);
-  console.log(namePtr, automationRatePtr);
-  console.log(name, defaultValue, minValue, maxValue, automationRate);
-
-  function pointerToInt(pointer: number): number {
-    const buf = memory.buffer.slice(pointer, pointer + 4);
-    const view = new DataView(buf);
-    return view.getInt32(0);
-  }
-  function pointerToFloat(pointer: number): number {
-    const buf = memory.buffer.slice(pointer, pointer + 4);
-    const view = new DataView(buf);
-    return view.getFloat32(0);
-  }
-  function pointerToString(pointerToLength: number): string {
-    const pointerToData = pointerToLength + 1;
-    const lenBuf = memory.buffer.slice(pointerToLength, pointerToData);
-    const length = Array.from(new Uint8Array(lenBuf))[0];
-    const sliced = memory.buffer.slice(pointerToData, pointerToData + length);
-    // utf-8 is not supported (because TextDecoder is not here...)
-    return String.fromCharCode(...new Uint8Array(sliced));
-  }
-
-  // TODO: get from module
+  const descriptor = getDescriptor(memory, staticPtr, paramInfoRelativeOffset);
   const params = [
     {
-      descriptor: {
-        name: "note",
-        defaultValue: 69,
-        minValue: 0,
-        maxValue: 127,
-        automationRate: "a-rate"
-      },
-      ptr: 2048
+      descriptor,
+      ptr: 2048 // TODO
     }
   ];
+  console.log(params);
+
   return class extends AudioWorkletProcessor {
     static get parameterDescriptors() {
       return params.map(p => p.descriptor);
@@ -79,10 +95,16 @@ export function createProcessorClass(exports: LanguageSpecificExports) {
         view.set(input[ch]);
       }
       for (const paramInfo of params) {
-        const param = parameters[paramInfo.descriptor.name];
-        const view = new Float32Array(memory.buffer, paramInfo.ptr, numSamples);
+        const { name, automationRate } = paramInfo.descriptor;
+        const arrayLength = automationRate === "a-rate" ? numSamples : 1;
+        const param = parameters[name];
+        const view = new Float32Array(
+          memory.buffer,
+          paramInfo.ptr,
+          arrayLength
+        );
         if (param.length === 1) {
-          view.fill(param[0]); // TODO: k-rate param should be non-array
+          view.fill(param[0]);
         } else {
           view.set(param);
         }

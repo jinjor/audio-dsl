@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "An experimental DSL for AudioWorklet",
   "scripts": {
-    "start": "npm run build && run-p server watch:**",
+    "start": "npm run-s build example && run-p server watch:**",
     "server": "http-server -c-1",
     "watch:compiler": "tsc -w",
     "watch:runtime": "tsc -p runtime -w",
