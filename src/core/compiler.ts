@@ -45,7 +45,10 @@ export function textToBinary(src: string): Uint8Array {
   }
 
   const m = new Module();
+  // TODO: which memory size is used? this one or imported one?
   m.setMemory(1, 1, "memory", validationResult.segment);
+  m.raw.addMemoryImport("0", "env", "memory");
+
   for (const imp of validationResult.imports) {
     m.addImport(imp);
   }
