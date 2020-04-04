@@ -221,7 +221,93 @@ describe("Validate", function () {
     assertErrorExists(`void f() { loop { float length = 0.0; } }`);
     assertErrorExists(`void f() { loop { i = 0.0; } }`);
     assertErrorExists(`void f() { loop { i = ""; } }`);
+    // TODO
     // assertErrorExists(`void f() { loop { return; } }`);
+    // TODO
     // assertErrorExists(`void f() { loop { loop { } } }`);
+  });
+  it("param", () => {
+    assertOk(`param int a { defaultValue = 0; minValue = 0; maxValue = 0; }`);
+    assertOk(`param int a { defaultValue = 1; minValue = 0; maxValue = -1; }`); // this is allowed for now
+    assertOk(
+      `param float a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }`
+    );
+    assertOk(`param int[] a { defaultValue = 0; minValue = 0; maxValue = 0; }`);
+    assertOk(
+      `param float[] a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }`
+    );
+    assertOk(
+      `int foo = 1; param int a { defaultValue = 0 + 0; minValue = foo; maxValue = foo * 2; }`
+    );
+    assertOk(
+      `int defaultValue = 1; param int a { defaultValue = 0; minValue = 0; maxValue = 0; }`
+    );
+    assertOk(
+      `var int defaultValue = 1; param int a { defaultValue = 0; minValue = 0; maxValue = 0; }`
+    );
+    // TODO
+    // assertOk(
+    //   `param int a { defaultValue = 0; minValue = 0; maxValue = 0; } void f() { a = 1; }`
+    // );
+    // TODO
+    // assertOk(
+    //   `param float a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; } void f() { a = 1.0; }`
+    // );
+    assertOk(
+      `param int[] a { defaultValue = 0; minValue = 0; maxValue = 0; } void f() { a[0] = 1; }`
+    );
+    assertOk(
+      `param float[] a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; } void f() { a[0] = 1.0; }`
+    );
+    assertErrorExists(`param int a { defaultValue = 0; minValue = 0; }`);
+    assertErrorExists(
+      `param int a { defaultValue = 0; minValue = 0; maxValue = 0; unknown = 0; }`
+    );
+    assertErrorExists(
+      `param int a { defaultValue = 0.0; minValue = 0; maxValue = 0; }`
+    );
+    assertErrorExists(
+      `param int a { defaultValue = 0; minValue = 0.0; maxValue = 0; }`
+    );
+    assertErrorExists(
+      `param int a { defaultValue = 0; minValue = 0; maxValue = 0.0; }`
+    );
+    assertErrorExists(
+      `param int[] a { defaultValue = 0.0; minValue = 0; maxValue = 0; }`
+    );
+    assertErrorExists(
+      `param int[] a { defaultValue = 0; minValue = 0.0; maxValue = 0; }`
+    );
+    assertErrorExists(
+      `param int[] a { defaultValue = 0; minValue = 0; maxValue = 0.0; }`
+    );
+    assertErrorExists(
+      `param int a { defaultValue = 0; minValue = 0; maxValue = 0; } void f () { a = 1.0; }`
+    );
+    assertErrorExists(
+      `param int[] a { defaultValue = 0; minValue = 0; maxValue = 0; } void f () { a = 1; }`
+    );
+    assertErrorExists(
+      `int a = 1; param int a { defaultValue = 0; minValue = 0; maxValue = 0; }`
+    );
+    assertErrorExists(
+      `var int foo = 1; param int a { defaultValue = foo; minValue = 0; maxValue = 0; }`
+    );
+    // TODO
+    // assertErrorExists(
+    //   `param int a { defaultValue = 0; minValue = 0; maxValue = 0; } a = 1`
+    // );
+    // TODO
+    // assertErrorExists(
+    //   `param int a { defaultValue = 0; minValue = 0; maxValue = 0; } int a = 1;`
+    // );
+    // TODO
+    // assertErrorExists(
+    //   `param int a { defaultValue = 0; minValue = 0; maxValue = 0; } var int a = 1;`
+    // );
+    // TODO
+    // assertErrorExists(
+    //   `param int a { defaultValue = 0; minValue = 0; maxValue = 0; } void a () {}`
+    // );
   });
 });
