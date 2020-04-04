@@ -30,6 +30,7 @@ jobs:
         # `npm install` to update package-lock.json
         run: |
           npm pack ../..
+          rm package-lock.json
           npm install
       - name: VSCode Extension
         working-directory: ./vscode-dsl
