@@ -7,6 +7,6 @@ npm ci --production
 
 cd vscode-dsl/server
 npm install ../..
-cd ..
+cd ../..
 
 npm install
