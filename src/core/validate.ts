@@ -39,7 +39,9 @@ import {
   StringGet,
   FieldType,
   StructTypeWithOffset,
-  paramOptionsType
+  paramOptionsType,
+  StructType,
+  ValueType
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -680,6 +682,7 @@ function validateFunctionDeclaration(
     export: true // ?
   });
 }
+
 function validateParamDeclaration(
   state: GlobalState,
   scope: GlobalScope,
@@ -730,151 +733,73 @@ function validateParamDeclaration(
   infoStruct.name = state.strings.set(ast.name.name);
   infoStruct.automationRate = state.strings.set(isArray ? "a-rate" : "k-rate");
 
-  const foundFields = new Set<string>();
-  const fields: {
-    name: string;
-    type: FieldType;
-    init: Expression;
-  }[] = new Array(ast.struct.fields.length);
-  for (let i = 0; i < ast.struct.fields.length; i++) {
-    const fieldAst = ast.struct.fields[i];
-    if (fieldAst.left.$ !== "Identifier") {
-      state.errors.push();
-      continue;
-    }
-    foundFields.add(fieldAst.left.name);
-    const right = evaluateGlobalExpression(state, scope, fieldAst.right);
-    if (right == null) {
-      continue;
-    }
-    const [rightExp, rightType] = right;
-    if (optionType == null) {
-      continue;
-    }
-    let matchedField: [FieldType, number] | null = null;
-    for (let i = 0; i < optionType.types.length; i++) {
-      const optionFieldTypeType = optionType.types[i];
-      if (optionFieldTypeType.name === fieldAst.left.name) {
-        matchedField = [optionFieldTypeType.type, i];
-        break;
-      }
-    }
-    if (matchedField == null) {
-      state.errors.push(
-        new UnknownField(
-          fieldAst.left.range,
-          fieldAst.left.name,
-          optionType.types
-        )
-      );
-      continue;
-    }
-    const [fieldType, fieldIndex] = matchedField;
-    if (!isTypeEqual(fieldType, rightType)) {
-      state.errors.push(
-        new AssignTypeMismatch(fieldAst.range, fieldType, rightType)
-      );
-      continue;
-    }
-    fields[fieldIndex] = {
-      name: fieldAst.left.name,
-      type: fieldType,
-      init: rightExp
-    };
-    if (fieldAst.left.name === "defaultValue") {
-      infoStruct[fieldAst.left.name] = rightExp.value;
-    } else if (fieldAst.left.name === "minValue") {
-      infoStruct[fieldAst.left.name] = rightExp.value;
-    } else if (fieldAst.left.name === "maxValue") {
-      infoStruct[fieldAst.left.name] = rightExp.value;
-    } else {
-      throw new Error("unreachable");
-    }
+  const optionValue =
+    optionType == null
+      ? null
+      : evaluateStructLiteralInGlobal(state, scope, optionType, ast.struct);
+  if (optionValue != null) {
+    infoStruct.defaultValue = optionValue[0].value;
+    infoStruct.minValue = optionValue[1].value;
+    infoStruct.maxValue = optionValue[2].value;
   }
+
   if (scope.isDeclaredInThisScope(ast.name.name)) {
     state.errors.push(
       new AlreadyDeclared(ast.name.range, "variable", ast.name.name)
     );
     return;
   }
-  if (valueType) {
-    if (isArray) {
-      if (valueType.$ === "Int32Type") {
-        validateArrayDeclaration(
-          state,
-          scope,
-          ast.name.name,
-          primitives.int32Type,
-          state.numSamples,
-          null
-        );
-      } else {
-        validateArrayDeclaration(
-          state,
-          scope,
-          ast.name.name,
-          primitives.float32Type,
-          state.numSamples,
-          null
-        );
-      }
-    } else {
-      if (valueType.$ === "Int32Type") {
-        state.globalVariableDeclarations.push({
-          $: "GlobalVariableDeclaration",
-          type: primitives.int32Type,
-          name: ast.name.name,
-          mutable: false,
-          init: {
-            $: "Int32Const",
-            value: 0
-          },
-          export: true
-        });
-      } else if (valueType.$ === "Float32Type") {
-        state.globalVariableDeclarations.push({
-          $: "GlobalVariableDeclaration",
-          type: primitives.float32Type,
-          name: ast.name.name,
-          mutable: false,
-          init: {
-            $: "Float32Const",
-            value: 0
-          },
-          export: true
-        });
-      }
-    }
-  }
-  if (optionType == null) {
-    return;
-  }
-  let missingFields: string[] = [];
-  for (let i = 0; i < optionType.types.length; i++) {
-    const name = optionType.types[i].name;
-    if (!foundFields.has(name)) {
-      missingFields.push(name);
-    }
-  }
-  if (missingFields.length > 0) {
-    state.errors.push(
-      new MissingFields(
-        ast.range, // too wide?
-        missingFields,
-        optionType.types
-      )
-    );
-    return;
-  }
-  for (const field of fields) {
-    if (field == null) {
-      return;
-    }
-  }
-
   if (valueType == null) {
     return;
   }
+  if (isArray) {
+    if (valueType.$ === "Int32Type") {
+      validateArrayDeclaration(
+        state,
+        scope,
+        ast.name.name,
+        primitives.int32Type,
+        state.numSamples,
+        null
+      );
+    } else {
+      validateArrayDeclaration(
+        state,
+        scope,
+        ast.name.name,
+        primitives.float32Type,
+        state.numSamples,
+        null
+      );
+    }
+  } else {
+    if (valueType.$ === "Int32Type") {
+      state.globalVariableDeclarations.push({
+        $: "GlobalVariableDeclaration",
+        type: primitives.int32Type,
+        name: ast.name.name,
+        mutable: false,
+        init: {
+          $: "Int32Const",
+          value: 0
+        },
+        export: true
+      });
+    } else if (valueType.$ === "Float32Type") {
+      state.globalVariableDeclarations.push({
+        $: "GlobalVariableDeclaration",
+        type: primitives.float32Type,
+        name: ast.name.name,
+        mutable: false,
+        init: {
+          $: "Float32Const",
+          value: 0
+        },
+        export: true
+      });
+    }
+  }
+
   // info struct
   // TODO: use param type, generalize logic, etc.
   const infoStructOffset = state.dataBuilder.pushInt32(infoStruct.name);
@@ -904,6 +829,83 @@ function validateParamDeclaration(
   }
   state.numberOfParams++;
 }
+
+function evaluateStructLiteralInGlobal(
+  state: GlobalState,
+  scope: GlobalScope,
+  type: StructType,
+  ast: ast.StructLiteral
+): NumberConst[] | null {
+  const fields: {
+    name: string;
+    type: ValueType;
+    found: boolean;
+    right: NumberConst | null;
+  }[] = type.types.map(t => ({
+    name: t.name,
+    type: t.type,
+    found: false,
+    right: null
+  }));
+  for (let i = 0; i < ast.fields.length; i++) {
+    const fieldAst = ast.fields[i];
+    if (fieldAst.left.$ !== "Identifier") {
+      state.errors.push();
+      continue;
+    }
+    let foundIndex = -1;
+    let fieldType: ValueType | null = null;
+    for (let f of fields) {
+      foundIndex++;
+      if (f.name === fieldAst.left.name) {
+        f.found = true;
+        fieldType = f.type;
+        break;
+      }
+    }
+    const right = evaluateGlobalExpression(state, scope, fieldAst.right);
+    if (right == null) {
+      continue;
+    }
+    const [rightExp, rightType] = right;
+    if (fieldType == null) {
+      state.errors.push(
+        new UnknownField(fieldAst.left.range, fieldAst.left.name, type.types)
+      );
+      continue;
+    }
+    if (!isTypeEqual(fieldType, rightType)) {
+      state.errors.push(
+        new AssignTypeMismatch(fieldAst.range, fieldType, rightType)
+      );
+      continue;
+    }
+    fields[foundIndex].right = rightExp;
+  }
+  let missingFields: string[] = [];
+  for (const field of fields) {
+    if (!field.found) {
+      missingFields.push(field.name);
+    }
+  }
+  if (missingFields.length > 0) {
+    state.errors.push(
+      new MissingFields(
+        ast.range, // too wide?
+        missingFields,
+        type.types
+      )
+    );
+    return null;
+  }
+  for (const field of fields) {
+    if (field.right == null) {
+      return null;
+    }
+  }
+  return fields.map(f => f.right) as NumberConst[];
+}
+
 function validateLocalStatement(
   state: State,
   scope: LocalScope,
