@@ -73,7 +73,7 @@ export type AnyType =
   | ArrayType
   | FunctionType;
 export type ExportableType = FunctionType | NumberConst;
-export type NumberConst = Int32Const | Float32Const | BoolConst | StringConst;
+export type NumberConst = Int32Const | Float32Const | BoolConst;
 export type Int32Const = {
   $: "Int32Const";
   value: number;
@@ -85,10 +85,6 @@ export type Float32Const = {
 export type BoolConst = {
   $: "BoolConst";
   value: number; // 0 | 1
-};
-export type StringConst = {
-  $: "StringConst";
-  value: number; // offset
 };
 export type ModuleHeader = {
   types: Map<string, FunctionType | NumberConst>;

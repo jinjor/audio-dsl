@@ -162,9 +162,6 @@ export class Module {
     if (exp.$ === "BoolConst") {
       return this.i32Const(exp.value as N);
     }
-    if (exp.$ === "StringConst") {
-      return this.i32Const(exp.value as N); // TODO: is this correct?
-    }
     if (exp.$ === "LocalGet") {
       return this.localGet(exp.index as N, this.type(exp.type));
     }

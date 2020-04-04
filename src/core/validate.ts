@@ -42,8 +42,7 @@ import {
   paramOptionsType,
   StructType,
   ValueType,
-  StringType,
-  StringConst
+  StringType
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -867,6 +866,9 @@ function evaluateStructLiteralInGlobal(
       );
       continue;
     }
+    if (rightExp.$ === "StringGet") {
+      throw new Error("there should not be a string field");
+    }
     fields[foundIndex].right = rightExp;
   }
   let missingFields: string[] = [];
@@ -1171,7 +1173,7 @@ function validateGlobalDeclaration(
     state.errors.push(new VoidShouldNotBeDeclaredAsAVariable(ast.type.range));
     return;
   }
-  let rightExp: NumberConst | null = null;
+  let rightExp: NumberConst | StringGet | null = null;
   let rightType: Int32Type | Float32Type | BoolType | StringType | null = null;
   if (ast.right == null) {
     const _rightExp = defaultValueOf(type);
@@ -1186,6 +1188,9 @@ function validateGlobalDeclaration(
   if (!isTypeEqual(type, rightType)) {
     state.errors.push(new DeclareTypeMismatch(ast.type.range, type, rightType));
     return;
+  }
+  if (rightExp.$ === "StringGet") {
+    throw new Error("there should not be a way to declare string");
   }
   if (ast.hasMutableFlag) {
     scope.declareType(ast.left.name, rightType);
@@ -1317,8 +1322,7 @@ function validateAssignableIdentifier(
   if (
     leftExp.$ === "Int32Const" ||
     leftExp.$ === "Float32Const" ||
-    leftExp.$ === "BoolConst" ||
-    leftExp.$ === "StringConst"
+    leftExp.$ === "BoolConst"
   ) {
     state.errors.push(new AssigningToConstantValueIsNotAllowed(leftAst.range));
     return null;
@@ -1775,7 +1779,9 @@ function evaluateGlobalExpression(
   state: GlobalState,
   scope: GlobalScope,
   ast: ast.Expression
-): [NumberConst, Int32Type | Float32Type | BoolType | StringType] | null {
+):
+  | [NumberConst | StringGet, Int32Type | Float32Type | BoolType | StringType]
+  | null {
   if (ast.$ === "IntLiteral") {
     return [
       {
@@ -1796,8 +1802,8 @@ function evaluateGlobalExpression(
     const offset = state.strings.set(ast.value);
     return [
       {
-        $: "StringConst",
-        value: offset
+        $: "StringGet",
+        relativeByteOffset: offset
       },
       primitives.stringType
     ];
@@ -1875,6 +1881,12 @@ function evaluateGlobalBinOp(
   }
   const [leftExp, leftType] = left;
   const [rightExp, rightType] = right;
+  if (leftExp.$ === "StringGet") {
+    throw new Error("there should not be a way to get string from global");
+  }
+  if (rightExp.$ === "StringGet") {
+    throw new Error("there should not be a way to get string from global");
+  }
   const expectedCombinations = getBinOpCombination(ast.operator);
   for (const combination of expectedCombinations) {
     if (
