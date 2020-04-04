@@ -169,4 +169,11 @@ describe("Validate", function() {
     assertErrorExists(`bool a = 0 <= 0.0;`);
     assertErrorExists(`bool a = 0.0 <= 0;`);
   });
+  it("string", () => {
+    assertErrorExists(`int a = "";`);
+    assertErrorExists(`float a = "";`);
+    assertErrorExists(`int a = 1 + "";`);
+    assertErrorExists(`int a = "" + 1;`);
+    assertErrorExists(`int a = "" + "";`);
+  });
 });

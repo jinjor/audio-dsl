@@ -41,7 +41,8 @@ import {
   StructTypeWithOffset,
   paramOptionsType,
   StructType,
-  ValueType
+  ValueType,
+  StringType
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -128,6 +129,7 @@ class GlobalScope implements Scope {
     | Int32Type
     | Float32Type
     | BoolType
+    | StringType
     | StructTypeWithOffset
     | ArrayType
     | FunctionType
@@ -152,6 +154,7 @@ class GlobalScope implements Scope {
       | Int32Type
       | Float32Type
       | BoolType
+      | StringType
       | StructTypeWithOffset
       | ArrayType
       | FunctionType
@@ -1168,7 +1171,7 @@ function validateGlobalDeclaration(
     return;
   }
   let rightExp: NumberConst | null = null;
-  let rightType: Int32Type | Float32Type | BoolType | null = null;
+  let rightType: Int32Type | Float32Type | BoolType | StringType | null = null;
   if (ast.right == null) {
     const _rightExp = defaultValueOf(type);
     [rightExp, rightType] = [_rightExp, type];
@@ -1313,7 +1316,8 @@ function validateAssignableIdentifier(
   if (
     leftExp.$ === "Int32Const" ||
     leftExp.$ === "Float32Const" ||
-    leftExp.$ === "BoolConst"
+    leftExp.$ === "BoolConst" ||
+    leftExp.$ === "StringConst"
   ) {
     state.errors.push(new AssigningToConstantValueIsNotAllowed(leftAst.range));
     return null;
@@ -1770,7 +1774,7 @@ function evaluateGlobalExpression(
   state: GlobalState,
   scope: GlobalScope,
   ast: ast.Expression
-): [NumberConst, Int32Type | Float32Type | BoolType] | null {
+): [NumberConst, Int32Type | Float32Type | BoolType | StringType] | null {
   if (ast.$ === "IntLiteral") {
     return [
       {
@@ -1788,7 +1792,14 @@ function evaluateGlobalExpression(
       primitives.float32Type
     ];
   } else if (ast.$ === "StringLiteral") {
-    throw new Error("StringLiteral not implemented yet");
+    const offset = state.strings.set(ast.value);
+    return [
+      {
+        $: "StringConst",
+        value: offset
+      },
+      primitives.stringType
+    ];
   } else if (ast.$ === "ArrayLiteral") {
     state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;

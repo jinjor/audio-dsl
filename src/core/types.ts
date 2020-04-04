@@ -39,6 +39,7 @@ export type FunctionType = {
 export type ValueType = Int32Type | Float32Type | BoolType;
 export type VariableType =
   | ValueType
+  | StringType
   | StructType
   | StructTypeWithOffset
   | ArrayType;
@@ -71,7 +72,7 @@ export type AnyType =
   | ArrayType
   | FunctionType;
 export type ExportableType = FunctionType | NumberConst;
-export type NumberConst = Int32Const | Float32Const | BoolConst;
+export type NumberConst = Int32Const | Float32Const | BoolConst | StringConst;
 export type Int32Const = {
   $: "Int32Const";
   value: number;
@@ -84,6 +85,10 @@ export type BoolConst = {
   $: "BoolConst";
   value: number; // 0 | 1
 };
+export type StringConst = {
+  $: "StringConst";
+  value: number; // offset
+};
 export type ModuleHeader = {
   types: Map<string, FunctionType | NumberConst>;
 };
@@ -95,6 +100,7 @@ export namespace primitives {
   export const float32Type: Float32Type = { $: "Float32Type" };
   export const voidType: VoidType = { $: "VoidType" };
   export const boolType: BoolType = { $: "BoolType" };
+  export const stringType: StringType = { $: "StringType" };
 }
 export function sizeOf(
   t: Int32Type | Float32Type | BoolType | StructType
