@@ -5,6 +5,7 @@ import { validate } from "../src/core/validate";
 import { mathModule, utilModule } from "../src/core/lib";
 import { builtInModule } from "../src/core//builtin";
 import { ModuleHeader } from "../src/core//types";
+import * as errors from "../src/core/errors";
 
 const moduleCache = new Map<string, ModuleHeader>();
 moduleCache.set("builtin", builtInModule);
@@ -21,12 +22,24 @@ function assertOk(src: string) {
     assert.fail();
   }
 }
-function assertErrorExists(src: string) {
+function assertErrorExists(src: string, expectedError?: any) {
   const ast = parse(src);
   const result = validate(ast, moduleCache);
   if (result.errors.length === 0) {
     console.log("unexpected no error");
     console.log(src);
+    assert.fail();
+  }
+  if (expectedError != null) {
+    for (const e of result.errors) {
+      if (e instanceof expectedError) {
+        return;
+      }
+    }
+    console.log("expected error not found");
+    console.log(src);
+    console.log("expected: " + expectedError);
+    console.log("errors: " + result.errors.map(e => e.message).join(", "));
     assert.fail();
   }
 }
