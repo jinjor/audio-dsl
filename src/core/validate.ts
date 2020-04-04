@@ -37,11 +37,11 @@ import {
   AnyType,
   defaultValueOf,
   StringGet,
-  FieldType,
+  LocalType,
   StructTypeWithOffset,
   paramOptionsType,
   StructType,
-  ValueType,
+  FieldType,
   StringType,
   Int32Const,
   Float32Const,
@@ -242,7 +242,7 @@ class GlobalScope implements Scope {
 
 class FunctionScope implements LocalScope {
   private declaredTypes = new Map<string, number>();
-  private localTypes: (Int32Type | Float32Type | BoolType)[] = [];
+  private localTypes: LocalType[] = [];
   private returnType: ReturnType | null = null;
   private returned: boolean = false;
   constructor(private parent: GlobalScope) {}
@@ -808,7 +808,7 @@ function evaluateStructLiteralInGlobal(
 ): NumberConst[] | null {
   const fields: {
     name: string;
-    type: ValueType;
+    type: FieldType;
     found: boolean;
     right: NumberConst | null;
   }[] = type.types.map((t) => ({
@@ -824,7 +824,7 @@ function evaluateStructLiteralInGlobal(
       continue;
     }
     let foundIndex = -1;
-    let fieldType: ValueType | null = null;
+    let fieldType: FieldType | null = null;
     for (let f of fields) {
       foundIndex++;
       if (f.name === fieldAst.left.name) {

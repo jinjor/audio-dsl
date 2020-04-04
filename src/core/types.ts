@@ -36,18 +36,24 @@ export type FunctionType = {
   params: ParamType[];
   returnType: ReturnType;
 };
-export type ValueType = Int32Type | Float32Type | BoolType;
 export type VariableType =
-  | ValueType
+  | Int32Type
+  | Float32Type
+  | BoolType
   | StringType
   | StructType
   | StructTypeWithOffset
   | ArrayType;
-export type ParamType = ValueType | StringType;
+export type ParamType = Int32Type | Float32Type | BoolType | StringType;
 export type FieldType = Int32Type | Float32Type | BoolType;
-export type ItemType = ValueType;
+export type ItemType = Int32Type | Float32Type | BoolType;
 export type LocalType = Int32Type | Float32Type | BoolType;
-export type ReturnType = ValueType | StringType | VoidType;
+export type ReturnType =
+  | Int32Type
+  | Float32Type
+  | BoolType
+  | StringType
+  | VoidType;
 export type AssignableType = Int32Type | Float32Type | BoolType | StringType;
 export type GlobalDeclarableType =
   | Int32Type
@@ -57,7 +63,9 @@ export type GlobalDeclarableType =
 export type LocalDeclarableType = VariableType;
 export type DeclaredType = VariableType | FunctionType;
 export type ExpressionType =
-  | ValueType
+  | Int32Type
+  | Float32Type
+  | BoolType
   | StringType
   | VoidType
   | StructType
