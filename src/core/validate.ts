@@ -9,7 +9,7 @@ import {
   Int32Type,
   Float32Type,
   ExpressionType,
-  NumberConst,
+  ConstantType,
   primitives,
   isTypeEqual,
   AssignableType,
@@ -106,7 +106,7 @@ type FoundExp =
   | FunctionGet
   | ArrayGet
   | StructTypeWithOffset
-  | NumberConst;
+  | ConstantType;
 interface Scope {
   declareType(name: string, type: DeclaredType): void;
   isDeclaredInThisScope(name: string): boolean;
@@ -135,7 +135,7 @@ class GlobalScope implements Scope {
     | StructTypeWithOffset
     | ArrayType
     | FunctionType
-    | NumberConst
+    | ConstantType
   >();
   constructor() {}
   createFunctionScope() {
@@ -144,7 +144,7 @@ class GlobalScope implements Scope {
   isDeclaredInThisScope(name: string): boolean {
     return this.declaredTypesOrStaticValue.has(name);
   }
-  declareConst(name: string, value: NumberConst): void {
+  declareConst(name: string, value: ConstantType): void {
     if (this.isDeclaredInThisScope(name)) {
       throw new Error(name + " is already declared in this scope");
     }
@@ -805,12 +805,12 @@ function evaluateStructLiteralInGlobal(
   scope: GlobalScope,
   type: StructType,
   ast: ast.StructLiteral
-): NumberConst[] | null {
+): ConstantType[] | null {
   const fields: {
     name: string;
     type: FieldType;
     found: boolean;
-    right: NumberConst | null;
+    right: ConstantType | null;
   }[] = type.types.map((t) => ({
     name: t.name,
     type: t.type,
@@ -876,7 +876,7 @@ function evaluateStructLiteralInGlobal(
       return null;
     }
   }
-  return fields.map((f) => f.right) as NumberConst[];
+  return fields.map((f) => f.right) as ConstantType[];
 }
 
 function validateLocalStatement(
@@ -1157,7 +1157,7 @@ function validateGlobalDeclaration(
     state.errors.push(new VoidShouldNotBeDeclaredAsAVariable(ast.type.range));
     return;
   }
-  let rightExp: NumberConst | StringGet | null = null;
+  let rightExp: ConstantType | StringGet | null = null;
   let rightType: Int32Type | Float32Type | BoolType | StringType | null = null;
   if (ast.right == null) {
     const _rightExp = defaultValueOf(type);
@@ -1764,7 +1764,7 @@ function evaluateGlobalExpression(
   scope: GlobalScope,
   ast: ast.Expression
 ):
-  | [NumberConst | StringGet, Int32Type | Float32Type | BoolType | StringType]
+  | [ConstantType | StringGet, Int32Type | Float32Type | BoolType | StringType]
   | null {
   if (ast.$ === "IntLiteral") {
     return [
@@ -1852,7 +1852,7 @@ function evaluateGlobalBinOp(
   state: GlobalState,
   scope: GlobalScope,
   ast: ast.BinOp
-): [NumberConst, Int32Type | Float32Type | BoolType] | null {
+): [ConstantType, Int32Type | Float32Type | BoolType] | null {
   const bin = validateBinOp(state, scope, ast);
   if (bin == null) {
     return null;

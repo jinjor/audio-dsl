@@ -80,8 +80,8 @@ export type AnyType =
   | StructType
   | ArrayType
   | FunctionType;
-export type ExportableType = FunctionType | NumberConst;
-export type NumberConst = Int32Const | Float32Const | BoolConst;
+export type ExportableType = FunctionType | ConstantType;
+export type ConstantType = Int32Const | Float32Const | BoolConst;
 export type Int32Const = {
   $: "Int32Const";
   value: number;
@@ -95,7 +95,7 @@ export type BoolConst = {
   value: number; // 0 | 1
 };
 export type ModuleHeader = {
-  types: Map<string, FunctionType | NumberConst>;
+  types: Map<string, FunctionType | ConstantType>;
 };
 // --------------------
 //  Util
@@ -127,7 +127,7 @@ export function sizeOf(
 }
 export function defaultValueOf(
   t: Int32Type | Float32Type | BoolType
-): NumberConst {
+): ConstantType {
   if (t.$ === "Int32Type") {
     return { $: "Int32Const", value: 0 };
   } else if (t.$ === "Float32Type") {
@@ -243,8 +243,7 @@ export function paramType(type: "Int32Type" | "Float32Type"): StructType {
 // --------------------
 export type AssignableExpression = LocalGet | GlobalGet;
 export type Expression =
-  | NumberConst
-  | BoolConst
+  | ConstantType
   | LocalGet
   | GlobalGet
   | FunctionGet
@@ -357,7 +356,7 @@ export type GlobalVariableDeclaration = {
   type: VariableType;
   name: string;
   mutable: boolean;
-  init: NumberConst;
+  init: ConstantType;
   export: boolean;
 };
 export type FunctionDeclaration = {

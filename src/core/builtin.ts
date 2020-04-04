@@ -1,7 +1,7 @@
-import { FunctionType, primitives, NumberConst, ModuleHeader } from "./types";
+import { FunctionType, primitives, ConstantType, ModuleHeader } from "./types";
 
 export const builtInModule: ModuleHeader = {
-  types: new Map<string, FunctionType | NumberConst>(),
+  types: new Map<string, FunctionType | ConstantType>(),
 };
 builtInModule.types.set("float", {
   $: "FunctionType",
