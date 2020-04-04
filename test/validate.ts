@@ -91,6 +91,31 @@ describe("Validate", function () {
     assertErrorExists(`var int a = 0; a = 1;`);
     assertErrorExists(`void f() {} f = 1;`);
   });
+  it("local declaration", () => {
+    assertErrorExists(`void f() { int g(){} }`);
+    assertErrorExists(`void f() { int[] a; }`);
+    assertErrorExists(`void f() { int[] a; }`);
+  });
+  it("local assign", () => {
+    assertOk(`void f() { int a = 1; a = 1; }`);
+    assertOk(`void f() { float a = 1.0; a = 1.0; }`);
+    assertOk(`int[] a; void f() { a[0] = 1; }`);
+    assertErrorExists(`void f() { int a = 1; a = 1.0; }`);
+    assertErrorExists(`void f() { float a = 1; a = 1; }`);
+    assertErrorExists(`int[] a; void f() { a[0] = 1.0; }`);
+    assertErrorExists(`int[] a; void f() { a[0.0] = 1; }`);
+    assertErrorExists(`int[] a; void f() { a[""] = 1; }`);
+    assertErrorExists(`int[] a; void f() { a[1 > 0] = 1; }`);
+    // TODO
+    // assertErrorExists(`void a(){} void f() { a() = 1; }`);
+    assertErrorExists(`void a(){} void f() { a[0] = 1; }`);
+  });
+  it("call", () => {
+    assertOk(`void a() { } void f() { a(); }`);
+    assertOk(`int a() { return 1; } int f() { return a(); }`);
+    assertOk(`int a(int a) { return a; } void f() { a(a(a(1))); }`);
+    assertErrorExists(`int[] a; void f() { a(); }`);
+  });
   it("static evaluation", () => {
     assertOk(`int a = 0; int b = a;`);
     assertOk(`int a = 0; var int b = a;`);

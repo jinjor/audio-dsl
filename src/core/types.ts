@@ -369,7 +369,7 @@ export type FunctionDeclaration = {
   export: boolean;
 };
 export type Assign = LocalSet | GlobalSet | ItemSet;
-export type GetForAssign = LocalGet | GlobalGet;
+export type GetForAssign = LocalGet | GlobalGet | ItemGet;
 export type LocalSet = {
   $: "LocalSet";
   index: number;

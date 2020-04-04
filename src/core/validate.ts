@@ -1258,7 +1258,7 @@ function validateAssign(
   return null;
 }
 
-function makeAssign(left: GetForAssign | ItemGet, right: Expression): Assign {
+function makeAssign(left: GetForAssign, right: Expression): Assign {
   if (left.$ === "LocalGet") {
     return {
       $: "LocalSet",
