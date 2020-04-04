@@ -63,10 +63,14 @@ describe("Validate", function() {
     assertErrorExists(`void f() { return 1; }`);
     assertErrorExists(`void f(int a) { return a; }`);
     assertErrorExists(`float f(int a) { return a; }`);
+    assertErrorExists(`bool f(int a) { return a; }`);
+    assertErrorExists(`int f(bool a) { return a; }`);
     assertErrorExists(`void f(void a) {}`);
     assertErrorExists(`void f() {} void f() {}`);
     assertErrorExists(`void f() { return f; }`);
     assertErrorExists(`int[] f() { return f; }`);
+    assertErrorExists(`int f() { return 1 > 0; }`);
+    assertErrorExists(`int f() { return ""; }`);
     // assertErrorExists(`string f() { return f; }`);
   });
   it("global assign", () => {
@@ -175,5 +179,6 @@ describe("Validate", function() {
     assertErrorExists(`int a = 1 + "";`);
     assertErrorExists(`int a = "" + 1;`);
     assertErrorExists(`int a = "" + "";`);
+    assertErrorExists(`bool a = "" > "";`);
   });
 });
