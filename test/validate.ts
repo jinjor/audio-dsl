@@ -186,6 +186,18 @@ describe("Validate", function() {
     assertErrorExists(`bool a = 0 <= 0.0;`);
     assertErrorExists(`bool a = 0.0 <= 0;`);
   });
+  it.skip("op (?)", () => {
+    assertOk(`int a = 1 > 0 ? 1 : 0;`);
+    assertOk(`float a = 1 > 0 ? 1.0 : 0.0;`);
+    assertOk(`int a = 1.0 > 0.0 ? 1 : 0;`);
+    assertOk(`float a = 1.0 > 0.0 ? 1.0 : 0.0;`);
+    assertErrorExists(`int a = 1 > 0 ? 1 : 0.0;`);
+    assertErrorExists(`int a = 1 > 0 ? 1.0 : 0;`);
+    assertErrorExists(`int a = 1 > 0 ? 1.0 : 0.0;`);
+    assertErrorExists(`float a = 1 > 0 ? 1 : 0.0;`);
+    assertErrorExists(`float a = 1 > 0 ? 1.0 : 0;`);
+    assertErrorExists(`float a = 1 > 0 ? 1 : 0;`);
+  });
   it("string", () => {
     assertErrorExists(`int a = "";`);
     assertErrorExists(`float a = "";`);
