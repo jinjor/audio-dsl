@@ -734,55 +734,35 @@ function validateParamDeclaration(
     return;
   }
   if (isArray) {
-    if (valueType.$ === "Int32Type") {
-      validateArrayDeclaration(
-        state,
-        scope,
-        ast.name.name,
-        primitives.int32Type,
-        state.numSamples,
-        null
-      );
-    } else {
-      validateArrayDeclaration(
-        state,
-        scope,
-        ast.name.name,
-        primitives.float32Type,
-        state.numSamples,
-        null
-      );
-    }
+    validateArrayDeclaration(
+      state,
+      scope,
+      ast.name.name,
+      valueType,
+      state.numSamples,
+      null
+    );
   } else {
-    if (valueType.$ === "Int32Type") {
-      scope.declareType(ast.name.name, primitives.int32Type);
-      state.globalVariableDeclarations.push({
-        $: "GlobalVariableDeclaration",
-        type: primitives.int32Type,
-        name: ast.name.name,
-        mutable: true,
-        init: {
-          $: "Int32Const",
-          value: 0,
-        },
-        export: true,
-      });
-    } else if (valueType.$ === "Float32Type") {
-      scope.declareType(ast.name.name, primitives.float32Type);
-      state.globalVariableDeclarations.push({
-        $: "GlobalVariableDeclaration",
-        type: primitives.float32Type,
-        name: ast.name.name,
-        mutable: true,
-        init: {
-          $: "Float32Const",
-          value: 0,
-        },
-        export: true,
-      });
-    }
+    let init: Int32Const | Float32Const =
+      valueType.$ === "Int32Type"
+        ? {
+            $: "Int32Const",
+            value: 0,
+          }
+        : {
+            $: "Float32Const",
+            value: 0,
+          };
+    scope.declareType(ast.name.name, valueType);
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      type: valueType,
+      name: ast.name.name,
+      mutable: true,
+      init,
+      export: true,
+    });
   }
-
   if (optionValue == null) {
     return;
   }
