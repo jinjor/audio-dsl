@@ -96,6 +96,7 @@ import {
   UnknownField,
   MissingFields,
   AssigningStructIsNotSupported,
+  InvlaidAssignTarget,
 } from "./errors";
 import { DataBuilder, StringBuilder } from "./data-builder";
 
@@ -1253,9 +1254,10 @@ function validateAssign(
       return null;
     }
     return makeAssign(leftExp, rightExp);
+  } else {
+    state.errors.push(new InvlaidAssignTarget(ast.left.range));
+    return null;
   }
-
-  return null;
 }
 
 function makeAssign(left: GetForAssign, right: Expression): Assign {

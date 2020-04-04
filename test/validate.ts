@@ -106,8 +106,7 @@ describe("Validate", function () {
     assertErrorExists(`int[] a; void f() { a[0.0] = 1; }`);
     assertErrorExists(`int[] a; void f() { a[""] = 1; }`);
     assertErrorExists(`int[] a; void f() { a[1 > 0] = 1; }`);
-    // TODO
-    // assertErrorExists(`void a(){} void f() { a() = 1; }`);
+    assertErrorExists(`void a(){} void f() { a() = 1; }`);
     assertErrorExists(`void a(){} void f() { a[0] = 1; }`);
   });
   it("call", () => {

@@ -147,8 +147,8 @@ export class TooFewArguments implements ValidationErrorType {
 }
 export class InvlaidAssignTarget implements ValidationErrorType {
   message: string;
-  constructor(public range: ast.Range | null, expressionName: string) {
-    this.message = "cannot assignable to " + expressionName;
+  constructor(public range: ast.Range) {
+    this.message = "invalid assign target";
   }
 }
 export class UnknownField implements ValidationErrorType {
