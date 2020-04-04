@@ -26,8 +26,11 @@ jobs:
           ./e2e-test.sh
       - name: npm pack for VSCode Extension
         working-directory: ./vscode-dsl/server
+        # `npm pack` to include real directory (not a symlink)
+        # `npm install` to update package-lock.json
         run: |
           npm pack ../..
+          npm install
       - name: VSCode Extension
         working-directory: ./vscode-dsl
         run: |
