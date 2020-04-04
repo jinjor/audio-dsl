@@ -24,6 +24,10 @@ jobs:
           npm run build
           npm test
           ./e2e-test.sh
+      - name: npm pack for VSCode Extension
+        working-directory: ./vscode-dsl/server
+        run: |
+          npm pack ../..
       - name: VSCode Extension
         working-directory: ./vscode-dsl
         run: |
