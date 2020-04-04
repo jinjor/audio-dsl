@@ -43,6 +43,8 @@ import {
   StructType,
   ValueType,
   StringType,
+  Int32Const,
+  Float32Const,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -753,11 +755,12 @@ function validateParamDeclaration(
     }
   } else {
     if (valueType.$ === "Int32Type") {
+      scope.declareType(ast.name.name, primitives.int32Type);
       state.globalVariableDeclarations.push({
         $: "GlobalVariableDeclaration",
         type: primitives.int32Type,
         name: ast.name.name,
-        mutable: false,
+        mutable: true,
         init: {
           $: "Int32Const",
           value: 0,
@@ -765,11 +768,12 @@ function validateParamDeclaration(
         export: true,
       });
     } else if (valueType.$ === "Float32Type") {
+      scope.declareType(ast.name.name, primitives.float32Type);
       state.globalVariableDeclarations.push({
         $: "GlobalVariableDeclaration",
         type: primitives.float32Type,
         name: ast.name.name,
-        mutable: false,
+        mutable: true,
         init: {
           $: "Float32Const",
           value: 0,
