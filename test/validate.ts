@@ -39,12 +39,12 @@ function assertErrorExists(src: string, expectedError?: any) {
     console.log("expected error not found");
     console.log(src);
     console.log("expected: " + expectedError);
-    console.log("errors: " + result.errors.map(e => e.message).join(", "));
+    console.log("errors: " + result.errors.map((e) => e.message).join(", "));
     assert.fail();
   }
 }
 
-describe("Validate", function() {
+describe("Validate", function () {
   it("global variable declaration", () => {
     assertOk(`int a = 0;`);
     assertOk(`float a = 0.0;`);

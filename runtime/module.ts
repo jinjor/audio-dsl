@@ -1,6 +1,6 @@
 import {
   LanguageSpecificInstance,
-  LanguageSpecificExports
+  LanguageSpecificExports,
 } from "./definition.js";
 
 function pointerToInt(memory: WebAssembly.Memory, pointer: number): number {
@@ -24,18 +24,18 @@ function pointerToString(memory: WebAssembly.Memory, pointer: number): string {
 
 function createUtilModule(memory: WebAssembly.Memory): any {
   return {
-    log_i: function(arg: number) {
+    log_i: function (arg: number) {
       console.log("log_i:", arg);
     },
-    log_f: function(arg: number) {
+    log_f: function (arg: number) {
       console.log("log_f:", arg);
     },
-    log_b: function(arg: number) {
+    log_b: function (arg: number) {
       console.log("log_b:", arg);
     },
-    log_s: function(pointer: number) {
+    log_s: function (pointer: number) {
       console.log("log_s:", pointerToString(memory, pointer));
-    }
+    },
   };
 }
 
@@ -64,17 +64,17 @@ function createMathModule(memory: WebAssembly.Memory): any {
     atanh: Math.atanh,
     cosh: Math.cosh,
     sinh: Math.sinh,
-    tanh: Math.tanh
+    tanh: Math.tanh,
   };
 }
 
 function createImportObject(memory: WebAssembly.Memory): any {
   return {
     env: {
-      memory
+      memory,
     },
     util: createUtilModule(memory),
-    math: createMathModule(memory)
+    math: createMathModule(memory),
   };
 }
 
@@ -151,7 +151,7 @@ export class Instance {
       defaultValue,
       minValue,
       maxValue,
-      automationRate
+      automationRate,
     };
   }
   getParamInfoList(): { descriptor: Descriptor; ptr: number }[] {

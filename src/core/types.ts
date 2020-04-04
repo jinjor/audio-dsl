@@ -213,8 +213,8 @@ export function paramOptionsType(
     types: [
       { name: "defaultValue", type: { $: type } },
       { name: "minValue", type: { $: type } },
-      { name: "maxValue", type: { $: type } }
-    ]
+      { name: "maxValue", type: { $: type } },
+    ],
   };
 }
 export function paramType(type: "Int32Type" | "Float32Type"): StructType {
@@ -225,8 +225,8 @@ export function paramType(type: "Int32Type" | "Float32Type"): StructType {
       { name: "defaultValue", type: { $: type } },
       { name: "minValue", type: { $: type } },
       { name: "maxValue", type: { $: type } },
-      { name: "automationRate", type: { $: "Int32Type" } } // pointer to "a-rate" | "k-rate"
-    ]
+      { name: "automationRate", type: { $: "Int32Type" } }, // pointer to "a-rate" | "k-rate"
+    ],
   };
 }
 

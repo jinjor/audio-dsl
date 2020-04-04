@@ -15,7 +15,10 @@
     "build:compiler": "tsc",
     "build:runtime": "tsc -p runtime",
     "build:runtime:bundle": "rollup runtime/dist/index.js --format es --file dist/runtime.js",
-    "test": "mocha -r source-map-support/register dist/test/**/*.js",
+    "format": "prettier --write src/** runtime/** test/**",
+    "test": "run-s test:*",
+    "test:compiler": "mocha -r source-map-support/register dist/test/**/*.js",
+    "test:format": "prettier --check src/** runtime/** test/**",
     "clean": "rm -rf dist tmp public/js"
   },
   "author": "jinjor",
@@ -37,6 +40,7 @@
     "http-server": "^0.12.1",
     "mocha": "^7.1.0",
     "npm-run-all": "^4.1.5",
+    "prettier": "^2.0.2",
     "source-map-support": "^0.5.16",
     "typescript": "^3.8.3"
   }

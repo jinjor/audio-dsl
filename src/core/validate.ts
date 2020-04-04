@@ -42,7 +42,7 @@ import {
   paramOptionsType,
   StructType,
   ValueType,
-  StringType
+  StringType,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -93,7 +93,7 @@ import {
   ParametersShouldBeNumberOrArrayOfNumbers,
   UnknownField,
   MissingFields,
-  AssigningStructIsNotSupported
+  AssigningStructIsNotSupported,
 } from "./errors";
 import { DataBuilder, StringBuilder } from "./data-builder";
 
@@ -178,7 +178,7 @@ class GlobalScope implements Scope {
       $: "ArrayType",
       itemType,
       numberOfItems,
-      byteOffset: this.byteOffset
+      byteOffset: this.byteOffset,
     });
     this.byteOffset += sizeOf(itemType) * numberOfItems;
   }
@@ -208,7 +208,7 @@ class GlobalScope implements Scope {
     ) {
       return [
         { $: "GlobalGet", name, type: typeOrStaticValue },
-        typeOrStaticValue
+        typeOrStaticValue,
       ];
     }
     if (typeOrStaticValue.$ === "FunctionType") {
@@ -219,8 +219,8 @@ class GlobalScope implements Scope {
         typeOrStaticValue,
         {
           $: "StructType",
-          types: typeOrStaticValue.types
-        }
+          types: typeOrStaticValue.types,
+        },
       ];
     }
     if (typeOrStaticValue.$ === "ArrayType") {
@@ -229,9 +229,9 @@ class GlobalScope implements Scope {
           $: "ArrayGet",
           name,
           byteOffset: typeOrStaticValue.byteOffset,
-          itemType: typeOrStaticValue.itemType
+          itemType: typeOrStaticValue.itemType,
         },
-        typeOrStaticValue
+        typeOrStaticValue,
       ];
     }
     throw new Error("unreachable");
@@ -381,7 +381,7 @@ export function validate(
     numberOfParams: 0,
     dataBuilder,
     strings: new StringBuilder(dataBuilder),
-    errors: []
+    errors: [],
   };
   const scope = new GlobalScope();
 
@@ -389,7 +389,7 @@ export function validate(
   ast.imports = [
     { $: "NameImport", name: "builtin" },
     { $: "NameImport", name: "math" },
-    { $: "NameImport", name: "util" }
+    { $: "NameImport", name: "util" },
   ];
   for (const importAst of ast.imports) {
     validateImport(state, scope, importAst);
@@ -403,9 +403,9 @@ export function validate(
     mutable: false,
     init: {
       $: "Int32Const",
-      value: 2
+      value: 2,
     },
-    export: true
+    export: true,
   });
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
@@ -414,9 +414,9 @@ export function validate(
     mutable: false,
     init: {
       $: "Int32Const",
-      value: 2
+      value: 2,
     },
-    export: true
+    export: true,
   });
   validateArrayDeclaration(
     state,
@@ -464,9 +464,9 @@ export function validate(
       mutable: false,
       init: {
         $: "Int32Const",
-        value: array.byteOffset
+        value: array.byteOffset,
       },
-      export: true
+      export: true,
     });
   }
 
@@ -477,9 +477,9 @@ export function validate(
     mutable: false,
     init: {
       $: "Int32Const",
-      value: state.numberOfParams
+      value: state.numberOfParams,
     },
-    export: true
+    export: true,
   });
 
   // string pointers
@@ -491,9 +491,9 @@ export function validate(
     mutable: false,
     init: {
       $: "Int32Const",
-      value: staticSegmentOffset
+      value: staticSegmentOffset,
     },
-    export: true
+    export: true,
   });
 
   // log.debug(util.inspect(state, { colors: true, depth: 10 }));
@@ -502,7 +502,7 @@ export function validate(
     globalVariableDeclarations: state.globalVariableDeclarations,
     functionDeclarations: state.functionDeclarations,
     segment: { offset: staticSegmentOffset, data: dataBuilder.createData() },
-    errors: state.errors
+    errors: state.errors,
   };
 }
 function validateArrayDeclaration(
@@ -541,7 +541,7 @@ function validateImport(
           $: "FunctionImport",
           moduleName,
           functionName: name,
-          type
+          type,
         });
         continue;
       }
@@ -672,7 +672,7 @@ function validateFunctionDeclaration(
     scope.declareType(ast.name.name, {
       $: "FunctionType",
       params: paramTypes,
-      returnType
+      returnType,
     });
   }
   state.functionDeclarations.push({
@@ -682,7 +682,7 @@ function validateFunctionDeclaration(
     returnType,
     localTypes,
     statements,
-    export: true // ?
+    export: true, // ?
   });
 }
 
@@ -760,9 +760,9 @@ function validateParamDeclaration(
         mutable: false,
         init: {
           $: "Int32Const",
-          value: 0
+          value: 0,
         },
-        export: true
+        export: true,
       });
     } else if (valueType.$ === "Float32Type") {
       state.globalVariableDeclarations.push({
@@ -772,9 +772,9 @@ function validateParamDeclaration(
         mutable: false,
         init: {
           $: "Float32Const",
-          value: 0
+          value: 0,
         },
-        export: true
+        export: true,
       });
     }
   }
@@ -808,9 +808,9 @@ function validateParamDeclaration(
       mutable: false,
       init: {
         $: "Int32Const",
-        value: infoStructOffset
+        value: infoStructOffset,
       },
-      export: true
+      export: true,
     });
   }
   state.numberOfParams++;
@@ -827,11 +827,11 @@ function evaluateStructLiteralInGlobal(
     type: ValueType;
     found: boolean;
     right: NumberConst | null;
-  }[] = type.types.map(t => ({
+  }[] = type.types.map((t) => ({
     name: t.name,
     type: t.type,
     found: false,
-    right: null
+    right: null,
   }));
   for (let i = 0; i < ast.fields.length; i++) {
     const fieldAst = ast.fields[i];
@@ -892,7 +892,7 @@ function evaluateStructLiteralInGlobal(
       return null;
     }
   }
-  return fields.map(f => f.right) as NumberConst[];
+  return fields.map((f) => f.right) as NumberConst[];
 }
 
 function validateLocalStatement(
@@ -1052,13 +1052,13 @@ function validateLoop(
       left: {
         $: "LocalGet",
         index: iIndex,
-        type: primitives.int32Type
+        type: primitives.int32Type,
       },
       right: {
         $: "Int32Const",
-        value: 1
-      }
-    }
+        value: 1,
+      },
+    },
   });
   localStatements.push({
     $: "Loop",
@@ -1069,14 +1069,14 @@ function validateLoop(
       left: {
         $: "LocalGet",
         index: iIndex,
-        type: primitives.int32Type
+        type: primitives.int32Type,
       },
       right: {
         $: "LocalGet",
         index: lenIndex,
-        type: primitives.int32Type
-      }
-    }
+        type: primitives.int32Type,
+      },
+    },
   });
 }
 
@@ -1108,7 +1108,7 @@ function validateReturn(
   }
   localStatements.push({
     $: "Return",
-    value: returnExp
+    value: returnExp,
   });
 }
 
@@ -1203,7 +1203,7 @@ function validateGlobalDeclaration(
     type,
     mutable: ast.hasMutableFlag,
     init: rightExp,
-    export: !ast.hasMutableFlag // by design
+    export: !ast.hasMutableFlag, // by design
   });
 }
 function validateLocalAssign(
@@ -1279,19 +1279,19 @@ function makeAssign(left: GetForAssign | ItemGet, right: Expression): Assign {
     return {
       $: "LocalSet",
       index: left.index,
-      value: right
+      value: right,
     };
   } else if (left.$ === "GlobalGet") {
     return {
       $: "GlobalSet",
       name: left.name,
-      value: right
+      value: right,
     };
   } else if (left.$ === "ItemGet") {
     return {
       $: "ItemSet",
       pointer: left.pointer,
-      value: right
+      value: right,
     };
   }
   throw new Error("Unreachable");
@@ -1372,10 +1372,10 @@ function validateArrayAccess(
         byteOffset: arrayExp.byteOffset,
         itemType: arrayType.itemType,
         name: arrayExp.name,
-        index: indexExp
-      }
+        index: indexExp,
+      },
     },
-    arrayType.itemType
+    arrayType.itemType,
   ];
 }
 
@@ -1406,17 +1406,17 @@ function validateExpression(
     return [
       {
         $: "Int32Const",
-        value: ast.value
+        value: ast.value,
       },
-      primitives.int32Type
+      primitives.int32Type,
     ];
   } else if (ast.$ === "FloatLiteral") {
     return [
       {
         $: "Float32Const",
-        value: ast.value
+        value: ast.value,
       },
-      primitives.float32Type
+      primitives.float32Type,
     ];
   } else if (ast.$ === "StringLiteral") {
     return validateStringLiteral(state, scope, ast.value);
@@ -1456,9 +1456,9 @@ function validateStringLiteral(
   return [
     {
       $: "StringGet",
-      relativeByteOffset: offset
+      relativeByteOffset: offset,
     },
-    primitives.stringType
+    primitives.stringType,
   ];
 }
 
@@ -1484,9 +1484,9 @@ function validateBinOp(
         {
           $: combination.kind,
           left: leftExp,
-          right: rightExp
+          right: rightExp,
         },
-        combination.returnType
+        combination.returnType,
       ];
     }
   }
@@ -1514,14 +1514,14 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.int32Type,
-        kind: "Int32AddOp"
+        kind: "Int32AddOp",
       },
       {
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.float32Type,
-        kind: "Float32AddOp"
-      }
+        kind: "Float32AddOp",
+      },
     ];
   }
   if (kind === "-") {
@@ -1530,14 +1530,14 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.int32Type,
-        kind: "Int32SubOp"
+        kind: "Int32SubOp",
       },
       {
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.float32Type,
-        kind: "Float32SubOp"
-      }
+        kind: "Float32SubOp",
+      },
     ];
   }
 
@@ -1547,14 +1547,14 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.int32Type,
-        kind: "Int32MulOp"
+        kind: "Int32MulOp",
       },
       {
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.float32Type,
-        kind: "Float32MulOp"
-      }
+        kind: "Float32MulOp",
+      },
     ];
   }
   if (kind === "/") {
@@ -1563,8 +1563,8 @@ function getBinOpCombination(
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.float32Type,
-        kind: "Float32DivOp"
-      }
+        kind: "Float32DivOp",
+      },
     ];
   }
   if (kind === "%") {
@@ -1573,8 +1573,8 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.int32Type,
-        kind: "Int32RemOp"
-      }
+        kind: "Int32RemOp",
+      },
     ];
   }
 
@@ -1584,14 +1584,14 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.boolType,
-        kind: "Int32LT"
+        kind: "Int32LT",
       },
       {
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.boolType,
-        kind: "Float32LT"
-      }
+        kind: "Float32LT",
+      },
     ];
   }
   if (kind === "<=") {
@@ -1600,14 +1600,14 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.boolType,
-        kind: "Int32LE"
+        kind: "Int32LE",
       },
       {
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.boolType,
-        kind: "Float32LE"
-      }
+        kind: "Float32LE",
+      },
     ];
   }
   if (kind === ">") {
@@ -1616,14 +1616,14 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.boolType,
-        kind: "Int32GT"
+        kind: "Int32GT",
       },
       {
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.boolType,
-        kind: "Float32GT"
-      }
+        kind: "Float32GT",
+      },
     ];
   }
   if (kind === ">=") {
@@ -1632,14 +1632,14 @@ function getBinOpCombination(
         leftType: primitives.int32Type,
         rightType: primitives.int32Type,
         returnType: primitives.boolType,
-        kind: "Int32GE"
+        kind: "Int32GE",
       },
       {
         leftType: primitives.float32Type,
         rightType: primitives.float32Type,
         returnType: primitives.boolType,
-        kind: "Float32GE"
-      }
+        kind: "Float32GE",
+      },
     ];
   }
   throw new Error("unreachable");
@@ -1680,9 +1680,9 @@ function validateCondOp(
       $: "CondOp",
       condition: conditionExp,
       ifTrue: ifTrueExp,
-      ifFalse: ifFalseExp
+      ifFalse: ifFalseExp,
     },
-    ifTrueType
+    ifTrueType,
   ];
 }
 
@@ -1748,18 +1748,18 @@ function validateFunctionCall(
     return [
       {
         $: "IntToFloatCast",
-        arg: args.map(item => item![0])[0]
+        arg: args.map((item) => item![0])[0],
       },
-      funcType.returnType
+      funcType.returnType,
     ];
   }
   if (funcExp.name === "int") {
     return [
       {
         $: "FloatToIntCast",
-        arg: args.map(item => item![0])[0]
+        arg: args.map((item) => item![0])[0],
       },
-      funcType.returnType
+      funcType.returnType,
     ];
   }
 
@@ -1767,11 +1767,11 @@ function validateFunctionCall(
     {
       $: "FunctionCall",
       target: funcExp,
-      args: args.map(item => item![0]),
+      args: args.map((item) => item![0]),
       // params,
-      returnType: funcType.returnType
+      returnType: funcType.returnType,
     },
-    funcType.returnType
+    funcType.returnType,
   ];
 }
 
@@ -1786,26 +1786,26 @@ function evaluateGlobalExpression(
     return [
       {
         $: "Int32Const",
-        value: ast.value
+        value: ast.value,
       },
-      primitives.int32Type
+      primitives.int32Type,
     ];
   } else if (ast.$ === "FloatLiteral") {
     return [
       {
         $: "Float32Const",
-        value: ast.value
+        value: ast.value,
       },
-      primitives.float32Type
+      primitives.float32Type,
     ];
   } else if (ast.$ === "StringLiteral") {
     const offset = state.strings.set(ast.value);
     return [
       {
         $: "StringGet",
-        relativeByteOffset: offset
+        relativeByteOffset: offset,
       },
-      primitives.stringType
+      primitives.stringType,
     ];
   } else if (ast.$ === "ArrayLiteral") {
     state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
@@ -1896,144 +1896,144 @@ function evaluateGlobalBinOp(
         return [
           {
             $: "Int32Const",
-            value: leftExp.value + rightExp.value
+            value: leftExp.value + rightExp.value,
           },
-          primitives.int32Type
+          primitives.int32Type,
         ];
       }
       if (combination.kind === "Int32SubOp") {
         return [
           {
             $: "Int32Const",
-            value: leftExp.value - rightExp.value
+            value: leftExp.value - rightExp.value,
           },
-          primitives.int32Type
+          primitives.int32Type,
         ];
       }
       if (combination.kind === "Int32MulOp") {
         return [
           {
             $: "Int32Const",
-            value: leftExp.value * rightExp.value
+            value: leftExp.value * rightExp.value,
           },
-          primitives.int32Type
+          primitives.int32Type,
         ];
       }
       if (combination.kind === "Int32RemOp") {
         return [
           {
             $: "Int32Const",
-            value: leftExp.value % rightExp.value
+            value: leftExp.value % rightExp.value,
           },
-          primitives.int32Type
+          primitives.int32Type,
         ];
       }
       if (combination.kind === "Int32LT") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value < rightExp.value ? 1 : 0
+            value: leftExp.value < rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       if (combination.kind === "Int32LE") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value <= rightExp.value ? 1 : 0
+            value: leftExp.value <= rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       if (combination.kind === "Int32GT") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value > rightExp.value ? 1 : 0
+            value: leftExp.value > rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       if (combination.kind === "Int32GE") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value >= rightExp.value ? 1 : 0
+            value: leftExp.value >= rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       if (combination.kind === "Float32AddOp") {
         return [
           {
             $: "Float32Const",
-            value: leftExp.value + rightExp.value
+            value: leftExp.value + rightExp.value,
           },
-          primitives.float32Type
+          primitives.float32Type,
         ];
       }
       if (combination.kind === "Float32SubOp") {
         return [
           {
             $: "Float32Const",
-            value: leftExp.value - rightExp.value
+            value: leftExp.value - rightExp.value,
           },
-          primitives.float32Type
+          primitives.float32Type,
         ];
       }
       if (combination.kind === "Float32MulOp") {
         return [
           {
             $: "Float32Const",
-            value: leftExp.value * rightExp.value
+            value: leftExp.value * rightExp.value,
           },
-          primitives.float32Type
+          primitives.float32Type,
         ];
       }
       if (combination.kind === "Float32DivOp") {
         return [
           {
             $: "Float32Const",
-            value: leftExp.value / rightExp.value
+            value: leftExp.value / rightExp.value,
           },
-          primitives.float32Type
+          primitives.float32Type,
         ];
       }
       if (combination.kind === "Float32LT") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value < rightExp.value ? 1 : 0
+            value: leftExp.value < rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       if (combination.kind === "Float32LE") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value <= rightExp.value ? 1 : 0
+            value: leftExp.value <= rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       if (combination.kind === "Float32GT") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value > rightExp.value ? 1 : 0
+            value: leftExp.value > rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       if (combination.kind === "Float32GE") {
         return [
           {
             $: "BoolConst",
-            value: leftExp.value >= rightExp.value ? 1 : 0
+            value: leftExp.value >= rightExp.value ? 1 : 0,
           },
-          primitives.boolType
+          primitives.boolType,
         ];
       }
       throw new Error("unreachable");

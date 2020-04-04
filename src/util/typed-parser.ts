@@ -193,7 +193,7 @@ class ExpectOneOf extends AbstractFailure {
     if (this.alias) {
       return `Expect ${this.alias}`;
     }
-    return this.errors.map(e => e.message).join(", ");
+    return this.errors.map((e) => e.message).join(", ");
   }
 }
 
@@ -636,7 +636,7 @@ export function sepUntil<A>(
   itemParser: Parser<A>
 ): Parser<A[]> {
   return guard(
-    map(_ => [], end),
+    map((_) => [], end),
     sepUntil1(end, separator, itemParser)
   );
 }
@@ -674,7 +674,7 @@ export function keyword<A = null>(s: string, value?: A): Parser<A> {
   if (value === undefined) {
     return expectString(s, "keyword") as any;
   }
-  return map(_ => value, expectString(s, "keyword"));
+  return map((_) => value, expectString(s, "keyword"));
 }
 
 /**

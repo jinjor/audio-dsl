@@ -26,12 +26,12 @@ function deepEq<T, T2 = Exclude<T, "range">>(a: T, b: T2) {
   assert.deepStrictEqual(a, b);
 }
 
-describe("Parser", function() {
+describe("Parser", function () {
   it.skip("todo", () => {
     deepEq(parseExpression(`[]`), { $: "ArrayLiteral", items: [] });
     deepEq(parseExpression(`[ 1 ]`), {
       $: "ArrayLiteral",
-      items: [{ $: "IntLiteral", value: 1 }]
+      items: [{ $: "IntLiteral", value: 1 }],
     });
   });
   it("literal", () => {
@@ -48,23 +48,23 @@ describe("Parser", function() {
     deepEq(parseExpression("a [1]"), {
       $: "ArrayAccess",
       array: { $: "Identifier", name: "a" },
-      index: { $: "IntLiteral", value: 1 }
+      index: { $: "IntLiteral", value: 1 },
     });
     deepEq(parseExpression("a()"), {
       $: "FunctionCall",
       func: { $: "Identifier", name: "a" },
       args: {
         $: "FunctionArguments",
-        values: []
-      }
+        values: [],
+      },
     });
     deepEq(parseExpression("a ( 1 )"), {
       $: "FunctionCall",
       func: { $: "Identifier", name: "a" },
       args: {
         $: "FunctionArguments",
-        values: [{ $: "IntLiteral", value: 1 }]
-      }
+        values: [{ $: "IntLiteral", value: 1 }],
+      },
     });
     deepEq(parseExpression("a () [ 1 ] "), {
       $: "ArrayAccess",
@@ -73,10 +73,10 @@ describe("Parser", function() {
         func: { $: "Identifier", name: "a" },
         args: {
           $: "FunctionArguments",
-          values: []
-        }
+          values: [],
+        },
       },
-      index: { $: "IntLiteral", value: 1 }
+      index: { $: "IntLiteral", value: 1 },
     });
     deepEq(parseExpression("(a + b)()[1]"), {
       $: "ArrayAccess",
@@ -86,14 +86,14 @@ describe("Parser", function() {
           $: "BinOp",
           operator: "+",
           left: { $: "Identifier", name: "a" },
-          right: { $: "Identifier", name: "b" }
+          right: { $: "Identifier", name: "b" },
         },
         args: {
           $: "FunctionArguments",
-          values: []
-        }
+          values: [],
+        },
       },
-      index: { $: "IntLiteral", value: 1 }
+      index: { $: "IntLiteral", value: 1 },
     });
   });
   it("op", () => {
@@ -105,9 +105,9 @@ describe("Parser", function() {
         $: "BinOp",
         operator: "*",
         left: { $: "IntLiteral", value: 1 },
-        right: { $: "IntLiteral", value: 2 }
+        right: { $: "IntLiteral", value: 2 },
       },
-      right: { $: "IntLiteral", value: 3 }
+      right: { $: "IntLiteral", value: 3 },
     });
     deepEq(parseExpression(`1 + 2 * 3`), {
       $: "BinOp",
@@ -117,8 +117,8 @@ describe("Parser", function() {
         $: "BinOp",
         operator: "*",
         left: { $: "IntLiteral", value: 2 },
-        right: { $: "IntLiteral", value: 3 }
-      }
+        right: { $: "IntLiteral", value: 3 },
+      },
     });
     deepEq(parseExpression(`1 * ( 2 + 3 )`), {
       $: "BinOp",
@@ -128,8 +128,8 @@ describe("Parser", function() {
         $: "BinOp",
         operator: "+",
         left: { $: "IntLiteral", value: 2 },
-        right: { $: "IntLiteral", value: 3 }
-      }
+        right: { $: "IntLiteral", value: 3 },
+      },
     });
     deepEq(parseExpression(`1 + 2 > 3`), {
       $: "BinOp",
@@ -138,9 +138,9 @@ describe("Parser", function() {
         $: "BinOp",
         operator: "+",
         left: { $: "IntLiteral", value: 1 },
-        right: { $: "IntLiteral", value: 2 }
+        right: { $: "IntLiteral", value: 2 },
       },
-      right: { $: "IntLiteral", value: 3 }
+      right: { $: "IntLiteral", value: 3 },
     });
     deepEq(parseExpression(`1 >= 2 + 3`), {
       $: "BinOp",
@@ -150,8 +150,8 @@ describe("Parser", function() {
         $: "BinOp",
         operator: "+",
         left: { $: "IntLiteral", value: 2 },
-        right: { $: "IntLiteral", value: 3 }
-      }
+        right: { $: "IntLiteral", value: 3 },
+      },
     });
     deepEq(parseExpression(`( 1 < 2 ) + 3`), {
       $: "BinOp",
@@ -160,9 +160,9 @@ describe("Parser", function() {
         $: "BinOp",
         operator: "<",
         left: { $: "IntLiteral", value: 1 },
-        right: { $: "IntLiteral", value: 2 }
+        right: { $: "IntLiteral", value: 2 },
       },
-      right: { $: "IntLiteral", value: 3 }
+      right: { $: "IntLiteral", value: 3 },
     });
     deepEq(parseExpression(`1 <= 2 ? 3 : 4`), {
       $: "CondOp",
@@ -170,10 +170,10 @@ describe("Parser", function() {
         $: "BinOp",
         operator: "<=",
         left: { $: "IntLiteral", value: 1 },
-        right: { $: "IntLiteral", value: 2 }
+        right: { $: "IntLiteral", value: 2 },
       },
       ifTrue: { $: "IntLiteral", value: 3 },
-      ifFalse: { $: "IntLiteral", value: 4 }
+      ifFalse: { $: "IntLiteral", value: 4 },
     });
     deepEq(parseExpression(`1 ? 2 : 3 ? 4 ? 5 : 6 : 7 ? 8 : 9`), {
       $: "CondOp",
@@ -186,15 +186,15 @@ describe("Parser", function() {
           $: "CondOp",
           condition: { $: "IntLiteral", value: 4 },
           ifTrue: { $: "IntLiteral", value: 5 },
-          ifFalse: { $: "IntLiteral", value: 6 }
+          ifFalse: { $: "IntLiteral", value: 6 },
         },
         ifFalse: {
           $: "CondOp",
           condition: { $: "IntLiteral", value: 7 },
           ifTrue: { $: "IntLiteral", value: 8 },
-          ifFalse: { $: "IntLiteral", value: 9 }
-        }
-      }
+          ifFalse: { $: "IntLiteral", value: 9 },
+        },
+      },
     });
   });
   it("variable declaration", () => {
@@ -202,11 +202,11 @@ describe("Parser", function() {
       $: "VariableDeclaration",
       type: {
         $: "PrimitiveType",
-        name: { $: "PrimitiveTypeName", kind: "int" }
+        name: { $: "PrimitiveTypeName", kind: "int" },
       },
       left: { $: "Identifier", name: "a" },
       right: { $: "IntLiteral", value: 1 },
-      hasMutableFlag: false
+      hasMutableFlag: false,
     });
     deepEq(parseStatement(`int [ ] a = 1;`), {
       $: "VariableDeclaration",
@@ -214,47 +214,47 @@ describe("Parser", function() {
         $: "ArrayType",
         type: {
           $: "PrimitiveType",
-          name: { $: "PrimitiveTypeName", kind: "int" }
-        }
+          name: { $: "PrimitiveTypeName", kind: "int" },
+        },
       },
       left: { $: "Identifier", name: "a" },
       right: { $: "IntLiteral", value: 1 },
-      hasMutableFlag: false
+      hasMutableFlag: false,
     });
     deepEq(parseStatement(`var int a = 1;`), {
       $: "VariableDeclaration",
       type: {
         $: "PrimitiveType",
-        name: { $: "PrimitiveTypeName", kind: "int" }
+        name: { $: "PrimitiveTypeName", kind: "int" },
       },
       left: { $: "Identifier", name: "a" },
       right: { $: "IntLiteral", value: 1 },
-      hasMutableFlag: true
+      hasMutableFlag: true,
     });
   });
   it("loop", () => {
     deepEq(parseStatement(`loop { }`), {
       $: "Loop",
-      statements: []
+      statements: [],
     });
     deepEq(parseStatement(`loop { return; }`), {
       $: "Loop",
       statements: [
         {
           $: "Return",
-          value: null
-        }
-      ]
+          value: null,
+        },
+      ],
     });
   });
   it("return", () => {
     deepEq(parseStatement(`return;`), {
       $: "Return",
-      value: null
+      value: null,
     });
     deepEq(parseStatement(`return 1;`), {
       $: "Return",
-      value: { $: "IntLiteral", value: 1 }
+      value: { $: "IntLiteral", value: 1 },
     });
   });
   it("function declaration", () => {
@@ -263,13 +263,13 @@ describe("Parser", function() {
       name: { $: "Identifier", name: "a" },
       params: {
         $: "ParamList",
-        items: []
+        items: [],
       },
       returnType: {
         $: "PrimitiveType",
-        name: { $: "PrimitiveTypeName", kind: "int" }
+        name: { $: "PrimitiveTypeName", kind: "int" },
       },
-      statements: []
+      statements: [],
     });
     deepEq(parseStatement(`void ab ( int a, float b ) { return; }`), {
       $: "FunctionDeclaration",
@@ -281,30 +281,30 @@ describe("Parser", function() {
             $: "Param",
             type: {
               $: "PrimitiveType",
-              name: { $: "PrimitiveTypeName", kind: "int" }
+              name: { $: "PrimitiveTypeName", kind: "int" },
             },
-            name: "a"
+            name: "a",
           },
           {
             $: "Param",
             type: {
               $: "PrimitiveType",
-              name: { $: "PrimitiveTypeName", kind: "float" }
+              name: { $: "PrimitiveTypeName", kind: "float" },
             },
-            name: "b"
-          }
-        ]
+            name: "b",
+          },
+        ],
       },
       returnType: {
         $: "PrimitiveType",
-        name: { $: "PrimitiveTypeName", kind: "void" }
+        name: { $: "PrimitiveTypeName", kind: "void" },
       },
       statements: [
         {
           $: "Return",
-          value: null
-        }
-      ]
+          value: null,
+        },
+      ],
     });
   });
 });

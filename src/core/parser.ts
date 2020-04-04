@@ -25,7 +25,7 @@ import {
   sepBy,
   $1,
   stringBeforeEndOr,
-  Position
+  Position,
 } from "../util/typed-parser";
 import * as util from "util";
 import * as log from "./log";
@@ -34,7 +34,7 @@ import * as ast from "./ast";
 function transformPosition(pos: Position): ast.Position {
   return {
     line: pos.row - 1,
-    character: pos.column - 1
+    character: pos.column - 1,
   };
 }
 function transformRange(range: Range): ast.Range {
@@ -42,8 +42,8 @@ function transformRange(range: Range): ast.Range {
     start: transformPosition(range.start),
     end: transformPosition({
       row: range.end.row,
-      column: range.end.column + 1
-    })
+      column: range.end.column + 1,
+    }),
   };
 }
 
@@ -53,7 +53,7 @@ const intLiteral = withContext<ast.IntLiteral>(
     (value, range) => ({
       range: transformRange(range),
       $: "IntLiteral",
-      value
+      value,
     }),
     int("-?(0|[1-9][0-9]*)")
   )
@@ -64,7 +64,7 @@ const floatLiteral = withContext<ast.FloatLiteral>(
     (value, range) => ({
       range: transformRange(range),
       $: "FloatLiteral",
-      value
+      value,
     }),
     float("-?(0|[1-9][0-9]*)(\\.[0-9]+)")
   )
@@ -101,7 +101,7 @@ const stringLiteral = withContext<ast.StringLiteral>(
     (value: string, range) => ({
       range: transformRange(range),
       $: "StringLiteral",
-      value
+      value,
     }),
     seq($2, symbol('"'), strInner, symbol('"'), _)
   )
@@ -113,7 +113,7 @@ const arrayLiteral: Parser<ast.ArrayLiteral> = withContext(
     (items, range) => ({
       range: transformRange(range),
       $: "ArrayLiteral",
-      items
+      items,
     }),
     bracedSep<ast.Expression>(
       "[",
@@ -167,7 +167,7 @@ const accessor = oneOf<ast.ArrayAccessor | ast.FunctionArguments>(
     (values, range) => ({
       range: transformRange(range),
       $: "FunctionArguments",
-      values
+      values,
     }),
     functionArgs
   ),
@@ -175,7 +175,7 @@ const accessor = oneOf<ast.ArrayAccessor | ast.FunctionArguments>(
     (value, range) => ({
       range: transformRange(range),
       $: "ArrayAccessor",
-      value
+      value,
     }),
     arrayIndex
   )
@@ -192,14 +192,14 @@ function joinAccessors(
   if (accessor.$ === "ArrayAccessor") {
     const range = {
       start: acc.range.start,
-      end: accessor.range.end
+      end: accessor.range.end,
     };
     return joinAccessors(
       {
         range,
         $: "ArrayAccess",
         array: acc,
-        index: accessor.value
+        index: accessor.value,
       },
       tail,
       i + 1
@@ -207,14 +207,14 @@ function joinAccessors(
   } else if (accessor.$ === "FunctionArguments") {
     const range = {
       start: acc.range.start,
-      end: accessor.range.end
+      end: accessor.range.end,
     };
     return joinAccessors(
       {
         range,
         $: "FunctionCall",
         func: acc,
-        args: accessor
+        args: accessor,
       },
       tail,
       i + 1
@@ -240,7 +240,7 @@ function joinBinOp<Op extends ast.BinOpKind>(
   }
   const range = {
     start: acc.range.start,
-    end: tail[i].value.range.end
+    end: tail[i].value.range.end,
   };
   return joinBinOp(
     {
@@ -248,7 +248,7 @@ function joinBinOp<Op extends ast.BinOpKind>(
       $: "BinOp",
       operator: tail[i].op,
       left: acc,
-      right: tail[i].value
+      right: tail[i].value,
     },
     tail,
     i + 1
@@ -272,10 +272,12 @@ const addOpKind: Parser<ast.AddOpKind> = oneOf<ast.AddOpKind>(
   keyword("+", "+"),
   keyword("-", "-")
 );
-const comparisonTail: Parser<{
-  op: ast.AddOpKind;
-  value: ast.Expression;
-}[]> = many(seq((op, _, value) => ({ op, value }), addOpKind, _, term, _));
+const comparisonTail: Parser<
+  {
+    op: ast.AddOpKind;
+    value: ast.Expression;
+  }[]
+> = many(seq((op, _, value) => ({ op, value }), addOpKind, _, term, _));
 const comparison = seq(
   (f, _, tail) => joinBinOp(f, tail, 0),
   term,
@@ -289,12 +291,12 @@ const compOpKind: Parser<ast.CompOpKind> = oneOf<ast.CompOpKind>(
   keyword("<", "<")
 );
 
-const conditionTail: Parser<{
-  op: ast.CompOpKind;
-  value: ast.Expression;
-}[]> = many(
-  seq((op, _, value) => ({ op, value }), compOpKind, _, comparison, _)
-);
+const conditionTail: Parser<
+  {
+    op: ast.CompOpKind;
+    value: ast.Expression;
+  }[]
+> = many(seq((op, _, value) => ({ op, value }), compOpKind, _, comparison, _));
 const condition = seq(
   (f, _, tail) => joinBinOp(f, tail, 0),
   comparison,
@@ -305,7 +307,7 @@ const expression: Parser<ast.Expression> = mapWithRange(
   (
     {
       head,
-      tail
+      tail,
     }: {
       head: ast.Expression;
       tail: { ifTrue: ast.Expression; ifFalse: ast.Expression } | null;
@@ -320,7 +322,7 @@ const expression: Parser<ast.Expression> = mapWithRange(
       $: "CondOp",
       condition: head,
       ifTrue: tail.ifTrue,
-      ifFalse: tail.ifFalse
+      ifFalse: tail.ifFalse,
     };
   },
   seq(
@@ -354,7 +356,7 @@ const primitiveTypeName: Parser<ast.PrimitiveTypeName> = mapWithRange(
   (kind: ast.PrimitiveTypeNameKind, range) => ({
     range: transformRange(range),
     $: "PrimitiveTypeName",
-    kind
+    kind,
   }),
   oneOf<ast.PrimitiveTypeNameKind>(
     keyword("int", "int"),
@@ -372,7 +374,7 @@ const type: Parser<ast.Type> = mapWithRange(
     const primitive: ast.PrimitiveType = {
       range: primitiveTypeName.range,
       $: "PrimitiveType",
-      name: primitiveTypeName
+      name: primitiveTypeName,
     };
     return isArray
       ? { range: transformRange(range), $: "ArrayType", type: primitive }
@@ -383,7 +385,7 @@ const type: Parser<ast.Type> = mapWithRange(
     primitiveTypeName,
     _,
     oneOf(
-      seq(_ => true, _, symbol("["), _, symbol("]")),
+      seq((_) => true, _, symbol("["), _, symbol("]")),
       constant(false)
     )
   )
@@ -410,7 +412,7 @@ const variableDeclarationWithMutableFlag: Parser<ast.VariableDeclaration> = mapW
     type,
     left,
     right,
-    hasMutableFlag: true
+    hasMutableFlag: true,
   }),
   seq($3, keyword("var"), _, variableDeclarationInner)
 );
@@ -430,12 +432,12 @@ const param: Parser<ast.Param> = mapWithRange(
     range: transformRange(range),
     $: "Param",
     type,
-    name: identifier.name
+    name: identifier.name,
   }),
   seq(
     (type: ast.Type, _: null, identifier: ast.Identifier) => ({
       type,
-      identifier
+      identifier,
     }),
     type,
     _,
@@ -446,7 +448,7 @@ const paramList: Parser<ast.ParamList> = mapWithRange(
   (items: ast.Param[], range: Range) => ({
     range: transformRange(range),
     $: "ParamList",
-    items
+    items,
   }),
   seq($3, symbol("("), _, sepBy(itemSep, param), _, symbol(")"))
 );
@@ -466,7 +468,7 @@ const fucntionDeclarationTail: Parser<FucntionDeclarationTail> = seq(
   (params: ast.ParamList, _, statements: ast.Statement[]) => ({
     $: "FucntionDeclarationTail",
     params,
-    statements
+    statements,
   }),
   paramList,
   _,
@@ -477,7 +479,7 @@ const structLiteral: Parser<ast.StructLiteral> = mapWithRange(
   (fields: ast.Assign[], range) => ({
     range: transformRange(range),
     $: "StructLiteral",
-    fields
+    fields,
   }),
   seq(
     $3,
@@ -499,7 +501,7 @@ const paramDeclaration: Parser<ast.ParamDeclaration> = mapWithRange(
     {
       type,
       name,
-      struct
+      struct,
     }: { type: ast.Type; name: ast.Identifier; struct: ast.StructLiteral },
     range
   ) => ({
@@ -507,7 +509,7 @@ const paramDeclaration: Parser<ast.ParamDeclaration> = mapWithRange(
     $: "ParamDeclaration",
     type,
     name,
-    struct
+    struct,
   }),
   seq(
     (
@@ -522,7 +524,7 @@ const paramDeclaration: Parser<ast.ParamDeclaration> = mapWithRange(
       return {
         type: _3,
         name: _5,
-        struct: _7
+        struct: _7,
       };
     },
     keyword("param"),
@@ -542,7 +544,7 @@ const declaration: Parser<
     {
       type,
       identifier,
-      tail
+      tail,
     }: {
       type: ast.Type;
       identifier: ast.Identifier;
@@ -557,7 +559,7 @@ const declaration: Parser<
         type,
         left: identifier,
         right: null,
-        hasMutableFlag: false
+        hasMutableFlag: false,
       };
     }
     if (tail.$ === "FucntionDeclarationTail") {
@@ -567,7 +569,7 @@ const declaration: Parser<
         name: identifier,
         params: tail.params,
         returnType: type,
-        statements: tail.statements
+        statements: tail.statements,
       };
     }
     return {
@@ -576,7 +578,7 @@ const declaration: Parser<
       type,
       left: identifier,
       right: tail,
-      hasMutableFlag: false
+      hasMutableFlag: false,
     };
   },
   seq(
@@ -596,7 +598,7 @@ const loop: Parser<ast.Loop> = mapWithRange(
   (statements: ast.Statement[], range) => ({
     range: transformRange(range),
     $: "Loop",
-    statements
+    statements,
   }),
   seq(
     $3,
@@ -617,7 +619,7 @@ const return_: Parser<ast.Return> = mapWithRange(
   (optionalExp, range) => ({
     range: transformRange(range),
     $: "Return",
-    value: optionalExp
+    value: optionalExp,
   }),
   returnInner
 );
@@ -636,7 +638,7 @@ const assign: Parser<ast.Assign> = mapWithRange(
       range: transformRange(range),
       $: "Assign",
       left,
-      right
+      right,
     };
   },
   seq((left, _, right) => ({ left, right }), expression, _, assignTail)
@@ -653,7 +655,7 @@ const assignOrExpression: Parser<ast.Assign | ast.Expression> = mapWithRange(
       range: transformRange(range),
       $: "Assign",
       left,
-      right
+      right,
     };
   },
   seq(
@@ -667,7 +669,7 @@ const comment: Parser<ast.Comment> = mapWithRange(
   (value: string, range) => ({
     range: transformRange(range),
     $: "Comment",
-    value
+    value,
   }),
   seq($2, symbol("//"), stringBeforeEndOr("\n"), symbol("\n"))
 );

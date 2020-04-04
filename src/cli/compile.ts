@@ -5,7 +5,7 @@ import * as log from "../core/log";
 
 const targets: string[] = [];
 const options: any = {
-  outDir: null
+  outDir: null,
 };
 for (let i = 3; i < process.argv.length; i++) {
   const s = process.argv[i];

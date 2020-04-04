@@ -12,7 +12,7 @@ export function createProcessorClass(instance: Instance) {
 
   return class extends AudioWorkletProcessor {
     static get parameterDescriptors() {
-      return params.map(p => p.descriptor);
+      return params.map((p) => p.descriptor);
     }
     process(
       inputs: Float32Array[][],

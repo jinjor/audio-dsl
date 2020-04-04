@@ -353,9 +353,9 @@ export class Module {
         loopId,
         this.raw.block(genId(), [
           ...loop.body.map(this.localStatement.bind(this)),
-          this.raw.br_if(loopId, this.expression(loop.continueIf))
+          this.raw.br_if(loopId, this.expression(loop.continueIf)),
         ])
-      )
+      ),
     ]) as X;
   }
   return(ret: types.Return): X {
@@ -427,8 +427,8 @@ export class Module {
       [
         {
           offset: this.i32Const(segment.offset as N),
-          data: segment.data
-        }
+          data: segment.data,
+        },
       ],
       null, // flags
       true // shared

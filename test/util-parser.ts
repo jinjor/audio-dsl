@@ -38,7 +38,7 @@ import {
   guard,
   sepUntil1,
   manyUntil,
-  isParseError
+  isParseError,
 } from "../src/util/typed-parser";
 
 import * as util from "util";
@@ -126,12 +126,12 @@ describe("Core", () => {
   });
   it("map", () => {
     succeed(
-      map(a => a.toUpperCase(), match("a")),
+      map((a) => a.toUpperCase(), match("a")),
       "a",
       "A"
     );
     fail(
-      map(a => a.toUpperCase(), match("a")),
+      map((a) => a.toUpperCase(), match("a")),
       "b"
     );
     fail(
@@ -142,7 +142,7 @@ describe("Core", () => {
   });
   it("mapWithRange", () => {
     succeed(
-      mapWithRange(a => a.toUpperCase(), match("a")),
+      mapWithRange((a) => a.toUpperCase(), match("a")),
       "a",
       "A"
     );
@@ -151,7 +151,7 @@ describe("Core", () => {
       "a",
       {
         start: { row: 1, column: 1 },
-        end: { row: 1, column: 1 }
+        end: { row: 1, column: 1 },
       }
     );
     succeed(
@@ -161,12 +161,12 @@ describe("Core", () => {
         "ab\ncd",
         {
           start: { row: 1, column: 1 },
-          end: { row: 2, column: 2 }
-        }
+          end: { row: 2, column: 2 },
+        },
       ]
     );
     fail(
-      mapWithRange(a => a.toUpperCase(), match("a")),
+      mapWithRange((a) => a.toUpperCase(), match("a")),
       "b"
     );
     fail(
@@ -186,13 +186,13 @@ describe("Core", () => {
     succeed(stringBefore("a"), "_a", "_");
     succeed(stringBefore("a+"), "aa", "");
     succeed(
-      seq(_ => {}, stringBefore("a"), match("ab")),
+      seq((_) => {}, stringBefore("a"), match("ab")),
       "ab"
     );
     fail(stringBefore("a"), "b");
     fail(stringBefore("a"), "");
     fail(
-      seq(_ => {}, stringBefore("a"), match("b")),
+      seq((_) => {}, stringBefore("a"), match("b")),
       "ab",
       0
     );
@@ -211,13 +211,13 @@ describe("Core", () => {
     succeed(stringUntil("a"), "_a", "_");
     succeed(stringUntil("a+"), "aa", "");
     succeed(
-      seq(_ => {}, stringUntil("a"), match("b")),
+      seq((_) => {}, stringUntil("a"), match("b")),
       "ab"
     );
     fail(stringUntil("a"), "b");
     fail(stringUntil("a"), "");
     fail(
-      seq(_ => {}, stringUntil("a"), match("ab")),
+      seq((_) => {}, stringUntil("a"), match("ab")),
       "ab",
       1
     );
@@ -280,7 +280,7 @@ describe("Core", () => {
       1
     );
     const nums: Parser<number[]> = oneOf(
-      map(_ => [], end),
+      map((_) => [], end),
       seq(
         (h, t) => [h, ...t],
         int("\\d"),
@@ -301,8 +301,8 @@ describe("Core", () => {
     succeed(many(int("\\d")), "", []);
     succeed(many(match(".+")), "foo", ["foo"]);
     succeed(many(match(".*")), "foo", ["foo"]);
-    succeed(many(attempt(seq(_ => 0, match("a"), match("b")))), "ac", []);
-    fail(many(seq(_ => 0, match("a"), match("b"))), "ac", 1);
+    succeed(many(attempt(seq((_) => 0, match("a"), match("b")))), "ac", []);
+    fail(many(seq((_) => 0, match("a"), match("b"))), "ac", 1);
   });
   it("manyUntil", () => {
     succeed(manyUntil(symbol("]"), int("\\d")), "]", []);
@@ -318,7 +318,7 @@ describe("Core", () => {
     fail(
       manyUntil(
         symbol("]"),
-        seq(_ => 0, match("a"), match("b"))
+        seq((_) => 0, match("a"), match("b"))
       ),
       "ac]",
       1
@@ -331,28 +331,28 @@ describe("Core", () => {
     fail(sepBy(symbol(","), int("\\d")), "1,a", 2);
     fail(sepBy(symbol(","), int("\\d")), "1,", 2);
     succeed(sepBy(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!2", [
-      1
+      1,
     ]);
     succeed(sepBy(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!?2", [
       1,
-      2
+      2,
     ]);
     succeed(sepBy(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!2", [
-      1
+      1,
     ]);
     succeed(sepBy(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!?2", [
       1,
-      2
+      2,
     ]);
     succeed(
-      sepBy(symbol(","), attempt(seq(_ => 0, match("a"), match("b")))),
+      sepBy(symbol(","), attempt(seq((_) => 0, match("a"), match("b")))),
       "ac",
       []
     );
     fail(
       sepBy(
         symbol(","),
-        seq(_ => 0, match("a"), match("b"))
+        seq((_) => 0, match("a"), match("b"))
       ),
       "ac",
       1
@@ -365,23 +365,23 @@ describe("Core", () => {
     fail(sepBy1(symbol(","), int("\\d")), "1,a", 2);
     fail(sepBy1(symbol(","), int("\\d")), "1,", 2);
     succeed(sepBy1(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!2", [
-      1
+      1,
     ]);
     succeed(sepBy1(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!?2", [
       1,
-      2
+      2,
     ]);
     succeed(sepBy1(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!2", [
-      1
+      1,
     ]);
     succeed(sepBy1(seq($null, symbol("!"), symbol("?")), int("\\d")), "1!?2", [
       1,
-      2
+      2,
     ]);
     fail(
       sepBy1(
         symbol(","),
-        seq(_ => 0, match("a"), match("b"))
+        seq((_) => 0, match("a"), match("b"))
       ),
       "ac",
       1
@@ -476,7 +476,7 @@ describe("Core", () => {
   });
 });
 
-describe("Example", function() {
+describe("Example", function () {
   this.timeout(50000);
 
   it("template", () => {
