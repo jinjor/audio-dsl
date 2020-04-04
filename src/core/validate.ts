@@ -715,34 +715,10 @@ function validateParamDeclaration(
     }
   }
   const optionType = valueType == null ? null : paramOptionsType(valueType.$);
-
-  // TODO: refactor
-  const infoStruct: {
-    name: number | null;
-    defaultValue: number | null;
-    minValue: number | null;
-    maxValue: number | null;
-    automationRate: number | null;
-  } = {
-    name: null,
-    defaultValue: null,
-    minValue: null,
-    maxValue: null,
-    automationRate: null
-  };
-  infoStruct.name = state.strings.set(ast.name.name);
-  infoStruct.automationRate = state.strings.set(isArray ? "a-rate" : "k-rate");
-
   const optionValue =
     optionType == null
       ? null
       : evaluateStructLiteralInGlobal(state, scope, optionType, ast.struct);
-  if (optionValue != null) {
-    infoStruct.defaultValue = optionValue[0].value;
-    infoStruct.minValue = optionValue[1].value;
-    infoStruct.maxValue = optionValue[2].value;
-  }
-
   if (scope.isDeclaredInThisScope(ast.name.name)) {
     state.errors.push(
       new AlreadyDeclared(ast.name.range, "variable", ast.name.name)
@@ -800,19 +776,26 @@ function validateParamDeclaration(
     }
   }
 
-  // info struct
-  // TODO: use param type, generalize logic, etc.
-  const infoStructOffset = state.dataBuilder.pushInt32(infoStruct.name);
-  if (valueType.$ === "Int32Type") {
-    state.dataBuilder.pushInt32(infoStruct.defaultValue!);
-    state.dataBuilder.pushInt32(infoStruct.minValue!);
-    state.dataBuilder.pushInt32(infoStruct.maxValue!);
-  } else if (valueType.$ === "Float32Type") {
-    state.dataBuilder.pushFloat32(infoStruct.defaultValue!);
-    state.dataBuilder.pushFloat32(infoStruct.minValue!);
-    state.dataBuilder.pushFloat32(infoStruct.maxValue!);
+  if (optionValue == null) {
+    return;
   }
-  state.dataBuilder.pushInt32(infoStruct.automationRate);
+  const info_name = state.strings.set(ast.name.name);
+  const info_automationRate = state.strings.set(isArray ? "a-rate" : "k-rate");
+  const info_defaultValue = optionValue[0].value;
+  const info_minValue = optionValue[1].value;
+  const info_maxValue = optionValue[2].value;
+  // TODO: use param type, generalize logic, etc.
+  const infoStructOffset = state.dataBuilder.pushInt32(info_name);
+  if (valueType.$ === "Int32Type") {
+    state.dataBuilder.pushInt32(info_defaultValue);
+    state.dataBuilder.pushInt32(info_minValue);
+    state.dataBuilder.pushInt32(info_maxValue);
+  } else if (valueType.$ === "Float32Type") {
+    state.dataBuilder.pushFloat32(info_defaultValue);
+    state.dataBuilder.pushFloat32(info_minValue);
+    state.dataBuilder.pushFloat32(info_maxValue);
+  }
+  state.dataBuilder.pushInt32(info_automationRate);
 
   if (state.numberOfParams === 0) {
     state.globalVariableDeclarations.push({
