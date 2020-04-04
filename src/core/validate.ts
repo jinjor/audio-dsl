@@ -1828,7 +1828,6 @@ function evaluateGlobalExpression(
       return null;
     }
     if (idExp.$ === "GlobalGet") {
-      // this should be only happen when identifier is from imports
       state.errors.push(
         new ReferringMutableValueInGlobalIsNotAllowed(ast.range)
       );
