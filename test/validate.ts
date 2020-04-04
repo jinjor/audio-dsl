@@ -206,4 +206,22 @@ describe("Validate", function () {
     assertErrorExists(`int a = "" + "";`);
     assertErrorExists(`bool a = "" > "";`);
   });
+  it("loop", () => {
+    assertOk(`void f() { loop { } }`);
+    assertOk(`void f(int i, int length) { loop { } }`);
+    assertOk(`void f(float i, float length) { loop { } }`);
+    assertOk(`void f() { int i; int length; loop { } }`);
+    assertOk(`void f() { float i; float length; loop { } }`);
+    assertOk(`void f() { int a = 0; loop { a = i; a = length; } }`);
+    assertOk(`void f() { loop { i = 0; } }`);
+    assertErrorExists(`loop {}`);
+    assertErrorExists(`void f() { loop { int i = 0; } }`);
+    assertErrorExists(`void f() { loop { int length = 0; } }`);
+    assertErrorExists(`void f() { loop { float i = 0.0; } }`);
+    assertErrorExists(`void f() { loop { float length = 0.0; } }`);
+    assertErrorExists(`void f() { loop { i = 0.0; } }`);
+    assertErrorExists(`void f() { loop { i = ""; } }`);
+    // assertErrorExists(`void f() { loop { return; } }`);
+    // assertErrorExists(`void f() { loop { loop { } } }`);
+  });
 });
