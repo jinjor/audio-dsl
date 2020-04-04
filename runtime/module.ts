@@ -87,11 +87,13 @@ export type Descriptor = {
 };
 
 const numSamples = 128;
+const sizeOfInt = 4;
+const sizeOfFloat = 4;
 export class Instance {
   private memory: WebAssembly.Memory;
-  exports: LanguageSpecificExports;
-  private inPtrs: number[];
-  private outPtrs: number[];
+  private exports: LanguageSpecificExports;
+  private inPtrs: number[] = [];
+  private outPtrs: number[] = [];
   constructor(bytes: Uint8Array) {
     const memory = new WebAssembly.Memory({ initial: 1, maximum: 1 });
     const mod = new WebAssembly.Module(bytes);
@@ -102,25 +104,29 @@ export class Instance {
     ) as LanguageSpecificInstance;
     this.memory = memory;
     this.exports = instance.exports;
-    this.inPtrs = [this.exports.in_0.value, this.exports.in_1.value];
-    this.outPtrs = [this.exports.out_0.value, this.exports.out_1.value];
+    for (let i = 0; i < this.exports.number_of_in_channels.value; i++) {
+      this.inPtrs[i] = this.exports.in_0.value + numSamples * sizeOfFloat * i;
+    }
+    for (let i = 0; i < this.exports.number_of_out_channels.value; i++) {
+      this.outPtrs[i] = this.exports.out_0.value + numSamples * sizeOfFloat * i;
+    }
   }
-  getAudioArrayAt(ptr: number): ArrayBuffer {
-    return this.memory.buffer.slice(ptr, ptr + 128 * 4);
+  private getAudioArrayAt(ptr: number): ArrayBuffer {
+    return this.memory.buffer.slice(ptr, ptr + numSamples * sizeOfFloat);
   }
-  getNthInputBuffer(n: number): ArrayBuffer {
+  private getNthInputBuffer(n: number): ArrayBuffer {
     return this.getAudioArrayAt(this.inPtrs[n]);
   }
-  getNthOutputBuffer(n: number): ArrayBuffer {
+  private getNthOutputBuffer(n: number): ArrayBuffer {
     return this.getAudioArrayAt(this.outPtrs[n]);
   }
-  getStaticBuffer(): ArrayBuffer {
+  private getStaticBuffer(): ArrayBuffer {
     const ptr = this.exports.static.value;
-    return this.memory.buffer.slice(ptr, ptr + 100);
+    return this.memory.buffer.slice(ptr, ptr + 100); // TODO: ?
   }
   getParamInfoBuffer(): ArrayBuffer {
     const ptr = this.exports.static.value + this.exports.params.value;
-    return this.memory.buffer.slice(ptr, ptr + 4 + 4 + 4 + 4 + 4);
+    return this.memory.buffer.slice(ptr, ptr + 4 + 4 + 4 + 4 + 4); // TODO
   }
   getNthDescriptor(n: number): Descriptor {
     const memory = this.memory;
@@ -150,9 +156,11 @@ export class Instance {
   }
   getParamInfoList(): { descriptor: Descriptor; ptr: number }[] {
     const info: { descriptor: Descriptor; ptr: number }[] = [];
+    const offset =
+      this.outPtrs[this.outPtrs.length - 1] + numSamples * sizeOfFloat; // TODO
     for (let i = 0; i < this.exports.number_of_params.value; i++) {
       const descriptor = this.getNthDescriptor(i);
-      info.push({ descriptor, ptr: 2048 }); // TODO
+      info.push({ descriptor, ptr: offset + numSamples * sizeOfFloat * i });
     }
     return info;
   }
@@ -181,31 +189,29 @@ export class Instance {
     );
     outgoingOutput.set(view);
   }
-}
-
-export function createInstance(bytes: Uint8Array): Instance {
-  const instance = new Instance(bytes);
-  const exp = instance.exports;
-
-  if (exp.test) {
-    console.log("testing module...");
-    exp.test();
+  process(): void {
+    this.exports.process();
   }
-  console.log("number_of_in_channels:", exp.number_of_in_channels.value);
-  console.log("number_of_out_channels:", exp.number_of_out_channels.value);
-  console.log("params:", exp.params.value);
-  console.log("number_of_params:", exp.number_of_params.value);
-  console.log("static:", exp.static.value);
-  console.log("in_0:", exp.in_0.value);
-  console.log("in_1:", exp.in_1.value);
-  console.log("out_0:", exp.out_0.value);
-  console.log("out_1:", exp.out_1.value);
-  // console.log("buffer:", memory.buffer);
-  console.log("in_0", instance.getNthInputBuffer(0));
-  console.log("in_1", instance.getNthInputBuffer(1));
-  console.log("out_0", instance.getNthOutputBuffer(0));
-  console.log("out_1", instance.getNthOutputBuffer(1));
-  console.log("static", instance.getStaticBuffer());
-  console.log("params", instance.getParamInfoBuffer());
-  return instance;
+  static create(bytes: Uint8Array): Instance {
+    const instance = new Instance(bytes);
+    const exp = instance.exports;
+    if (exp.test) {
+      console.log("testing module...");
+      exp.test();
+    }
+    console.log("number_of_in_channels:", exp.number_of_in_channels.value);
+    console.log("number_of_out_channels:", exp.number_of_out_channels.value);
+    console.log("params:", exp.params.value);
+    console.log("number_of_params:", exp.number_of_params.value);
+    console.log("static:", exp.static.value);
+    console.log("inputs:", exp.in_0.value);
+    console.log("outputs:", exp.out_0.value);
+    console.log("in_0", instance.getNthInputBuffer(0));
+    console.log("in_1", instance.getNthInputBuffer(1));
+    console.log("out_0", instance.getNthOutputBuffer(0));
+    console.log("out_1", instance.getNthOutputBuffer(1));
+    console.log("static", instance.getStaticBuffer());
+    console.log("params", instance.getParamInfoBuffer());
+    return instance;
+  }
 }

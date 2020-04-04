@@ -445,7 +445,6 @@ export function validate(
     state.numSamples,
     null
   );
-
   // user definitions
   for (let statement of ast.statements) {
     validateGlobalStatement(state, scope, statement);

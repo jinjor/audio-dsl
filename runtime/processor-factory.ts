@@ -31,7 +31,7 @@ export function createProcessorClass(instance: Instance) {
         const param = parameters[name];
         instance.setParam(automationRate, paramInfo.ptr, param);
       }
-      instance.exports.process();
+      instance.process();
       for (let ch = 0; ch < outLength; ch++) {
         instance.getFloat32ArrayFromNthOutput(ch, output[ch]);
       }
