@@ -35,6 +35,6 @@ utilModule.types.set("log_b", {
 });
 utilModule.types.set("log_s", {
   $: "FunctionType",
-  params: [primitives.int32Type], // TODO: this should be string type for type checking
+  params: [primitives.stringType],
   returnType: primitives.voidType
 });

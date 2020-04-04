@@ -42,7 +42,8 @@ import {
   paramOptionsType,
   StructType,
   ValueType,
-  StringType
+  StringType,
+  StringConst
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -1382,7 +1383,6 @@ function validateAssignableType(
 ): AssignableType | null {
   if (
     leftType.$ === "VoidType" ||
-    leftType.$ === "StringType" || // TODO: should be ok in global
     leftType.$ === "StructType" ||
     leftType.$ === "ArrayType" ||
     leftType.$ === "FunctionType"

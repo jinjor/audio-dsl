@@ -271,7 +271,7 @@ class Unsupported implements ValidationErrorType {
 }
 export class DeclaringArrayInLocalIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
-    super(range, "declaring array");
+    super(range, "declaring array in local");
   }
 }
 export class DeclaringArrayWithInitialValueNotSupported extends Unsupported {

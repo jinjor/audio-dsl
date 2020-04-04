@@ -43,12 +43,12 @@ export type VariableType =
   | StructType
   | StructTypeWithOffset
   | ArrayType;
-export type ParamType = ValueType;
+export type ParamType = ValueType | StringType;
 export type FieldType = Int32Type | Float32Type | BoolType;
 export type ItemType = ValueType;
 export type LocalType = Int32Type | Float32Type | BoolType;
 export type ReturnType = ValueType | StringType | VoidType;
-export type AssignableType = Int32Type | Float32Type | BoolType;
+export type AssignableType = Int32Type | Float32Type | BoolType | StringType;
 export type GlobalDeclarableType =
   | Int32Type
   | Float32Type
