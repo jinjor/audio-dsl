@@ -2,7 +2,11 @@
 
 set -e
 
-# build here
 npm run build
+npm ci --production
+
 cd vscode-dsl/server
 npm install ../..
+cd ..
+
+npm install

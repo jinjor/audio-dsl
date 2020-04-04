@@ -13,3 +13,13 @@ client/node_modules/**
 !client/node_modules/vscode-languageserver-protocol/**
 !client/node_modules/vscode-languageserver-types/**
 !client/node_modules/semver/**
+
+node_modules/audio-dsl/.git
+node_modules/audio-dsl/.github
+node_modules/audio-dsl/node_modules/@types
+node_modules/audio-dsl/example
+node_modules/audio-dsl/public
+node_modules/audio-dsl/runtime
+node_modules/audio-dsl/src
+node_modules/audio-dsl/test
+node_modules/audio-dsl/vscode-dsl
