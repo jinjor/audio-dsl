@@ -4,5 +4,6 @@ node_modules
 *.d.ts
 *.js.map
 *.vsix
+*.tgz
 dist
 tmp
