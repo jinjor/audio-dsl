@@ -1382,6 +1382,7 @@ function validateAssignableType(
 ): AssignableType | null {
   if (
     leftType.$ === "VoidType" ||
+    leftType.$ === "StringType" || // TODO: should be ok in global
     leftType.$ === "StructType" ||
     leftType.$ === "ArrayType" ||
     leftType.$ === "FunctionType"
@@ -1446,14 +1447,14 @@ function validateStringLiteral(
   state: State,
   scope: Scope,
   value: string
-): [StringGet, Int32Type] {
+): [StringGet, StringType] {
   const offset = state.strings.set(value);
   return [
     {
       $: "StringGet",
       relativeByteOffset: offset
     },
-    primitives.int32Type
+    primitives.stringType
   ];
 }
 

@@ -114,7 +114,12 @@ export class Module {
   // types
   // -----
   type(
-    t: types.Int32Type | types.Float32Type | types.VoidType | types.BoolType
+    t:
+      | types.Int32Type
+      | types.Float32Type
+      | types.VoidType
+      | types.BoolType
+      | types.StringType
   ): T {
     if (t.$ === "Int32Type") {
       return $i32;
@@ -128,14 +133,19 @@ export class Module {
     if (t.$ === "BoolType") {
       return $bool;
     }
-    // maybe not possible?
-    // if (t.$ === "StructType") {
-    //   return $.createType(t.types.map(this.type.bind(this))) as T;
-    // }
+    if (t.$ === "StringType") {
+      return $i32;
+    }
     throw new Error("Unreachable");
   }
   types(
-    t: (types.Int32Type | types.Float32Type | types.VoidType | types.BoolType)[]
+    t: (
+      | types.Int32Type
+      | types.Float32Type
+      | types.VoidType
+      | types.BoolType
+      | types.StringType
+    )[]
   ): T {
     return $.createType(t.map(this.type.bind(this))) as T;
   }

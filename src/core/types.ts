@@ -47,7 +47,7 @@ export type ParamType = ValueType;
 export type FieldType = Int32Type | Float32Type | BoolType;
 export type ItemType = ValueType;
 export type LocalType = Int32Type | Float32Type | BoolType;
-export type ReturnType = ValueType | VoidType;
+export type ReturnType = ValueType | StringType | VoidType;
 export type AssignableType = Int32Type | Float32Type | BoolType;
 export type GlobalDeclarableType =
   | Int32Type
@@ -58,6 +58,7 @@ export type LocalDeclarableType = VariableType;
 export type DeclaredType = VariableType | FunctionType;
 export type ExpressionType =
   | ValueType
+  | StringType
   | VoidType
   | StructType
   | ArrayType
