@@ -79,7 +79,8 @@ export type AnyType =
   | StringType
   | StructType
   | ArrayType
-  | FunctionType;
+  | FunctionType
+  | ConstantType;
 export type ExportableType = FunctionType | ConstantType;
 export type ConstantType = Int32Const | Float32Const | BoolConst;
 export type Int32Const = {
@@ -106,6 +107,11 @@ export namespace primitives {
   export const voidType: VoidType = { $: "VoidType" };
   export const boolType: BoolType = { $: "BoolType" };
   export const stringType: StringType = { $: "StringType" };
+}
+export function isConstantType(
+  t: AnyType | LocalGet | GlobalGet
+): t is ConstantType {
+  return t.$ === "Int32Const" || t.$ === "Float32Const" || t.$ === "BoolConst";
 }
 export function sizeOf(
   t: Int32Type | Float32Type | BoolType | StructType

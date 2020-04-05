@@ -45,6 +45,7 @@ import {
   StringType,
   Int32Const,
   Float32Const,
+  isConstantType,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -568,22 +569,9 @@ function validateImport(
         });
         continue;
       }
-      if (type.$ === "Int32Const") {
+      if (isConstantType(type)) {
         const internalName = scope.addImportName(name, moduleName);
         scope.declareConst(internalName, type);
-        // TODO: push to state?
-        continue;
-      }
-      if (type.$ === "Float32Const") {
-        const internalName = scope.addImportName(name, moduleName);
-        scope.declareConst(internalName, type);
-        // TODO: push to state?
-        continue;
-      }
-      if (type.$ === "BoolConst") {
-        const internalName = scope.addImportName(name, moduleName);
-        scope.declareConst(internalName, type);
-        // TODO: push to state?
         continue;
       }
       throw new Error("unreachable");
@@ -1328,11 +1316,7 @@ function validateAssignableIdentifier(
     state.errors.push(new AssigningArrayIsNotSupported(leftAst.range));
     return null;
   }
-  if (
-    leftExp.$ === "Int32Const" ||
-    leftExp.$ === "Float32Const" ||
-    leftExp.$ === "BoolConst"
-  ) {
+  if (isConstantType(leftExp)) {
     state.errors.push(new AssigningToConstantValueIsNotAllowed(leftAst.range));
     return null;
   }
