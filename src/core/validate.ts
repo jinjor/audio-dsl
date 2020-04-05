@@ -781,10 +781,10 @@ function validateParamDeclaration(
     paramInfoType,
     [
       state.strings.set(ast.name.name),
-      state.strings.set(isArray ? "a-rate" : "k-rate"),
       optionValue[0].value,
       optionValue[1].value,
       optionValue[2].value,
+      state.strings.set(isArray ? "a-rate" : "k-rate"),
     ]
   );
   if (infoStructOffset == null) {
