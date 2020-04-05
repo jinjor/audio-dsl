@@ -125,6 +125,21 @@ export function typeOfConstant(
   }
   throw new Error("unreachable");
 }
+export function makeConstant(
+  t: Int32Type | Float32Type | BoolType,
+  value: number
+): ConstantType {
+  if (t.$ === "Int32Type") {
+    return { $: "Int32Const", value };
+  }
+  if (t.$ === "Float32Type") {
+    return { $: "Float32Const", value };
+  }
+  if (t.$ === "BoolType") {
+    return { $: "BoolConst", value };
+  }
+  throw new Error("unreachable");
+}
 export function sizeOf(
   t: Int32Type | Float32Type | BoolType | StructType
 ): number {

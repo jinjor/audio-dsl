@@ -47,6 +47,7 @@ import {
   Float32Const,
   isConstantType,
   typeOfConstant,
+  makeConstant,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -1481,175 +1482,26 @@ function validateBinOp(
   }
   const [leftExp, leftType] = left;
   const [rightExp, rightType] = right;
-  const expectedCombinations = getBinOpCombination(ast.operator);
-  for (const combination of expectedCombinations) {
-    if (
-      isTypeEqual(leftType, combination.leftType) &&
-      isTypeEqual(rightType, combination.rightType)
-    ) {
-      return [
-        {
-          $: combination.kind,
-          left: leftExp,
-          right: rightExp,
-        },
-        combination.returnType,
-      ];
-    }
+  const found = binop.get(ast.operator, leftType, rightType);
+  if (found == null) {
+    state.errors.push(
+      new InvalidTypeCombinationForBinOp(
+        ast.range,
+        ast.operator,
+        leftType,
+        rightType
+      )
+    );
+    return null;
   }
-  state.errors.push(
-    new InvalidTypeCombinationForBinOp(
-      ast.range,
-      ast.operator,
-      leftType,
-      rightType
-    )
-  );
-  return null;
-}
-function getBinOpCombination(
-  kind: ast.BinOpKind
-): {
-  leftType: Int32Type | Float32Type;
-  rightType: Int32Type | Float32Type;
-  returnType: Int32Type | Float32Type | BoolType;
-  kind: BinOpKind;
-}[] {
-  if (kind === "+") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.int32Type,
-        kind: "Int32AddOp",
-      },
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.float32Type,
-        kind: "Float32AddOp",
-      },
-    ];
-  }
-  if (kind === "-") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.int32Type,
-        kind: "Int32SubOp",
-      },
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.float32Type,
-        kind: "Float32SubOp",
-      },
-    ];
-  }
-
-  if (kind === "*") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.int32Type,
-        kind: "Int32MulOp",
-      },
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.float32Type,
-        kind: "Float32MulOp",
-      },
-    ];
-  }
-  if (kind === "/") {
-    return [
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.float32Type,
-        kind: "Float32DivOp",
-      },
-    ];
-  }
-  if (kind === "%") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.int32Type,
-        kind: "Int32RemOp",
-      },
-    ];
-  }
-
-  if (kind === "<") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.boolType,
-        kind: "Int32LT",
-      },
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.boolType,
-        kind: "Float32LT",
-      },
-    ];
-  }
-  if (kind === "<=") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.boolType,
-        kind: "Int32LE",
-      },
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.boolType,
-        kind: "Float32LE",
-      },
-    ];
-  }
-  if (kind === ">") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.boolType,
-        kind: "Int32GT",
-      },
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.boolType,
-        kind: "Float32GT",
-      },
-    ];
-  }
-  if (kind === ">=") {
-    return [
-      {
-        leftType: primitives.int32Type,
-        rightType: primitives.int32Type,
-        returnType: primitives.boolType,
-        kind: "Int32GE",
-      },
-      {
-        leftType: primitives.float32Type,
-        rightType: primitives.float32Type,
-        returnType: primitives.boolType,
-        kind: "Float32GE",
-      },
-    ];
-  }
-  throw new Error("unreachable");
+  return [
+    {
+      $: found.kind,
+      left: leftExp,
+      right: rightExp,
+    },
+    found.returnType,
+  ];
 }
 
 function validateCondOp(
@@ -1887,166 +1739,186 @@ function evaluateGlobalBinOp(
   if (rightExp.$ === "StringGet") {
     throw new Error("there should not be a way to get string from global");
   }
-  const expectedCombinations = getBinOpCombination(ast.operator);
-  for (const combination of expectedCombinations) {
-    if (
-      isTypeEqual(leftType, combination.leftType) &&
-      isTypeEqual(rightType, combination.rightType)
-    ) {
-      if (combination.kind === "Int32AddOp") {
-        return [
-          {
-            $: "Int32Const",
-            value: leftExp.value + rightExp.value,
-          },
-          primitives.int32Type,
-        ];
-      }
-      if (combination.kind === "Int32SubOp") {
-        return [
-          {
-            $: "Int32Const",
-            value: leftExp.value - rightExp.value,
-          },
-          primitives.int32Type,
-        ];
-      }
-      if (combination.kind === "Int32MulOp") {
-        return [
-          {
-            $: "Int32Const",
-            value: leftExp.value * rightExp.value,
-          },
-          primitives.int32Type,
-        ];
-      }
-      if (combination.kind === "Int32RemOp") {
-        return [
-          {
-            $: "Int32Const",
-            value: leftExp.value % rightExp.value,
-          },
-          primitives.int32Type,
-        ];
-      }
-      if (combination.kind === "Int32LT") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value < rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      if (combination.kind === "Int32LE") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value <= rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      if (combination.kind === "Int32GT") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value > rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      if (combination.kind === "Int32GE") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value >= rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      if (combination.kind === "Float32AddOp") {
-        return [
-          {
-            $: "Float32Const",
-            value: leftExp.value + rightExp.value,
-          },
-          primitives.float32Type,
-        ];
-      }
-      if (combination.kind === "Float32SubOp") {
-        return [
-          {
-            $: "Float32Const",
-            value: leftExp.value - rightExp.value,
-          },
-          primitives.float32Type,
-        ];
-      }
-      if (combination.kind === "Float32MulOp") {
-        return [
-          {
-            $: "Float32Const",
-            value: leftExp.value * rightExp.value,
-          },
-          primitives.float32Type,
-        ];
-      }
-      if (combination.kind === "Float32DivOp") {
-        return [
-          {
-            $: "Float32Const",
-            value: leftExp.value / rightExp.value,
-          },
-          primitives.float32Type,
-        ];
-      }
-      if (combination.kind === "Float32LT") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value < rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      if (combination.kind === "Float32LE") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value <= rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      if (combination.kind === "Float32GT") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value > rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      if (combination.kind === "Float32GE") {
-        return [
-          {
-            $: "BoolConst",
-            value: leftExp.value >= rightExp.value ? 1 : 0,
-          },
-          primitives.boolType,
-        ];
-      }
-      throw new Error("unreachable");
-    }
+  const found = binop.get(ast.operator, leftType, rightType);
+  if (found == null) {
+    state.errors.push(
+      new InvalidTypeCombinationForBinOp(
+        ast.range,
+        ast.operator,
+        leftType,
+        rightType
+      )
+    );
+    return null;
   }
-  state.errors.push(
-    new InvalidTypeCombinationForBinOp(
-      ast.range,
-      ast.operator,
-      leftType,
-      rightType
-    )
+  return [found.evaluate(leftExp, rightExp), found.returnType];
+}
+
+namespace binop {
+  type BinOpLeftType = Int32Type | Float32Type | BoolType;
+  type BinOpRightType = Int32Type | Float32Type | BoolType;
+  type BinOpReturnType = Int32Type | Float32Type | BoolType;
+  type FoundBinOp = {
+    kind: BinOpKind;
+    returnType: BinOpReturnType;
+    evaluate: (left: ConstantType, right: ConstantType) => ConstantType;
+  };
+  const map = new Map<string, FoundBinOp>();
+  function makeKey(
+    astKind: ast.BinOpKind,
+    leftTypeKind: string,
+    rightTypeKind: string
+  ) {
+    return `${leftTypeKind}${astKind}${rightTypeKind}`;
+  }
+  function set(
+    astKind: ast.BinOpKind,
+    kind: BinOpKind,
+    leftType: BinOpLeftType,
+    rightType: BinOpRightType,
+    returnType: BinOpReturnType,
+    evaluate: (left: ConstantType, right: ConstantType) => number
+  ): void {
+    map.set(makeKey(astKind, leftType.$, rightType.$), {
+      kind,
+      returnType,
+      evaluate: (left: ConstantType, right: ConstantType) =>
+        makeConstant(returnType, evaluate(left, right)),
+    });
+  }
+  export function get(
+    kind: ast.BinOpKind,
+    leftType: AnyType,
+    rightType: AnyType
+  ): FoundBinOp | null {
+    return map.get(makeKey(kind, leftType.$, rightType.$)) ?? null;
+  }
+  set(
+    "+",
+    "Int32AddOp",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.int32Type,
+    (l: ConstantType, r: ConstantType) => l.value + r.value
   );
-  return null;
+  set(
+    "+",
+    "Float32AddOp",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.float32Type,
+    (l: ConstantType, r: ConstantType) => l.value + r.value
+  );
+  set(
+    "-",
+    "Int32SubOp",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.int32Type,
+    (l: ConstantType, r: ConstantType) => l.value - r.value
+  );
+  set(
+    "-",
+    "Float32SubOp",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.float32Type,
+    (l: ConstantType, r: ConstantType) => l.value - r.value
+  );
+  set(
+    "*",
+    "Int32MulOp",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.int32Type,
+    (l: ConstantType, r: ConstantType) => l.value * r.value
+  );
+  set(
+    "*",
+    "Float32MulOp",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.float32Type,
+    (l: ConstantType, r: ConstantType) => l.value * r.value
+  );
+  set(
+    "/",
+    "Float32DivOp",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.float32Type,
+    (l: ConstantType, r: ConstantType) => l.value / r.value
+  );
+  set(
+    "%",
+    "Int32RemOp",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.int32Type,
+    (l: ConstantType, r: ConstantType) => l.value % r.value
+  );
+  set(
+    "<",
+    "Int32LT",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value < r.value ? 1 : 0)
+  );
+  set(
+    "<",
+    "Float32LT",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value < r.value ? 1 : 0)
+  );
+  set(
+    "<=",
+    "Int32LE",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value <= r.value ? 1 : 0)
+  );
+  set(
+    "<=",
+    "Float32LE",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value <= r.value ? 1 : 0)
+  );
+  set(
+    ">",
+    "Int32GT",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value > r.value ? 1 : 0)
+  );
+  set(
+    ">",
+    "Float32GT",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value > r.value ? 1 : 0)
+  );
+  set(
+    ">=",
+    "Int32GE",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value >= r.value ? 1 : 0)
+  );
+  set(
+    ">=",
+    "Float32GE",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value >= r.value ? 1 : 0)
+  );
 }
