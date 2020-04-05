@@ -719,9 +719,7 @@ function validateParamDeclaration(
   let isArray = false;
   if (ast.type.$ === "PrimitiveType") {
     const type = validatePrimitiveType(state, ast.type);
-    if (type.$ === "Int32Type") {
-      valueType = type;
-    } else if (type.$ === "Float32Type") {
+    if (type.$ === "Int32Type" || type.$ === "Float32Type") {
       valueType = type;
     } else {
       state.errors.push(
@@ -731,9 +729,7 @@ function validateParamDeclaration(
   } else if (ast.type.$ === "ArrayType") {
     isArray = true;
     const type = validatePrimitiveType(state, ast.type.type);
-    if (type.$ === "Int32Type") {
-      valueType = type;
-    } else if (type.$ === "Float32Type") {
+    if (type.$ === "Int32Type" || type.$ === "Float32Type") {
       valueType = type;
     } else {
       state.errors.push(
@@ -766,23 +762,13 @@ function validateParamDeclaration(
       null
     );
   } else {
-    let init: Int32Const | Float32Const =
-      valueType.$ === "Int32Type"
-        ? {
-            $: "Int32Const",
-            value: 0,
-          }
-        : {
-            $: "Float32Const",
-            value: 0,
-          };
     scope.declareType(ast.name.name, valueType);
     state.globalVariableDeclarations.push({
       $: "GlobalVariableDeclaration",
       type: valueType,
       name: ast.name.name,
       mutable: true,
-      init,
+      init: makeConstant(valueType, 0),
       export: true,
     });
   }
