@@ -221,7 +221,10 @@ class GlobalScope implements Scope {
         const internalName = `${moduleName}.${name}`;
         return this.lookupType(internalName);
       }
-      throw new Error("ambiguous name)");
+      return {
+        $: "Ambiguous",
+        modules,
+      };
     }
     if (typeOrStaticValue.$ === "Int32Const") {
       return [typeOrStaticValue, primitives.int32Type];
