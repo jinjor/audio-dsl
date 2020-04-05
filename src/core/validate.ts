@@ -138,9 +138,18 @@ class GlobalScope implements Scope {
     | FunctionType
     | ConstantType
   >();
+  private importNameMap = new Map<string, string[]>();
   constructor() {}
   createFunctionScope() {
     return new FunctionScope(this);
+  }
+  addImportName(name: string, moduleName: string): string {
+    const internalName = `${moduleName}.${name}`;
+    if (!this.importNameMap.has(name)) {
+      this.importNameMap.set(name, []);
+    }
+    this.importNameMap.get(name)!.push(moduleName);
+    return internalName;
   }
   isDeclaredInThisScope(name: string): boolean {
     return this.declaredTypesOrStaticValue.has(name);
@@ -196,8 +205,17 @@ class GlobalScope implements Scope {
   }
   lookupType(name: string): [FoundExp, ExpressionType] | null {
     const typeOrStaticValue = this.declaredTypesOrStaticValue.get(name);
-    if (!typeOrStaticValue) {
-      return null;
+    if (typeOrStaticValue == null) {
+      const modules = this.importNameMap.get(name);
+      if (modules == null) {
+        return null;
+      }
+      if (modules.length === 1) {
+        const moduleName = modules[0];
+        const internalName = `${moduleName}.${name}`;
+        return this.lookupType(internalName);
+      }
+      throw new Error("not implemented yet (ambiguous name)");
     }
     if (typeOrStaticValue.$ === "Int32Const") {
       return [typeOrStaticValue, primitives.int32Type];
@@ -539,10 +557,11 @@ function validateImport(
     }
     for (const [name, type] of header.types.entries()) {
       if (type.$ === "FunctionType") {
-        scope.declareType(name, type);
+        const internalName = scope.addImportName(name, moduleName);
+        scope.declareType(internalName, type);
         state.imports.push({
           $: "FunctionImport",
-          internalName: name,
+          internalName,
           externalModuleName: moduleName,
           externalBasename: name,
           type,
@@ -550,17 +569,20 @@ function validateImport(
         continue;
       }
       if (type.$ === "Int32Const") {
-        scope.declareConst(name, type);
+        const internalName = scope.addImportName(name, moduleName);
+        scope.declareConst(internalName, type);
         // TODO: push to state?
         continue;
       }
       if (type.$ === "Float32Const") {
-        scope.declareConst(name, type);
+        const internalName = scope.addImportName(name, moduleName);
+        scope.declareConst(internalName, type);
         // TODO: push to state?
         continue;
       }
       if (type.$ === "BoolConst") {
-        scope.declareConst(name, type);
+        const internalName = scope.addImportName(name, moduleName);
+        scope.declareConst(internalName, type);
         // TODO: push to state?
         continue;
       }

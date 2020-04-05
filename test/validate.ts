@@ -340,11 +340,8 @@ describe("Validate", function () {
   });
   it("import", () => {
     assertOk(`void f() { float a = sin(0.0); }`);
-    // TODO
-    // assertOk(`float sin = 0.0; void f() { float p = sin; }`); // shadowing math.sin()
-    // assertOk(`int int = 0; void f() { int i = int; }`); // shadowing int()
-    // Note:
-    //   currently, all members of imported module are declared automatically.
-    //   If shadowing is not allowed, minor version-up may break the exsisting code.
+    assertOk(`int PI = 1; void f() { int p = PI; }`); // shadowing math.PI
+    assertOk(`float sin = 0.0; void f() { float p = sin; }`); // shadowing math.sin()
+    assertOk(`int int = 0; void f() { int i = int; }`); // shadowing int()
   });
 });
