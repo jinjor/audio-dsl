@@ -1840,14 +1840,8 @@ function evaluateGlobalExpression(
       );
       return null;
     }
-    if (idExp.$ === "Int32Const") {
-      return [idExp, primitives.int32Type];
-    }
-    if (idExp.$ === "Float32Const") {
-      return [idExp, primitives.float32Type];
-    }
-    if (idExp.$ === "BoolConst") {
-      return [idExp, primitives.boolType];
+    if (isConstantType(idExp)) {
+      return [idExp, typeOfConstant(idExp)];
     }
     throw new Error("maybe undeachable");
   }
