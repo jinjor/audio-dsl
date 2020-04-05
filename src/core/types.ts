@@ -343,8 +343,9 @@ export type CondOp = {
 export type Import = FunctionImport;
 export type FunctionImport = {
   $: "FunctionImport";
-  moduleName: string;
-  functionName: string;
+  internalName: string;
+  externalModuleName: string;
+  externalBasename: string;
   type: FunctionType;
 };
 // --------------------

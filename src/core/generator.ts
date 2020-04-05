@@ -436,9 +436,9 @@ export class Module {
   }
   addImport(functionImport: types.Import): void {
     this.raw.addFunctionImport(
-      functionImport.functionName, // internalName
-      functionImport.moduleName, // externalModuleName
-      functionImport.functionName, // externalBasename
+      functionImport.internalName,
+      functionImport.externalModuleName,
+      functionImport.externalBasename,
       this.types(functionImport.type.params),
       this.type(functionImport.type.returnType)
     );

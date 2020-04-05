@@ -542,8 +542,9 @@ function validateImport(
         scope.declareType(name, type);
         state.imports.push({
           $: "FunctionImport",
-          moduleName,
-          functionName: name,
+          internalName: name,
+          externalModuleName: moduleName,
+          externalBasename: name,
           type,
         });
         continue;
