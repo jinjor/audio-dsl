@@ -328,4 +328,22 @@ describe("Validate", function () {
       `param int a { defaultValue = 0; minValue = 0; maxValue = 0; } void a () {}`
     );
   });
+  it("cast", () => {
+    assertOk(`void f() { float a = float(0); }`);
+    assertOk(`void f() { int a = int(0.0); }`);
+    assertErrorExists(`void f() { float a = float(0.0); }`);
+    assertErrorExists(`void f() { float a = int(0.0); }`);
+    assertErrorExists(`void f() { int a = float(0); }`);
+    assertErrorExists(`void f() { int a = int(0); }`);
+    assertErrorExists(`void f() { int a = float(0.0); }`);
+    assertErrorExists(`void f() { float a = int(0); }`);
+  });
+  it("import", () => {
+    assertOk(`void f() { float a = sin(0.0); }`);
+    // TODO
+    // assertOk(`float sin = 0.0; void f() { float p = sin; }`); // shadowing math.sin
+    // Note:
+    //   currently, all members of imported module are declared automatically.
+    //   If shadowing is not allowed, minor version-up may break the exsisting code.
+  });
 });
