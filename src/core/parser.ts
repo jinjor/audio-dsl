@@ -711,6 +711,16 @@ function parseDebug<T>(parser: Parser<T>, src: string): T {
     return ast;
   } catch (e) {
     log.debug(util.inspect(e, { colors: true, depth: 10 }));
-    throw e;
+    if (e.position) {
+      const error: ast.ParseError = {
+        $: "ParseError",
+        position: transformPosition(e.position),
+        message: e.message,
+        details: e.explain(),
+      };
+      throw error;
+    } else {
+      throw e;
+    }
   }
 }

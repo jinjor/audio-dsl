@@ -18,7 +18,7 @@ export function parseAndValidate(src: string): ValidationResult {
   try {
     ast = parse(src);
   } catch (e) {
-    console.log(e.explain());
+    console.log(e.details);
     throw e;
   }
   const start = Date.now();

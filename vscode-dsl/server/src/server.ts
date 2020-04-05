@@ -15,10 +15,10 @@ import {
   CompletionItemKind,
   TextDocumentPositionParams,
   TextDocumentSyncKind,
-  InitializeResult
+  InitializeResult,
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { compiler } from "audio-dsl";
+import { compiler, ast } from "audio-dsl";
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -54,15 +54,15 @@ connection.onInitialize((params: InitializeParams) => {
       textDocumentSync: TextDocumentSyncKind.Full,
       // Tell the client that the server supports code completion
       completionProvider: {
-        resolveProvider: true
-      }
-    }
+        resolveProvider: true,
+      },
+    },
   };
   if (hasWorkspaceFolderCapability) {
     result.capabilities.workspace = {
       workspaceFolders: {
-        supported: true
-      }
+        supported: true,
+      },
     };
   }
   return result;
@@ -77,7 +77,7 @@ connection.onInitialized(() => {
     );
   }
   if (hasWorkspaceFolderCapability) {
-    connection.workspace.onDidChangeWorkspaceFolders(_event => {
+    connection.workspace.onDidChangeWorkspaceFolders((_event) => {
       connection.console.log("Workspace folder change event received.");
     });
   }
@@ -97,7 +97,7 @@ let globalSettings: ExampleSettings = defaultSettings;
 // Cache the settings of all open documents
 let documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
 
-connection.onDidChangeConfiguration(change => {
+connection.onDidChangeConfiguration((change) => {
   if (hasConfigurationCapability) {
     // Reset all cached document settings
     documentSettings.clear();
@@ -119,7 +119,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
   if (!result) {
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
-      section: "languageServerExample"
+      section: "languageServerExample",
     });
     documentSettings.set(resource, result);
   }
@@ -127,13 +127,13 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 }
 
 // Only keep settings for open documents
-documents.onDidClose(e => {
+documents.onDidClose((e) => {
   documentSettings.delete(e.document.uri);
 });
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
+documents.onDidChangeContent((change) => {
   validateTextDocument(change.document);
 });
 
@@ -160,7 +160,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         severity: DiagnosticSeverity.Error,
         range: error.range,
         message: error.message,
-        source: "dsl"
+        source: "dsl",
       };
       if (hasDiagnosticRelatedInformationCapability) {
         // diagnostic.relatedInformation = [];
@@ -168,12 +168,24 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
       diagnostics.push(diagnostic);
     }
   } catch (e) {
-    // TOOD: handle syntax errors
+    if (e.$ === "ParseError") {
+      e = e as ast.ParseError;
+      let diagnostic: Diagnostic = {
+        severity: DiagnosticSeverity.Error,
+        range: { start: e.position, end: e.position },
+        message: e.message,
+        source: "dsl",
+      };
+      if (hasDiagnosticRelatedInformationCapability) {
+        // diagnostic.relatedInformation = [];
+      }
+      diagnostics.push(diagnostic);
+    }
   }
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
-connection.onDidChangeWatchedFiles(_change => {
+connection.onDidChangeWatchedFiles((_change) => {
   // Monitored files have change in VSCode
   connection.console.log("We received an file change event");
 });
@@ -188,13 +200,13 @@ connection.onCompletion(
       {
         label: "TypeScript",
         kind: CompletionItemKind.Text,
-        data: 1
+        data: 1,
       },
       {
         label: "JavaScript",
         kind: CompletionItemKind.Text,
-        data: 2
-      }
+        data: 2,
+      },
     ];
   }
 );

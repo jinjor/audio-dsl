@@ -9,6 +9,12 @@ export interface Range {
 export interface SourceInfo {
   range: Range;
 }
+export type ParseError = {
+  $: "ParseError";
+  position: Position;
+  message: string;
+  details: string;
+};
 
 // --------------------
 //  Module
