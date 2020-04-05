@@ -1,13 +1,15 @@
 import { textToBinary } from "../src/core/compiler";
 import { base64ToBytes } from "../runtime/common/util";
 import { Instance } from "../runtime/common/module";
+import { util, math } from "../runtime/common/lib";
 import assert from "assert";
 
 function compile(src: string) {
   const binary = textToBinary(src);
   const base64 = Buffer.from(binary.buffer).toString("base64");
   const bytes = base64ToBytes(base64);
-  return Instance.create(bytes);
+  const libs = [util, math];
+  return Instance.create(bytes, libs);
 }
 
 describe("Compile", function () {

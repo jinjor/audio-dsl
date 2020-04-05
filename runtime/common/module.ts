@@ -2,80 +2,18 @@ import {
   LanguageSpecificInstance,
   LanguageSpecificExports,
 } from "./definition.js";
+import { pointerToInt, pointerToFloat, pointerToString, Lib } from "./lib";
 
-function pointerToInt(memory: WebAssembly.Memory, pointer: number): number {
-  const buf = memory.buffer.slice(pointer, pointer + 4);
-  const view = new DataView(buf);
-  return view.getInt32(0);
-}
-function pointerToFloat(memory: WebAssembly.Memory, pointer: number): number {
-  const buf = memory.buffer.slice(pointer, pointer + 4);
-  const view = new DataView(buf);
-  return view.getFloat32(0);
-}
-function pointerToString(memory: WebAssembly.Memory, pointer: number): string {
-  const pointerToData = pointer + 1;
-  const lenBuf = memory.buffer.slice(pointer, pointerToData);
-  const length = Array.from(new Uint8Array(lenBuf))[0];
-  const sliced = memory.buffer.slice(pointerToData, pointerToData + length);
-  // utf-8 is not supported (because TextDecoder is not here...)
-  return String.fromCharCode(...new Uint8Array(sliced));
-}
-
-function createUtilModule(memory: WebAssembly.Memory): any {
-  return {
-    log_i: function (arg: number) {
-      console.log("log_i:", arg);
-    },
-    log_f: function (arg: number) {
-      console.log("log_f:", arg);
-    },
-    log_b: function (arg: number) {
-      console.log("log_b:", arg);
-    },
-    log_s: function (pointer: number) {
-      console.log("log_s:", pointerToString(memory, pointer));
-    },
-  };
-}
-
-function createMathModule(memory: WebAssembly.Memory): any {
-  return {
-    abs: Math.abs,
-    acos: Math.acos,
-    asin: Math.asin,
-    atan: Math.atan,
-    atan2: Math.atan2,
-    ceil: Math.ceil,
-    cos: Math.cos,
-    exp: Math.exp,
-    floor: Math.floor,
-    log: Math.log,
-    log10: Math.log10,
-    max: Math.max,
-    min: Math.min,
-    pow: Math.pow,
-    round: Math.fround,
-    sin: Math.sin,
-    sqrt: Math.sqrt,
-    tan: Math.tan,
-    acosh: Math.acosh,
-    asinh: Math.asinh,
-    atanh: Math.atanh,
-    cosh: Math.cosh,
-    sinh: Math.sinh,
-    tanh: Math.tanh,
-  };
-}
-
-function createImportObject(memory: WebAssembly.Memory): any {
-  return {
+function createImportObject(memory: WebAssembly.Memory, libs: Lib[]): any {
+  const importObject: any = {
     env: {
       memory,
     },
-    util: createUtilModule(memory),
-    math: createMathModule(memory),
   };
+  for (const lib of libs) {
+    importObject[lib.name] = lib.create(memory);
+  }
+  return importObject;
 }
 
 export type Descriptor = {
@@ -94,13 +32,13 @@ export class Instance {
   private exports: LanguageSpecificExports;
   private inPtrs: number[] = [];
   private outPtrs: number[] = [];
-  constructor(bytes: Uint8Array) {
+  constructor(bytes: Uint8Array, libs: Lib[]) {
     const memory = new WebAssembly.Memory({ initial: 1, maximum: 1 });
     const mod = new WebAssembly.Module(bytes);
-    const lib = createImportObject(memory);
+    const importObject = createImportObject(memory, libs);
     const instance = new WebAssembly.Instance(
       mod,
-      lib
+      importObject
     ) as LanguageSpecificInstance;
     this.memory = memory;
     this.exports = instance.exports;
@@ -198,8 +136,8 @@ export class Instance {
       this.exports.test();
     }
   }
-  static create(bytes: Uint8Array): Instance {
-    const instance = new Instance(bytes);
+  static create(bytes: Uint8Array, libs: Lib[]): Instance {
+    const instance = new Instance(bytes, libs);
     const exp = instance.exports;
     instance.test();
     console.log("number_of_in_channels:", exp.number_of_in_channels.value);
