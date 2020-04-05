@@ -98,6 +98,7 @@ import {
   MissingFields,
   AssigningStructIsNotSupported,
   InvlaidAssignTarget,
+  AmbiguousName,
 } from "./errors";
 import { DataBuilder, StringBuilder } from "./data-builder";
 
@@ -109,10 +110,14 @@ type FoundExp =
   | ArrayGet
   | StructTypeWithOffset
   | ConstantType;
+type LookupResult =
+  | [FoundExp, ExpressionType]
+  | { $: "Ambiguous"; modules: string[] }
+  | null;
 interface Scope {
   declareType(name: string, type: DeclaredType): void;
   isDeclaredInThisScope(name: string): boolean;
-  lookupType(name: string): [FoundExp, ExpressionType] | null;
+  lookupType(name: string): LookupResult;
 }
 interface LocalScope extends Scope {
   createBlockScope(): BlockScope;
@@ -120,7 +125,7 @@ interface LocalScope extends Scope {
   isDeclaredInThisScope(name: string): boolean;
   addLocalType(type: Int32Type | Float32Type | BoolType): number;
   coverReturn(): void;
-  lookupType(name: string): [FoundExp, ExpressionType] | null;
+  lookupType(name: string): LookupResult;
   lookupLocalTypeByIndex(
     index: number
   ): Int32Type | Float32Type | BoolType | null;
@@ -204,7 +209,7 @@ class GlobalScope implements Scope {
     }
     return arrays;
   }
-  lookupType(name: string): [FoundExp, ExpressionType] | null {
+  lookupType(name: string): LookupResult {
     const typeOrStaticValue = this.declaredTypesOrStaticValue.get(name);
     if (typeOrStaticValue == null) {
       const modules = this.importNameMap.get(name);
@@ -216,7 +221,7 @@ class GlobalScope implements Scope {
         const internalName = `${moduleName}.${name}`;
         return this.lookupType(internalName);
       }
-      throw new Error("not implemented yet (ambiguous name)");
+      throw new Error("ambiguous name)");
     }
     if (typeOrStaticValue.$ === "Int32Const") {
       return [typeOrStaticValue, primitives.int32Type];
@@ -302,7 +307,7 @@ class FunctionScope implements LocalScope {
   getLocalTypes(): (Int32Type | Float32Type | BoolType)[] {
     return this.localTypes;
   }
-  lookupType(name: string): [FoundExp, ExpressionType] | null {
+  lookupType(name: string): LookupResult {
     if (this.declaredTypes.has(name)) {
       const index = this.declaredTypes.get(name)!;
       const type = this.localTypes[index];
@@ -340,7 +345,7 @@ class BlockScope implements LocalScope {
   isDeclaredInThisScope(name: string): boolean {
     return this.declaredTypes.has(name);
   }
-  lookupType(name: string): [FoundExp, ExpressionType] | null {
+  lookupType(name: string): LookupResult {
     if (this.declaredTypes.has(name)) {
       const index = this.declaredTypes.get(name)!;
       const type = this.lookupLocalTypeByIndex(index);
@@ -1001,6 +1006,9 @@ function lookupSelfDeclaredLocal(
   if (found == null) {
     throw new Error("Unexpected lookup not found: " + name);
   }
+  if (!Array.isArray(found)) {
+    throw new Error("Unexpected lookup multiple found: " + name);
+  }
   const [exp, type] = found;
   assertLocalGet(exp);
   return [exp, type];
@@ -1327,12 +1335,16 @@ function validateIdentifier(
   scope: Scope,
   ast: ast.Identifier
 ): [FoundExp, ExpressionType] | null {
-  const lookupResult = scope.lookupType(ast.name);
-  if (lookupResult == null) {
+  const found = scope.lookupType(ast.name);
+  if (found == null) {
     state.errors.push(new NotFound(ast.range, ast.name));
     return null;
   }
-  return lookupResult;
+  if (!Array.isArray(found)) {
+    state.errors.push(new AmbiguousName(ast.range, ast.name, found.modules));
+    return null;
+  }
+  return found;
 }
 function validateArrayAccess(
   state: State,

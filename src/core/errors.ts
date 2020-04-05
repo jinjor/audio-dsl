@@ -41,6 +41,14 @@ export class NotFound implements ValidationErrorType {
     this.message = `${n} not found`;
   }
 }
+export class AmbiguousName implements ValidationErrorType {
+  message: string;
+  constructor(public range: ast.Range, name: string, modules: string[]) {
+    const n = formatIdentifier(name);
+    const moduleNames = modules.map(formatIdentifier).join(", ");
+    this.message = `${n} is ambiguous name which is defined in multiple module: ${moduleNames}`;
+  }
+}
 export class InvalidTypeCombinationForBinOp implements ValidationErrorType {
   message: string;
   constructor(
