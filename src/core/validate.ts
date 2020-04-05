@@ -433,10 +433,7 @@ export function validate(
     name: "number_of_in_channels",
     type: primitives.int32Type,
     mutable: false,
-    init: {
-      $: "Int32Const",
-      value: 2,
-    },
+    init: makeConstant(primitives.int32Type, 2),
     export: true,
   });
   state.globalVariableDeclarations.push({
@@ -444,10 +441,7 @@ export function validate(
     name: "number_of_out_channels",
     type: primitives.int32Type,
     mutable: false,
-    init: {
-      $: "Int32Const",
-      value: 2,
-    },
+    init: makeConstant(primitives.int32Type, 2),
     export: true,
   });
   validateArrayDeclaration(
@@ -494,10 +488,7 @@ export function validate(
       type: primitives.int32Type,
       name,
       mutable: false,
-      init: {
-        $: "Int32Const",
-        value: array.byteOffset,
-      },
+      init: makeConstant(primitives.int32Type, array.byteOffset),
       export: true,
     });
   }
@@ -507,10 +498,7 @@ export function validate(
     type: primitives.int32Type,
     name: "number_of_params",
     mutable: false,
-    init: {
-      $: "Int32Const",
-      value: state.numberOfParams,
-    },
+    init: makeConstant(primitives.int32Type, state.numberOfParams),
     export: true,
   });
 
@@ -521,10 +509,7 @@ export function validate(
     type: primitives.int32Type,
     name: "static",
     mutable: false,
-    init: {
-      $: "Int32Const",
-      value: staticSegmentOffset,
-    },
+    init: makeConstant(primitives.int32Type, staticSegmentOffset),
     export: true,
   });
 
@@ -796,10 +781,7 @@ function validateParamDeclaration(
       type: primitives.int32Type,
       name: "params",
       mutable: false,
-      init: {
-        $: "Int32Const",
-        value: infoStructOffset,
-      },
+      init: makeConstant(primitives.int32Type, infoStructOffset),
       export: true,
     });
   }
@@ -1049,7 +1031,7 @@ function validateLoop(
     init,
     { $: "Int32Type" },
     "i",
-    { $: "Int32Const", value: 0 }
+    makeConstant(primitives.int32Type, 0)
   );
   const lenIndex = validateLocalVariableDeclarationInternal(
     state,
@@ -1057,7 +1039,7 @@ function validateLoop(
     init,
     { $: "Int32Type" },
     "length",
-    { $: "Int32Const", value: state.numSamples }
+    makeConstant(primitives.int32Type, state.numSamples)
   );
   for (const statement of ast.statements) {
     validateLocalStatement(state, childScope, body, statement);
@@ -1073,10 +1055,7 @@ function validateLoop(
         index: iIndex,
         type: primitives.int32Type,
       },
-      right: {
-        $: "Int32Const",
-        value: 1,
-      },
+      right: makeConstant(primitives.int32Type, 1),
     },
   });
   localStatements.push({
@@ -1627,18 +1606,12 @@ function evaluateGlobalExpression(
   | null {
   if (ast.$ === "IntLiteral") {
     return [
-      {
-        $: "Int32Const",
-        value: ast.value,
-      },
+      makeConstant(primitives.int32Type, ast.value),
       primitives.int32Type,
     ];
   } else if (ast.$ === "FloatLiteral") {
     return [
-      {
-        $: "Float32Const",
-        value: ast.value,
-      },
+      makeConstant(primitives.float32Type, ast.value),
       primitives.float32Type,
     ];
   } else if (ast.$ === "StringLiteral") {
