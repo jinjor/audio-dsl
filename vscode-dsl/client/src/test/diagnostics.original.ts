@@ -16,20 +16,20 @@ suite("Should get diagnostics", () => {
         message: "ANY is all uppercase.",
         range: toRange(0, 0, 0, 3),
         severity: vscode.DiagnosticSeverity.Warning,
-        source: "ex"
+        source: "ex",
       },
       {
         message: "ANY is all uppercase.",
         range: toRange(0, 14, 0, 17),
         severity: vscode.DiagnosticSeverity.Warning,
-        source: "ex"
+        source: "ex",
       },
       {
         message: "OS is all uppercase.",
         range: toRange(0, 18, 0, 20),
         severity: vscode.DiagnosticSeverity.Warning,
-        source: "ex"
-      }
+        source: "ex",
+      },
     ]);
   });
 });

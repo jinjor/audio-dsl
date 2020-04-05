@@ -69,14 +69,18 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
+    "format": "prettier --write server/src/** client/src/**",
     "package": "rm *.vsix; vsce package",
     "use": "code --install-extension vscode-dsl-0.0.1.vsix",
-    "test": "sh ./scripts/e2e.sh"
+    "test": "npm run test:e2e && npm run test:format",
+    "test:e2e": "sh ./scripts/e2e.sh",
+    "test:format": "prettier --check server/src/** client/src/**"
   },
   "devDependencies": {
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.11.0",
     "eslint": "^6.8.0",
+    "prettier": "^2.0.2",
     "typescript": "^3.8.3",
     "vsce": "^1.75.0"
   },

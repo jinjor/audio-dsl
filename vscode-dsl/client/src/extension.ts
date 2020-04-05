@@ -10,7 +10,7 @@ import {
   LanguageClient,
   LanguageClientOptions,
   ServerOptions,
-  TransportKind
+  TransportKind,
 } from "vscode-languageclient";
 
 let client: LanguageClient;
@@ -31,8 +31,8 @@ export function activate(context: ExtensionContext) {
     debug: {
       module: serverModule,
       transport: TransportKind.ipc,
-      options: debugOptions
-    }
+      options: debugOptions,
+    },
   };
 
   // Options to control the language client
@@ -41,8 +41,8 @@ export function activate(context: ExtensionContext) {
     documentSelector: [{ scheme: "file", language: "dsl" }],
     synchronize: {
       // Notify the server about file changes to '.clientrc files contained in the workspace
-      fileEvents: workspace.createFileSystemWatcher("**/.clientrc")
-    }
+      fileEvents: workspace.createFileSystemWatcher("**/.clientrc"),
+    },
   };
 
   // Create the language client and start the client.
