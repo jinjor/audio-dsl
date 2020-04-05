@@ -1587,7 +1587,7 @@ function validateFunctionCall(
     }
   }
   // TODO: should be CastGet
-  if (funcExp.name === "float") {
+  if (funcExp.name === "builtin.float") {
     return [
       {
         $: "IntToFloatCast",
@@ -1596,7 +1596,7 @@ function validateFunctionCall(
       funcType.returnType,
     ];
   }
-  if (funcExp.name === "int") {
+  if (funcExp.name === "builtin.int") {
     return [
       {
         $: "FloatToIntCast",
