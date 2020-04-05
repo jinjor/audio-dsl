@@ -12,8 +12,7 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "preserveWatchOutput": true,
-    "allowJs": true
+    "preserveWatchOutput": true
   },
   "include": ["src/**/*.ts", "runtime/common/**/*.ts", "test/**/*.ts"]
 }
