@@ -45,6 +45,8 @@ import * as util from "util";
 import { readFileSync } from "fs";
 import assert from "assert";
 
+const log = util.debuglog("dsl-test");
+
 function succeed<A>(parser: Parser<A>, source: string, expect?: A): void {
   try {
     const value = run(parser, source);
@@ -82,8 +84,7 @@ function fail<A>(parser: Parser<A>, source: string, offset = 0): void {
       `Offsets did not match: expected = ${offset}, actual = ${error.offset}, source = ${source}`
     );
   }
-  error.explain();
-  console.log(error.explain());
+  log(error.explain());
 }
 
 function failWithNonParseError<A>(parser: Parser<A>, source: string) {
@@ -100,7 +101,7 @@ function throwError<A>(message = "Something is wrong"): () => never {
   };
 }
 
-describe("Core", () => {
+describe("Utility Parser", () => {
   it("position", () => {
     assert.deepEqual(calcPosition("", 0), { row: 1, column: 1 });
     assert.deepEqual(calcPosition(" ", 0), { row: 1, column: 1 });

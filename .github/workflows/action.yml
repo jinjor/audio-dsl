@@ -3,6 +3,7 @@ on: [push]
 env:
   CI: true
   DISPLAY: ":99.0"
+  NODE_DEBUG: dsl,dsl-test
 jobs:
   build:
     runs-on: ubuntu-latest
