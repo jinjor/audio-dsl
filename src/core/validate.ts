@@ -46,6 +46,7 @@ import {
   Int32Const,
   Float32Const,
   isConstantType,
+  typeOfConstant,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -226,15 +227,13 @@ class GlobalScope implements Scope {
         modules,
       };
     }
-    if (typeOrStaticValue.$ === "Int32Const") {
-      return [typeOrStaticValue, primitives.int32Type];
-    }
-    if (typeOrStaticValue.$ === "Float32Const") {
-      return [typeOrStaticValue, primitives.float32Type];
+    if (isConstantType(typeOrStaticValue)) {
+      return [typeOrStaticValue, typeOfConstant(typeOrStaticValue)];
     }
     if (
       typeOrStaticValue.$ === "Int32Type" ||
-      typeOrStaticValue.$ === "Float32Type"
+      typeOrStaticValue.$ === "Float32Type" ||
+      typeOrStaticValue.$ === "BoolType"
     ) {
       return [
         { $: "GlobalGet", name, type: typeOrStaticValue },

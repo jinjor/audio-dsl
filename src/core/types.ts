@@ -108,10 +108,22 @@ export namespace primitives {
   export const boolType: BoolType = { $: "BoolType" };
   export const stringType: StringType = { $: "StringType" };
 }
-export function isConstantType(
-  t: AnyType | LocalGet | GlobalGet
-): t is ConstantType {
+export function isConstantType(t: { $: string }): t is ConstantType {
   return t.$ === "Int32Const" || t.$ === "Float32Const" || t.$ === "BoolConst";
+}
+export function typeOfConstant(
+  t: ConstantType
+): Int32Type | Float32Type | BoolType {
+  if (t.$ === "Int32Const") {
+    return primitives.int32Type;
+  }
+  if (t.$ === "Float32Const") {
+    return primitives.float32Type;
+  }
+  if (t.$ === "BoolConst") {
+    return primitives.boolType;
+  }
+  throw new Error("unreachable");
 }
 export function sizeOf(
   t: Int32Type | Float32Type | BoolType | StructType

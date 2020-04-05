@@ -100,6 +100,8 @@ describe("Validate", function () {
     assertOk(`void f() { int a = 1; a = 1; }`);
     assertOk(`void f() { float a = 1.0; a = 1.0; }`);
     assertOk(`int[] a; void f() { a[0] = 1; }`);
+    assertOk(`void f(int a) { a = 1; }`);
+    assertOk(`void f(bool a) { a = 1 > 0; }`);
     assertErrorExists(`void f() { int a = 1; a = 1.0; }`);
     assertErrorExists(`void f() { float a = 1; a = 1; }`);
     assertErrorExists(`int[] a; void f() { a[0] = 1.0; }`);
@@ -120,6 +122,7 @@ describe("Validate", function () {
     assertOk(`int a = 0; var int b = a;`);
     assertOk(`int a = 0; int b = a + a;`);
     assertOk(`int a = 0; bool b = 1 > a;`);
+    assertOk(`bool a = 1 > 0; bool b = a;`);
     assertErrorExists(`int a = 0; float b = float(a);`); // maybe need a static function
     assertErrorExists(`var int a = 0; int b = a;`);
     assertErrorExists(`var int a = 0; var int b = a;`);
