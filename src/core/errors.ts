@@ -46,7 +46,7 @@ export class AmbiguousName implements ValidationErrorType {
   constructor(public range: ast.Range, name: string, modules: string[]) {
     const n = formatIdentifier(name);
     const moduleNames = modules.map(formatIdentifier).join(", ");
-    this.message = `${n} is ambiguous name which is defined in multiple module: ${moduleNames}`;
+    this.message = `${n} is ambiguous name which is defined in multiple modules: ${moduleNames}`;
   }
 }
 export class InvalidTypeCombinationForBinOp implements ValidationErrorType {
