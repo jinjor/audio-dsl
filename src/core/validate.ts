@@ -48,6 +48,7 @@ import {
   isConstantType,
   typeOfConstant,
   makeConstant,
+  makeAssign,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -1282,29 +1283,6 @@ function validateAssign(
   }
 }
 
-function makeAssign(left: GetForAssign, right: Expression): Assign {
-  if (left.$ === "LocalGet") {
-    return {
-      $: "LocalSet",
-      index: left.index,
-      value: right,
-    };
-  } else if (left.$ === "GlobalGet") {
-    return {
-      $: "GlobalSet",
-      name: left.name,
-      value: right,
-    };
-  } else if (left.$ === "ItemGet") {
-    return {
-      $: "ItemSet",
-      pointer: left.pointer,
-      value: right,
-    };
-  }
-  throw new Error("Unreachable");
-}
-
 function validateAssignableIdentifier(
   state: State,
   scope: Scope,
@@ -1412,18 +1390,12 @@ function validateExpression(
 ): [Expression, ExpressionType] | null {
   if (ast.$ === "IntLiteral") {
     return [
-      {
-        $: "Int32Const",
-        value: ast.value,
-      },
+      makeConstant(primitives.int32Type, ast.value),
       primitives.int32Type,
     ];
   } else if (ast.$ === "FloatLiteral") {
     return [
-      {
-        $: "Float32Const",
-        value: ast.value,
-      },
+      makeConstant(primitives.float32Type, ast.value),
       primitives.float32Type,
     ];
   } else if (ast.$ === "StringLiteral") {
@@ -1603,6 +1575,7 @@ function validateFunctionCall(
       return null;
     }
   }
+  // TODO: should be CastGet
   if (funcExp.name === "float") {
     return [
       {

@@ -170,6 +170,28 @@ export function defaultValueOf(
   }
   throw new Error("unreachable");
 }
+export function makeAssign(left: GetForAssign, right: Expression): Assign {
+  if (left.$ === "LocalGet") {
+    return {
+      $: "LocalSet",
+      index: left.index,
+      value: right,
+    };
+  } else if (left.$ === "GlobalGet") {
+    return {
+      $: "GlobalSet",
+      name: left.name,
+      value: right,
+    };
+  } else if (left.$ === "ItemGet") {
+    return {
+      $: "ItemSet",
+      pointer: left.pointer,
+      value: right,
+    };
+  }
+  throw new Error("Unreachable");
+}
 export function isTypeEqual<T extends AnyType>(a: AnyType, b: AnyType): b is T {
   if (a === b) {
     return true;
