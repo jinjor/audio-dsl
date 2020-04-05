@@ -788,19 +788,18 @@ function validateParamDeclaration(
 function pushStructToDataBuilder(
   builder: DataBuilder,
   structType: StructType,
-  values: number[]
+  fieldValues: number[]
 ): number | null {
-  // assumes everything has been validated
   let structOffset = null;
   for (let i = 0; i < structType.types.length; i++) {
     const fieldType = structType.types[i];
     let offset = null;
     if (fieldType.type.$ === "Int32Type") {
-      offset = builder.pushInt32(values[i]);
+      offset = builder.pushInt32(fieldValues[i]);
     } else if (fieldType.type.$ === "Float32Type") {
-      offset = builder.pushFloat32(values[i]);
+      offset = builder.pushFloat32(fieldValues[i]);
     } else if (fieldType.type.$ === "BoolType") {
-      offset = builder.pushInt32(values[i]);
+      offset = builder.pushInt32(fieldValues[i]);
     } else {
       throw new Error("unreachable");
     }
@@ -809,6 +808,21 @@ function pushStructToDataBuilder(
     }
   }
   return structOffset;
+}
+function pushStructArrayToDataBuilder(
+  builder: DataBuilder,
+  structType: StructType,
+  fieldValuesArray: number[][]
+): number | null {
+  let structArrayOffset = null;
+  for (let i = 0; i < fieldValuesArray.length; i++) {
+    const fieldValues = fieldValuesArray[i];
+    const offset = pushStructToDataBuilder(builder, structType, fieldValues);
+    if (structArrayOffset == null) {
+      structArrayOffset = offset;
+    }
+  }
+  return structArrayOffset;
 }
 
 function evaluateStructLiteralInGlobal(
