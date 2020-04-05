@@ -268,7 +268,7 @@ export function typeToString(a: AnyType): string {
   }
   throw new Error("unreachable");
 }
-export function paramOptionsType(
+export function makeParamOptionsType(
   type: "Int32Type" | "Float32Type"
 ): StructType {
   return {
@@ -280,7 +280,9 @@ export function paramOptionsType(
     ],
   };
 }
-export function paramType(type: "Int32Type" | "Float32Type"): StructType {
+export function makeParamInfoType(
+  type: "Int32Type" | "Float32Type"
+): StructType {
   return {
     $: "StructType",
     types: [

@@ -39,7 +39,8 @@ import {
   StringGet,
   LocalType,
   StructTypeWithOffset,
-  paramOptionsType,
+  makeParamOptionsType,
+  makeParamInfoType,
   StructType,
   FieldType,
   StringType,
@@ -740,7 +741,8 @@ function validateParamDeclaration(
       );
     }
   }
-  const optionType = valueType == null ? null : paramOptionsType(valueType.$);
+  const optionType =
+    valueType == null ? null : makeParamOptionsType(valueType.$);
   const optionValue =
     optionType == null
       ? null
@@ -787,24 +789,21 @@ function validateParamDeclaration(
   if (optionValue == null) {
     return;
   }
-  const info_name = state.strings.set(ast.name.name);
-  const info_automationRate = state.strings.set(isArray ? "a-rate" : "k-rate");
-  const info_defaultValue = optionValue[0].value;
-  const info_minValue = optionValue[1].value;
-  const info_maxValue = optionValue[2].value;
-  // TODO: use param type, generalize logic, etc.
-  const infoStructOffset = state.dataBuilder.pushInt32(info_name);
-  if (valueType.$ === "Int32Type") {
-    state.dataBuilder.pushInt32(info_defaultValue);
-    state.dataBuilder.pushInt32(info_minValue);
-    state.dataBuilder.pushInt32(info_maxValue);
-  } else if (valueType.$ === "Float32Type") {
-    state.dataBuilder.pushFloat32(info_defaultValue);
-    state.dataBuilder.pushFloat32(info_minValue);
-    state.dataBuilder.pushFloat32(info_maxValue);
+  const paramInfoType = makeParamInfoType(valueType.$);
+  const infoStructOffset = pushStructToDataBuilder(
+    state.dataBuilder,
+    paramInfoType,
+    [
+      state.strings.set(ast.name.name),
+      state.strings.set(isArray ? "a-rate" : "k-rate"),
+      optionValue[0].value,
+      optionValue[1].value,
+      optionValue[2].value,
+    ]
+  );
+  if (infoStructOffset == null) {
+    throw new Error("unreachable");
   }
-  state.dataBuilder.pushInt32(info_automationRate);
-
   if (state.numberOfParams === 0) {
     state.globalVariableDeclarations.push({
       $: "GlobalVariableDeclaration",
@@ -819,6 +818,32 @@ function validateParamDeclaration(
     });
   }
   state.numberOfParams++;
+}
+
+function pushStructToDataBuilder(
+  builder: DataBuilder,
+  structType: StructType,
+  values: number[]
+): number | null {
+  // assumes everything has been validated
+  let structOffset = null;
+  for (let i = 0; i < structType.types.length; i++) {
+    const fieldType = structType.types[i];
+    let offset = null;
+    if (fieldType.type.$ === "Int32Type") {
+      offset = builder.pushInt32(values[i]);
+    } else if (fieldType.type.$ === "Float32Type") {
+      offset = builder.pushFloat32(values[i]);
+    } else if (fieldType.type.$ === "BoolType") {
+      offset = builder.pushInt32(values[i]);
+    } else {
+      throw new Error("unreachable");
+    }
+    if (structOffset == null) {
+      structOffset = offset;
+    }
+  }
+  return structOffset;
 }
 
 function evaluateStructLiteralInGlobal(
