@@ -1,4 +1,4 @@
-import { Instance } from "./module";
+import { Instance } from "./common/module";
 
 declare const AudioWorkletProcessor: any;
 

@@ -125,7 +125,7 @@ export class Instance {
     return this.memory.buffer.slice(ptr, ptr + 100); // TODO: ?
   }
   getParamInfoBuffer(): ArrayBuffer {
-    const ptr = this.exports.static.value + this.exports.params.value;
+    const ptr = this.exports.static.value + this.exports.params?.value; // TODO
     return this.memory.buffer.slice(ptr, ptr + 4 + 4 + 4 + 4 + 4); // TODO
   }
   getNthDescriptor(n: number): Descriptor {
@@ -192,16 +192,19 @@ export class Instance {
   process(): void {
     this.exports.process();
   }
+  test(): void {
+    if (this.exports.test) {
+      console.log("testing module...");
+      this.exports.test();
+    }
+  }
   static create(bytes: Uint8Array): Instance {
     const instance = new Instance(bytes);
     const exp = instance.exports;
-    if (exp.test) {
-      console.log("testing module...");
-      exp.test();
-    }
+    instance.test();
     console.log("number_of_in_channels:", exp.number_of_in_channels.value);
     console.log("number_of_out_channels:", exp.number_of_out_channels.value);
-    console.log("params:", exp.params.value);
+    console.log("params:", exp.params?.value); // TODO
     console.log("number_of_params:", exp.number_of_params.value);
     console.log("static:", exp.static.value);
     console.log("inputs:", exp.in_0.value);
