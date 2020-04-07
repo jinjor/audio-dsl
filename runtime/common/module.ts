@@ -136,6 +136,15 @@ export class Instance {
       this.exports.test();
     }
   }
+  get numberOfInChannels(): number {
+    return this.exports.number_of_in_channels.value;
+  }
+  get numberOfOutChannels(): number {
+    return this.exports.number_of_out_channels.value;
+  }
+  get numberOfParams(): number {
+    return this.exports.number_of_params.value;
+  }
   static create(bytes: Uint8Array, libs: Lib[]): Instance {
     const instance = new Instance(bytes, libs);
     const exp = instance.exports;
