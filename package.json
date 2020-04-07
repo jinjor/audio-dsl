@@ -4,7 +4,7 @@
   "description": "An experimental DSL for AudioWorklet",
   "scripts": {
     "start": "run-p server watch:**",
-    "server": "http-server -c-1",
+    "server": "ecstatic ./public --cache 1 --port 8080",
     "watch:compiler": "tsc -w",
     "watch:runtime": "tsc -p runtime -w",
     "watch:runtime:bundle": "chokidar \"runtime/dist/**\" -c \"npm run build:runtime:bundle\"",
@@ -37,7 +37,7 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.9.0",
     "chokidar-cli": "^2.1.0",
-    "http-server": "^0.12.1",
+    "ecstatic": "^4.1.4",
     "mocha": "^7.1.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.0.2",
