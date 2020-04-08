@@ -850,21 +850,6 @@ function pushStructToDataBuilder(
   }
   return structOffset;
 }
-function pushStructArrayToDataBuilder(
-  builder: DataBuilder,
-  structType: StructType,
-  fieldValuesArray: number[][]
-): number | null {
-  let structArrayOffset = null;
-  for (let i = 0; i < fieldValuesArray.length; i++) {
-    const fieldValues = fieldValuesArray[i];
-    const offset = pushStructToDataBuilder(builder, structType, fieldValues);
-    if (structArrayOffset == null) {
-      structArrayOffset = offset;
-    }
-  }
-  return structArrayOffset;
-}
 
 function evaluateStructLiteralInGlobal(
   state: GlobalState,
