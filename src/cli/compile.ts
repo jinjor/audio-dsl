@@ -57,11 +57,8 @@ register(moduleName, base64);
   fs.writeFileSync(outFile, processorSourceText);
 
   const runtimeOutputFile = path.join(outDir, RUNTIME_PATH);
-  // TODO: cache invalidation
-  // if (!fs.existsSync(runtimeOutputFile)) {
-  {
-    const runtimeSourceFile = path.join(__dirname, "../../runtime.js");
-    fs.copyFileSync(runtimeSourceFile, runtimeOutputFile);
-  }
+  const runtimeSourceFile = path.join(__dirname, "../../runtime.js");
+  fs.copyFileSync(runtimeSourceFile, runtimeOutputFile);
+
   console.log("compiled:", srcFile, "->", path.dirname(outFile));
 }
