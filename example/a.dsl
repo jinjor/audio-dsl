@@ -42,9 +42,9 @@ void process() {
   float type = wave_type[0];
   loop {
     out_0[i] = (
-      type == 1.0 ? calc_sin() :
-      type == 2.0 ? calc_square() :
-      type == 3.0 ? calc_saw() :
+      type == 0.0 ? calc_sin() :
+      type == 1.0 ? calc_square() :
+      type == 2.0 ? calc_saw() :
       calc_triangle()
     ) * gain;
     angle = angle + angle_per_sample(note_to_hz(note[i]));
