@@ -377,7 +377,7 @@ type GlobalState = {
   imports: Import[];
   globalVariableDeclarations: GlobalVariableDeclaration[];
   functionDeclarations: FunctionDeclaration[];
-  numberOfParams: number;
+  paramInfo: { structType: StructType; fieldValues: number[] }[];
   dataBuilder: DataBuilder;
   strings: StringBuilder;
   errors: ValidationErrorType[];
@@ -407,7 +407,7 @@ export function validate(
     imports: [],
     globalVariableDeclarations: [],
     functionDeclarations: [],
-    numberOfParams: 0,
+    paramInfo: [],
     dataBuilder,
     strings: new StringBuilder(dataBuilder),
     errors: [],
@@ -490,15 +490,6 @@ export function validate(
     });
   }
 
-  state.globalVariableDeclarations.push({
-    $: "GlobalVariableDeclaration",
-    type: primitives.int32Type,
-    name: "number_of_params",
-    mutable: false,
-    init: makeConstant(primitives.int32Type, state.numberOfParams),
-    export: true,
-  });
-
   // string pointers
   const staticSegmentOffset = scope.byteOffset;
   state.globalVariableDeclarations.push({
@@ -509,6 +500,37 @@ export function validate(
     init: makeConstant(primitives.int32Type, staticSegmentOffset),
     export: true,
   });
+
+  // param info
+  state.globalVariableDeclarations.push({
+    $: "GlobalVariableDeclaration",
+    type: primitives.int32Type,
+    name: "number_of_params",
+    mutable: false,
+    init: makeConstant(primitives.int32Type, state.paramInfo.length),
+    export: true,
+  });
+  for (let i = 0; i < state.paramInfo.length; i++) {
+    const { structType, fieldValues } = state.paramInfo[i];
+    const infoStructOffset = pushStructToDataBuilder(
+      state.dataBuilder,
+      structType,
+      fieldValues
+    );
+    if (infoStructOffset == null) {
+      throw new Error("unreachable");
+    }
+    if (i === 0) {
+      state.globalVariableDeclarations.push({
+        $: "GlobalVariableDeclaration",
+        type: primitives.int32Type,
+        name: "params",
+        mutable: false,
+        init: makeConstant(primitives.int32Type, infoStructOffset),
+        export: true,
+      });
+    }
+  }
 
   // log.debug(util.inspect(state, { colors: true, depth: 10 }));
   return {
@@ -758,31 +780,17 @@ function validateParamDeclaration(
     return;
   }
   const paramInfoType = makeParamInfoType(valueType.$);
-  const infoStructOffset = pushStructToDataBuilder(
-    state.dataBuilder,
-    paramInfoType,
-    [
+  state.paramInfo.push({
+    structType: paramInfoType,
+    fieldValues: [
+      valueType.$ === "Int32Type" ? 1 : 0,
       state.strings.set(ast.name.name),
       optionValue[0].value,
       optionValue[1].value,
       optionValue[2].value,
       state.strings.set(isArray ? "a-rate" : "k-rate"),
-    ]
-  );
-  if (infoStructOffset == null) {
-    throw new Error("unreachable");
-  }
-  if (state.numberOfParams === 0) {
-    state.globalVariableDeclarations.push({
-      $: "GlobalVariableDeclaration",
-      type: primitives.int32Type,
-      name: "params",
-      mutable: false,
-      init: makeConstant(primitives.int32Type, infoStructOffset),
-      export: true,
-    });
-  }
-  state.numberOfParams++;
+    ],
+  });
 }
 
 function pushStructToDataBuilder(

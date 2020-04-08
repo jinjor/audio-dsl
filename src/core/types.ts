@@ -286,6 +286,7 @@ export function makeParamInfoType(
   return {
     $: "StructType",
     types: [
+      { name: "isInt", type: primitives.boolType },
       { name: "name", type: { $: "Int32Type" } }, // pointer to string
       { name: "defaultValue", type: { $: type } },
       { name: "minValue", type: { $: type } },

@@ -14,6 +14,15 @@ export function pointerToFloat(
   const view = new DataView(buf);
   return view.getFloat32(0);
 }
+export function pointerToBool(
+  memory: WebAssembly.Memory,
+  pointer: number
+): boolean {
+  const buf = memory.buffer.slice(pointer, pointer + 4);
+  const view = new DataView(buf);
+  const intValue = view.getInt32(0);
+  return intValue > 0;
+}
 export function pointerToString(
   memory: WebAssembly.Memory,
   pointer: number

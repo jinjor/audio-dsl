@@ -2,7 +2,13 @@ import {
   LanguageSpecificInstance,
   LanguageSpecificExports,
 } from "./definition.js";
-import { pointerToInt, pointerToFloat, pointerToString, Lib } from "./lib";
+import {
+  pointerToInt,
+  pointerToFloat,
+  pointerToString,
+  Lib,
+  pointerToBool,
+} from "./lib";
 
 function createImportObject(memory: WebAssembly.Memory, libs: Lib[]): any {
   const importObject: any = {
@@ -27,7 +33,7 @@ export type Descriptor = {
 const numSamples = 128;
 const sizeOfInt = 4;
 const sizeOfFloat = 4;
-const sizeOfParamInfo = 20; // TODO
+const sizeOfParamInfo = 24; // TODO
 export class Instance {
   private memory: WebAssembly.Memory;
   private exports: LanguageSpecificExports;
@@ -75,11 +81,13 @@ export class Instance {
     const paramInfoOffset =
       staticPtr + paramInfoRelativeOffset + n * sizeOfParamInfo;
     // get struct
-    const namePtr = pointerToInt(memory, paramInfoOffset);
-    const defaultValue = pointerToFloat(memory, paramInfoOffset + 4);
-    const minValue = pointerToFloat(memory, paramInfoOffset + 8);
-    const maxValue = pointerToFloat(memory, paramInfoOffset + 12);
-    const automationRatePtr = pointerToInt(memory, paramInfoOffset + 16);
+    const isInt = pointerToBool(memory, paramInfoOffset);
+    const pointerToValue = isInt ? pointerToInt : pointerToFloat;
+    const namePtr = pointerToInt(memory, paramInfoOffset + 4);
+    const defaultValue = pointerToValue(memory, paramInfoOffset + 8);
+    const minValue = pointerToValue(memory, paramInfoOffset + 12);
+    const maxValue = pointerToValue(memory, paramInfoOffset + 16);
+    const automationRatePtr = pointerToInt(memory, paramInfoOffset + 20);
     // get string
     const name = pointerToString(memory, staticPtr + namePtr);
     const automationRate = pointerToString(
