@@ -60,4 +60,37 @@ void test() {
     compile(src, [util]);
     assert.deepStrictEqual(output, [1, -1, 2.0, -2.0, true, false, "Hello"]);
   });
+  it("exports param info", () => {
+    const src = `
+param float[] note {
+  defaultValue = 0.0;
+  minValue = 0.0;
+  maxValue = 127.0;
+}
+param int[] wave_type {
+  defaultValue = 0;
+  minValue = 0;
+  maxValue = 4;
+}
+void process() {}
+void test() {}
+    `;
+    // TODO: case of single value
+    const instance = compile(src, []);
+    assert.equal(instance.numberOfParams, 2);
+    assert.deepStrictEqual(instance.getNthDescriptor(0), {
+      name: "note",
+      defaultValue: 0,
+      minValue: 0,
+      maxValue: 127,
+      automationRate: "a-rate",
+    });
+    assert.deepStrictEqual(instance.getNthDescriptor(1), {
+      name: "wave_type",
+      defaultValue: 0,
+      minValue: 0,
+      maxValue: 4,
+      automationRate: "a-rate",
+    });
+  });
 });
