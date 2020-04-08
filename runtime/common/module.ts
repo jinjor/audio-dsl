@@ -32,13 +32,12 @@ export type Descriptor = {
 export type ParamInfo = {
   descriptor: Descriptor;
   ptr: number;
-  isInt: boolean;
 };
 
 const numSamples = 128;
 const sizeOfInt = 4;
 const sizeOfFloat = 4;
-const sizeOfParamInfo = 24; // TODO
+const sizeOfParamInfo = 20; // TODO
 export class Instance {
   private memory: WebAssembly.Memory;
   private exports: LanguageSpecificExports;
@@ -98,23 +97,20 @@ export class Instance {
     const paramInfoOffset =
       staticPtr + paramInfoRelativeOffset + n * sizeOfParamInfo;
     // get struct
-    const isInt = pointerToBool(memory, paramInfoOffset);
-    const pointerToValue = isInt ? pointerToInt : pointerToFloat;
-    const namePtr = pointerToInt(memory, paramInfoOffset + 4);
-    const defaultValue = pointerToValue(memory, paramInfoOffset + 8);
-    const minValue = pointerToValue(memory, paramInfoOffset + 12);
-    const maxValue = pointerToValue(memory, paramInfoOffset + 16);
-    const automationRatePtr = pointerToInt(memory, paramInfoOffset + 20);
+    const namePtr = pointerToInt(memory, paramInfoOffset + 0);
+    const defaultValue = pointerToFloat(memory, paramInfoOffset + 4);
+    const minValue = pointerToFloat(memory, paramInfoOffset + 8);
+    const maxValue = pointerToFloat(memory, paramInfoOffset + 12);
+    const automationRatePtr = pointerToInt(memory, paramInfoOffset + 16);
     // get string
     const name = pointerToString(memory, staticPtr + namePtr);
     const automationRate = pointerToString(
       memory,
       staticPtr + automationRatePtr
     );
-    const ptr =
-      this.outPtrs[this.outPtrs.length - 1] +
-      sizeOfFloat * numSamples + // TODO
-      (isInt ? sizeOfInt : sizeOfFloat) * numSamples * n; // TODO
+    const pointer_of_params =
+      this.outPtrs[this.outPtrs.length - 1] + sizeOfFloat * numSamples; // TODO
+    const ptr = pointer_of_params + sizeOfFloat * numSamples * n; // TODO: consider single value
     return {
       descriptor: {
         name,
@@ -123,7 +119,6 @@ export class Instance {
         maxValue,
         automationRate,
       },
-      isInt,
       ptr,
     };
   }
@@ -142,16 +137,13 @@ export class Instance {
     );
     view.set(incommingInput);
   }
-  setParam(
-    isInt: boolean,
+  setFloat32ArrayToParam(
     automationRate: string,
     ptr: number,
     param: Float32Array
   ) {
     const arrayLength = automationRate === "a-rate" ? numSamples : 1;
-    const view = isInt
-      ? new Int32Array(this.memory.buffer, ptr, arrayLength)
-      : new Float32Array(this.memory.buffer, ptr, arrayLength);
+    const view = new Float32Array(this.memory.buffer, ptr, arrayLength);
     if (param.length === 1) {
       view.fill(param[0]);
     } else {

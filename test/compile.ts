@@ -67,10 +67,10 @@ param float[] note {
   minValue = 0.0;
   maxValue = 127.0;
 }
-param int[] wave_type {
-  defaultValue = 0;
-  minValue = 0;
-  maxValue = 4;
+param float[] wave_type {
+  defaultValue = 0.0;
+  minValue = 0.0;
+  maxValue = 4.0;
 }
 void process() {}
 void test() {}

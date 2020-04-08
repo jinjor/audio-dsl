@@ -94,7 +94,7 @@ import {
   DeclaringArrayWithInitialValueNotSupported,
   DeclaringMutableArraysIsNotAllowed,
   ParametersShouldBeDeclaredInGlobal,
-  ParametersShouldBeNumberOrArrayOfNumbers,
+  ParametersShouldBeFloatOrArrayOfFloat,
   UnknownField,
   MissingFields,
   AssigningStructIsNotSupported,
@@ -765,21 +765,21 @@ function validateParamDeclaration(
   let isArray = false;
   if (ast.type.$ === "PrimitiveType") {
     const type = validatePrimitiveType(state, ast.type);
-    if (type.$ === "Int32Type" || type.$ === "Float32Type") {
+    if (type.$ === "Float32Type") {
       valueType = type;
     } else {
       state.errors.push(
-        new ParametersShouldBeNumberOrArrayOfNumbers(ast.type.range)
+        new ParametersShouldBeFloatOrArrayOfFloat(ast.type.range)
       );
     }
   } else if (ast.type.$ === "ArrayType") {
     isArray = true;
     const type = validatePrimitiveType(state, ast.type.type);
-    if (type.$ === "Int32Type" || type.$ === "Float32Type") {
+    if (type.$ === "Float32Type") {
       valueType = type;
     } else {
       state.errors.push(
-        new ParametersShouldBeNumberOrArrayOfNumbers(ast.type.range)
+        new ParametersShouldBeFloatOrArrayOfFloat(ast.type.range)
       );
     }
   }
@@ -825,7 +825,6 @@ function validateParamDeclaration(
   state.paramInfo.push({
     structType: paramInfoType,
     fieldValues: [
-      valueType.$ === "Int32Type" ? 1 : 0,
       state.strings.set(ast.name.name),
       optionValue[0].value,
       optionValue[1].value,

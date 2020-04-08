@@ -262,11 +262,11 @@ export class ParametersShouldBeDeclaredInGlobal implements ValidationErrorType {
     this.message = `parameters should be declared at top level`;
   }
 }
-export class ParametersShouldBeNumberOrArrayOfNumbers
+export class ParametersShouldBeFloatOrArrayOfFloat
   implements ValidationErrorType {
   message: string;
   constructor(public range: ast.Range) {
-    this.message = `parameters should be one of int, float, int[] or float[]`;
+    this.message = `parameters should be either float or float[]`;
   }
 }
 
