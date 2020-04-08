@@ -20,7 +20,7 @@ float note_to_hz(float note) {
   return base_hz * pow(2.0, (note - base_note) / 12.0);
 }
 float angle_per_sample(float hz) {
-  return TWO_PI * hz / float(sample_rate);
+  return TWO_PI * hz / to_float(sample_rate);
 }
 
 float gain = 0.1;

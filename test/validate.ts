@@ -347,14 +347,15 @@ describe("Validate", function () {
     );
   });
   it("cast", () => {
-    assertOk(`void f() { float a = float(0); }`);
-    assertOk(`void f() { int a = int(0.0); }`);
-    assertErrorExists(`void f() { float a = float(0.0); }`);
-    assertErrorExists(`void f() { float a = int(0.0); }`);
-    assertErrorExists(`void f() { int a = float(0); }`);
-    assertErrorExists(`void f() { int a = int(0); }`);
-    assertErrorExists(`void f() { int a = float(0.0); }`);
-    assertErrorExists(`void f() { float a = int(0); }`);
+    // TODO: test built-in funcs instead of "cast"
+    assertOk(`void f() { float a = to_float(0); }`);
+    assertOk(`void f() { int a = floor(0.0); }`);
+    assertErrorExists(`void f() { float a = to_float(0.0); }`);
+    assertErrorExists(`void f() { float a = floor(0.0); }`);
+    assertErrorExists(`void f() { int a = to_float(0); }`);
+    assertErrorExists(`void f() { int a = floor(0); }`);
+    assertErrorExists(`void f() { int a = to_float(0.0); }`);
+    assertErrorExists(`void f() { float a = floor(0); }`);
   });
   it("import", () => {
     assertOk(`void f() { float a = sin(0.0); }`);

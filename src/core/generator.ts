@@ -194,11 +194,41 @@ export class Module {
     if (exp.$ === "FunctionCall") {
       return this.functionCall(exp);
     }
-    if (exp.$ === "IntToFloatCast") {
-      return this.intToFloatCast(exp);
+    if (exp.$ === "IntToFloat") {
+      return this.raw.f32.convert_s.i32(this.expression(exp.args[0])) as X;
     }
-    if (exp.$ === "FloatToIntCast") {
-      return this.floatToIntCast(exp);
+    if (exp.$ === "F32Abs") {
+      return this.raw.f32.abs(this.expression(exp.args[0])) as X;
+    }
+    if (exp.$ === "F32Neg") {
+      return this.raw.f32.neg(this.expression(exp.args[0])) as X;
+    }
+    if (exp.$ === "F32Ceil") {
+      return this.raw.f32.ceil(this.expression(exp.args[0])) as X;
+    }
+    if (exp.$ === "F32Floor") {
+      return this.raw.f32.floor(this.expression(exp.args[0])) as X;
+    }
+    if (exp.$ === "F32Trunc") {
+      return this.raw.f32.trunc(this.expression(exp.args[0])) as X;
+    }
+    if (exp.$ === "F32Nearest") {
+      return this.raw.f32.nearest(this.expression(exp.args[0])) as X;
+    }
+    if (exp.$ === "F32Sqrt") {
+      return this.raw.f32.sqrt(this.expression(exp.args[0])) as X;
+    }
+    if (exp.$ === "F32Min") {
+      return this.raw.f32.min(
+        this.expression(exp.args[0]),
+        this.expression(exp.args[1])
+      ) as X;
+    }
+    if (exp.$ === "F32Max") {
+      return this.raw.f32.max(
+        this.expression(exp.args[0]),
+        this.expression(exp.args[1])
+      ) as X;
     }
     if (exp.$ === "Int32AddOp") {
       return this.i32Add(this.expression(exp.left), this.expression(exp.right));
@@ -275,12 +305,6 @@ export class Module {
     const returnType = this.type(exp.returnType);
     return this.call(name, args, returnType);
   }
-  intToFloatCast(exp: types.IntToFloatCast): X {
-    return this.raw.f32.convert_s.i32(this.expression(exp.arg)) as X;
-  }
-  floatToIntCast(exp: types.FloatToIntCast): X {
-    return this.raw.i32.trunc_s.f32(this.expression(exp.arg)) as X;
-  }
   // ----------
   // statements
   // ----------
@@ -297,14 +321,8 @@ export class Module {
     if (statement.$ === "ItemSet") {
       return this.itemSet(statement);
     }
-    if (statement.$ === "FunctionCall") {
-      return this.functionCall(statement);
-    }
-    if (statement.$ === "IntToFloatCast") {
-      return this.intToFloatCast(statement);
-    }
-    if (statement.$ === "FloatToIntCast") {
-      return this.floatToIntCast(statement);
+    if (statement.$ === "CallStatement") {
+      return this.expression(statement.exp);
     }
     if (statement.$ === "Loop") {
       return this.loop(statement);

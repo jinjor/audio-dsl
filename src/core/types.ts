@@ -35,6 +35,7 @@ export type FunctionType = {
   $: "FunctionType";
   params: ParamType[];
   returnType: ReturnType;
+  builtinFunctionKind: BuiltinFunctionKind | null;
 };
 export type VariableType =
   | Int32Type
@@ -340,15 +341,21 @@ export type FunctionCall = {
   // params: ParamType[];
   returnType: ReturnType;
 };
-export type BuiltInCall = IntToFloatCast | FloatToIntCast;
-export type Call = FunctionCall | BuiltInCall;
-export type IntToFloatCast = {
-  $: "IntToFloatCast";
-  arg: Expression;
-};
-export type FloatToIntCast = {
-  $: "FloatToIntCast";
-  arg: Expression;
+export type Call = FunctionCall | BuiltinFunctionCall;
+export type BuiltinFunctionKind =
+  | "IntToFloat"
+  | "F32Abs"
+  | "F32Neg"
+  | "F32Ceil"
+  | "F32Floor"
+  | "F32Trunc"
+  | "F32Nearest"
+  | "F32Sqrt"
+  | "F32Min"
+  | "F32Max";
+export type BuiltinFunctionCall = {
+  $: BuiltinFunctionKind;
+  args: Expression[];
 };
 export type Int32CompOpKind =
   | "Int32LT"
@@ -408,7 +415,11 @@ export type FunctionImport = {
 // --------------------
 //  Statements
 // --------------------
-export type LocalStatement = Assign | Call | Loop | Return;
+export type LocalStatement = Assign | CallStatement | Loop | Return;
+export type CallStatement = {
+  $: "CallStatement";
+  exp: Call;
+};
 export type GlobalVariableDeclaration = {
   $: "GlobalVariableDeclaration";
   type: VariableType;

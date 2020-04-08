@@ -743,6 +743,7 @@ function validateFunctionDeclaration(
       $: "FunctionType",
       params: paramTypes,
       returnType,
+      builtinFunctionKind: null,
     });
   }
   state.functionDeclarations.push({
@@ -968,7 +969,7 @@ function validateFunctionCallStatement(
     return;
   }
   const [funcExp] = func; // ignore type
-  localStatements.push(funcExp);
+  localStatements.push({ $: "CallStatement", exp: funcExp });
 }
 
 function validateLocalVariableDeclaration(
@@ -1602,21 +1603,11 @@ function validateFunctionCall(
       return null;
     }
   }
-  // TODO: should be CastGet
-  if (funcExp.name === "builtin.float") {
+  if (funcType.builtinFunctionKind != null) {
     return [
       {
-        $: "IntToFloatCast",
-        arg: args.map((item) => item![0])[0],
-      },
-      funcType.returnType,
-    ];
-  }
-  if (funcExp.name === "builtin.int") {
-    return [
-      {
-        $: "FloatToIntCast",
-        arg: args.map((item) => item![0])[0],
+        $: funcType.builtinFunctionKind,
+        args: args.map((item) => item![0]),
       },
       funcType.returnType,
     ];
