@@ -38,8 +38,8 @@ import {
   StringGet,
   LocalType,
   StructTypeWithOffset,
-  makeParamOptionsType,
-  makeParamInfoType,
+  paramOptionsType,
+  paramInfoType,
   StructType,
   FieldType,
   StringType,
@@ -761,13 +761,11 @@ function validateParamDeclaration(
   scope: GlobalScope,
   ast: ast.ParamDeclaration
 ) {
-  let valueType: Int32Type | Float32Type | null = null;
+  const valueType = primitives.float32Type;
   let isArray = false;
   if (ast.type.$ === "PrimitiveType") {
     const type = validatePrimitiveType(state, ast.type);
-    if (type.$ === "Float32Type") {
-      valueType = type;
-    } else {
+    if (type.$ !== "Float32Type") {
       state.errors.push(
         new ParametersShouldBeFloatOrArrayOfFloat(ast.type.range)
       );
@@ -775,27 +773,22 @@ function validateParamDeclaration(
   } else if (ast.type.$ === "ArrayType") {
     isArray = true;
     const type = validatePrimitiveType(state, ast.type.type);
-    if (type.$ === "Float32Type") {
-      valueType = type;
-    } else {
+    if (type.$ !== "Float32Type") {
       state.errors.push(
         new ParametersShouldBeFloatOrArrayOfFloat(ast.type.range)
       );
     }
   }
-  const optionType =
-    valueType == null ? null : makeParamOptionsType(valueType.$);
-  const optionValue =
-    optionType == null
-      ? null
-      : evaluateStructLiteralInGlobal(state, scope, optionType, ast.struct);
+  const optionValue = evaluateStructLiteralInGlobal(
+    state,
+    scope,
+    paramOptionsType,
+    ast.struct
+  );
   if (scope.isDeclaredInThisScope(ast.name.name)) {
     state.errors.push(
       new AlreadyDeclared(ast.name.range, "variable", ast.name.name)
     );
-    return;
-  }
-  if (valueType == null) {
     return;
   }
   if (isArray) {
@@ -821,7 +814,6 @@ function validateParamDeclaration(
   if (optionValue == null) {
     return;
   }
-  const paramInfoType = makeParamInfoType(valueType.$);
   state.paramInfo.push({
     structType: paramInfoType,
     fieldValues: [

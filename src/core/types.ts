@@ -268,32 +268,24 @@ export function typeToString(a: AnyType): string {
   }
   throw new Error("unreachable");
 }
-export function makeParamOptionsType(
-  type: "Int32Type" | "Float32Type"
-): StructType {
-  return {
-    $: "StructType",
-    types: [
-      { name: "defaultValue", type: { $: type } },
-      { name: "minValue", type: { $: type } },
-      { name: "maxValue", type: { $: type } },
-    ],
-  };
-}
-export function makeParamInfoType(
-  type: "Int32Type" | "Float32Type"
-): StructType {
-  return {
-    $: "StructType",
-    types: [
-      { name: "name", type: { $: "Int32Type" } }, // pointer to string
-      { name: "defaultValue", type: { $: type } },
-      { name: "minValue", type: { $: type } },
-      { name: "maxValue", type: { $: type } },
-      { name: "automationRate", type: { $: "Int32Type" } }, // pointer to "a-rate" | "k-rate"
-    ],
-  };
-}
+export const paramOptionsType: StructType = {
+  $: "StructType",
+  types: [
+    { name: "defaultValue", type: primitives.float32Type },
+    { name: "minValue", type: primitives.float32Type },
+    { name: "maxValue", type: primitives.float32Type },
+  ],
+};
+export const paramInfoType: StructType = {
+  $: "StructType",
+  types: [
+    { name: "name", type: { $: "Int32Type" } }, // pointer to string
+    { name: "defaultValue", type: primitives.float32Type },
+    { name: "minValue", type: primitives.float32Type },
+    { name: "maxValue", type: primitives.float32Type },
+    { name: "automationRate", type: { $: "Int32Type" } }, // pointer to "a-rate" | "k-rate"
+  ],
+};
 
 // --------------------
 //  Expressions
