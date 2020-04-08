@@ -29,6 +29,11 @@ export type Descriptor = {
   maxValue: number;
   automationRate: string; // "a-rate" | "k-rate"
 };
+export type ParamInfo = {
+  descriptor: Descriptor;
+  ptr: number;
+  isInt: boolean;
+};
 
 const numSamples = 128;
 const sizeOfInt = 4;
@@ -82,7 +87,7 @@ export class Instance {
       this.exports.offset_of_param_info.value;
     return this.memory.buffer.slice(ptr, ptr + sizeOfParamInfo);
   }
-  getNthDescriptor(n: number): Descriptor | null {
+  getNthParamInfo(n: number): ParamInfo | null {
     const memory = this.memory;
     const staticPtr = this.exports.pointer_of_static_data.value;
     if (n >= this.numberOfParams) {
@@ -106,21 +111,26 @@ export class Instance {
       memory,
       staticPtr + automationRatePtr
     );
+    const ptr =
+      this.outPtrs[this.outPtrs.length - 1] +
+      sizeOfFloat * numSamples + // TODO
+      (isInt ? sizeOfInt : sizeOfFloat) * numSamples * n; // TODO
     return {
-      name,
-      defaultValue,
-      minValue,
-      maxValue,
-      automationRate,
+      descriptor: {
+        name,
+        defaultValue,
+        minValue,
+        maxValue,
+        automationRate,
+      },
+      isInt,
+      ptr,
     };
   }
-  getParamInfoList(): { descriptor: Descriptor; ptr: number }[] {
-    const info: { descriptor: Descriptor; ptr: number }[] = [];
-    const offset =
-      this.outPtrs[this.outPtrs.length - 1] + numSamples * sizeOfFloat; // TODO
-    for (let i = 0; i < this.exports.number_of_params.value; i++) {
-      const descriptor = this.getNthDescriptor(i)!;
-      info.push({ descriptor, ptr: offset + numSamples * sizeOfFloat * i });
+  getParamInfoList(): ParamInfo[] {
+    const info: ParamInfo[] = [];
+    for (let i = 0; i < this.numberOfParams; i++) {
+      info.push(this.getNthParamInfo(i)!);
     }
     return info;
   }
@@ -132,9 +142,16 @@ export class Instance {
     );
     view.set(incommingInput);
   }
-  setParam(automationRate: string, ptr: number, param: Float32Array) {
+  setParam(
+    isInt: boolean,
+    automationRate: string,
+    ptr: number,
+    param: Float32Array
+  ) {
     const arrayLength = automationRate === "a-rate" ? numSamples : 1;
-    const view = new Float32Array(this.memory.buffer, ptr, arrayLength);
+    const view = isInt
+      ? new Int32Array(this.memory.buffer, ptr, arrayLength)
+      : new Float32Array(this.memory.buffer, ptr, arrayLength);
     if (param.length === 1) {
       view.fill(param[0]);
     } else {

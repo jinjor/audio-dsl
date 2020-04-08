@@ -78,14 +78,14 @@ void test() {}
     // TODO: case of single value
     const instance = compile(src, []);
     assert.equal(instance.numberOfParams, 2);
-    assert.deepStrictEqual(instance.getNthDescriptor(0), {
+    assert.deepStrictEqual(instance.getNthParamInfo(0)?.descriptor, {
       name: "note",
       defaultValue: 0,
       minValue: 0,
       maxValue: 127,
       automationRate: "a-rate",
     });
-    assert.deepStrictEqual(instance.getNthDescriptor(1), {
+    assert.deepStrictEqual(instance.getNthParamInfo(1)?.descriptor, {
       name: "wave_type",
       defaultValue: 0,
       minValue: 0,

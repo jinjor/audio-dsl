@@ -3,13 +3,12 @@ import { Instance } from "./common/module";
 declare const AudioWorkletProcessor: any;
 
 export function createProcessorClass(instance: Instance) {
-  // const numInputs = exports.number_of_in_channels.value;
-  // const numOutputs = exports.number_of_out_channels.value;
-  const numInputs = 1;
-  const numOutputs = 1;
+  const numInputs = instance.numberOfParams;
+  const numOutputs = instance.numberOfOutChannels;
   const params = instance.getParamInfoList();
-  console.log(params[0]);
-
+  for (const p of params) {
+    console.log(p.isInt, p.ptr, p.descriptor);
+  }
   return class extends AudioWorkletProcessor {
     static get parameterDescriptors() {
       return params.map((p) => p.descriptor);
@@ -29,7 +28,12 @@ export function createProcessorClass(instance: Instance) {
       for (const paramInfo of params) {
         const { name, automationRate } = paramInfo.descriptor;
         const param = parameters[name];
-        instance.setParam(automationRate, paramInfo.ptr, param);
+        instance.setParam(
+          paramInfo.isInt,
+          automationRate,
+          paramInfo.ptr,
+          param
+        );
       }
       instance.process();
       for (let ch = 0; ch < outLength; ch++) {
