@@ -27,6 +27,7 @@ export type Descriptor = {
 const numSamples = 128;
 const sizeOfInt = 4;
 const sizeOfFloat = 4;
+const sizeOfParamInfo = 20; // TODO
 export class Instance {
   private memory: WebAssembly.Memory;
   private exports: LanguageSpecificExports;
@@ -64,14 +65,15 @@ export class Instance {
   }
   getParamInfoBuffer(): ArrayBuffer {
     const ptr = this.exports.static.value + this.exports.params?.value; // TODO
-    return this.memory.buffer.slice(ptr, ptr + 4 + 4 + 4 + 4 + 4); // TODO
+    return this.memory.buffer.slice(ptr, ptr + sizeOfParamInfo);
   }
   getNthDescriptor(n: number): Descriptor {
     const memory = this.memory;
     const staticPtr = this.exports.static.value;
     const paramInfoRelativeOffset = this.exports.params.value;
 
-    const paramInfoOffset = staticPtr + paramInfoRelativeOffset;
+    const paramInfoOffset =
+      staticPtr + paramInfoRelativeOffset + n * sizeOfParamInfo;
     // get struct
     const namePtr = pointerToInt(memory, paramInfoOffset);
     const defaultValue = pointerToFloat(memory, paramInfoOffset + 4);
