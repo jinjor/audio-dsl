@@ -213,6 +213,24 @@ describe("Validate", function () {
     assertErrorExists(`bool a = 0 <= 0.0;`);
     assertErrorExists(`bool a = 0.0 <= 0;`);
   });
+  it("op (==)", () => {
+    assertOk(`bool a = 0 == 0;`);
+    assertOk(`bool a = 0.0 == 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 == 0.0;`);
+    // wrong combination
+    assertErrorExists(`bool a = 0 == 0.0;`);
+    assertErrorExists(`bool a = 0.0 == 0;`);
+  });
+  it("op (!=)", () => {
+    assertOk(`bool a = 0 != 0;`);
+    assertOk(`bool a = 0.0 != 0.0;`);
+    // wrong return type
+    assertErrorExists(`int a = 0.0 != 0.0;`);
+    // wrong combination
+    assertErrorExists(`bool a = 0 != 0.0;`);
+    assertErrorExists(`bool a = 0.0 != 0;`);
+  });
   it.skip("op (?)", () => {
     assertOk(`int a = 1 > 0 ? 1 : 0;`);
     assertOk(`float a = 1 > 0 ? 1.0 : 0.0;`);

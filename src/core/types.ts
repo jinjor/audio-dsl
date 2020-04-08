@@ -350,12 +350,20 @@ export type FloatToIntCast = {
   $: "FloatToIntCast";
   arg: Expression;
 };
-export type Int32CompOpKind = "Int32LT" | "Int32LE" | "Int32GT" | "Int32GE";
+export type Int32CompOpKind =
+  | "Int32LT"
+  | "Int32LE"
+  | "Int32GT"
+  | "Int32GE"
+  | "Int32EQ"
+  | "Int32NE";
 export type Float32CompOpKind =
   | "Float32LT"
   | "Float32LE"
   | "Float32GT"
-  | "Float32GE";
+  | "Float32GE"
+  | "Float32EQ"
+  | "Float32NE";
 export type Int32BinOpKind =
   | "Int32AddOp"
   | "Int32SubOp"

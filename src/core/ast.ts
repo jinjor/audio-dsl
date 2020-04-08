@@ -179,7 +179,7 @@ export type CondOp = SourceInfo & {
 // --------------------
 export type AddOpKind = "+" | "-";
 export type MulOpKind = "*" | "/" | "%";
-export type CompOpKind = "<" | "<=" | ">" | ">=";
+export type CompOpKind = "<" | "<=" | ">" | ">=" | "==" | "!=";
 export type BinOpKind = AddOpKind | MulOpKind | CompOpKind;
 export type Type = PrimitiveType | ArrayType;
 export type PrimitiveTypeNameKind = "int" | "float" | "void" | "bool";

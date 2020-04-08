@@ -1915,4 +1915,36 @@ namespace binop {
     primitives.boolType,
     (l: ConstantType, r: ConstantType) => (l.value >= r.value ? 1 : 0)
   );
+  set(
+    "==",
+    "Int32EQ",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value === r.value ? 1 : 0)
+  );
+  set(
+    "==",
+    "Float32EQ",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value === r.value ? 1 : 0)
+  );
+  set(
+    "!=",
+    "Int32NE",
+    primitives.int32Type,
+    primitives.int32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value !== r.value ? 1 : 0)
+  );
+  set(
+    "!=",
+    "Float32NE",
+    primitives.float32Type,
+    primitives.float32Type,
+    primitives.boolType,
+    (l: ConstantType, r: ConstantType) => (l.value !== r.value ? 1 : 0)
+  );
 }

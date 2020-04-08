@@ -288,7 +288,9 @@ const compOpKind: Parser<ast.CompOpKind> = oneOf<ast.CompOpKind>(
   keyword(">=", ">="),
   keyword(">", ">"),
   keyword("<=", "<="),
-  keyword("<", "<")
+  keyword("<", "<"),
+  keyword("==", "=="),
+  keyword("!=", "!=")
 );
 
 const conditionTail: Parser<

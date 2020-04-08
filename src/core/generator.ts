@@ -51,6 +51,12 @@ export class Module {
   i32Ge(left: X, right: X): X {
     return this.raw.i32.ge_s(left, right) as X;
   }
+  i32Eq(left: X, right: X): X {
+    return this.raw.i32.eq(left, right) as X;
+  }
+  i32Ne(left: X, right: X): X {
+    return this.raw.i32.ne(left, right) as X;
+  }
   i32Store(ptr: X, value: X): X {
     return this.raw.i32.store(0, 0, ptr, value) as X;
   }
@@ -84,6 +90,12 @@ export class Module {
   }
   f32Ge(left: X, right: X): X {
     return this.raw.f32.ge(left, right) as X;
+  }
+  f32Eq(left: X, right: X): X {
+    return this.raw.f32.eq(left, right) as X;
+  }
+  f32Ne(left: X, right: X): X {
+    return this.raw.f32.ne(left, right) as X;
   }
   f32Store(ptr: X, value: X): X {
     return this.raw.f32.store(0, 0, ptr, value) as X;
@@ -224,6 +236,12 @@ export class Module {
     if (exp.$ === "Int32GE") {
       return this.i32Ge(this.expression(exp.left), this.expression(exp.right));
     }
+    if (exp.$ === "Int32EQ") {
+      return this.i32Eq(this.expression(exp.left), this.expression(exp.right));
+    }
+    if (exp.$ === "Int32NE") {
+      return this.i32Ne(this.expression(exp.left), this.expression(exp.right));
+    }
     if (exp.$ === "Float32LT") {
       return this.f32Lt(this.expression(exp.left), this.expression(exp.right));
     }
@@ -235,6 +253,12 @@ export class Module {
     }
     if (exp.$ === "Float32GE") {
       return this.f32Ge(this.expression(exp.left), this.expression(exp.right));
+    }
+    if (exp.$ === "Float32EQ") {
+      return this.f32Eq(this.expression(exp.left), this.expression(exp.right));
+    }
+    if (exp.$ === "Float32NE") {
+      return this.f32Ne(this.expression(exp.left), this.expression(exp.right));
     }
     if (exp.$ === "CondOp") {
       return this.raw.select(
