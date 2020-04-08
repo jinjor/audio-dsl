@@ -50,10 +50,14 @@ export class Instance {
     this.memory = memory;
     this.exports = instance.exports;
     for (let i = 0; i < this.exports.number_of_in_channels.value; i++) {
-      this.inPtrs[i] = this.exports.in_0.value + numSamples * sizeOfFloat * i;
+      this.inPtrs[i] =
+        this.exports.pointer_of_in_channels.value +
+        numSamples * sizeOfFloat * i;
     }
     for (let i = 0; i < this.exports.number_of_out_channels.value; i++) {
-      this.outPtrs[i] = this.exports.out_0.value + numSamples * sizeOfFloat * i;
+      this.outPtrs[i] =
+        this.exports.pointer_of_out_channels.value +
+        numSamples * sizeOfFloat * i;
     }
   }
   private getAudioArrayAt(ptr: number): ArrayBuffer {
@@ -66,17 +70,25 @@ export class Instance {
     return this.getAudioArrayAt(this.outPtrs[n]);
   }
   private getStaticBuffer(): ArrayBuffer {
-    const ptr = this.exports.static.value;
+    const ptr = this.exports.pointer_of_static_data.value;
     return this.memory.buffer.slice(ptr, ptr + 100); // TODO: ?
   }
-  getParamInfoBuffer(): ArrayBuffer {
-    const ptr = this.exports.static.value + this.exports.params?.value; // TODO
+  getParamInfoBuffer(): ArrayBuffer | null {
+    if (this.exports.offset_of_param_info == null) {
+      return null;
+    }
+    const ptr =
+      this.exports.pointer_of_static_data.value +
+      this.exports.offset_of_param_info.value;
     return this.memory.buffer.slice(ptr, ptr + sizeOfParamInfo);
   }
-  getNthDescriptor(n: number): Descriptor {
+  getNthDescriptor(n: number): Descriptor | null {
     const memory = this.memory;
-    const staticPtr = this.exports.static.value;
-    const paramInfoRelativeOffset = this.exports.params.value;
+    const staticPtr = this.exports.pointer_of_static_data.value;
+    if (n >= this.numberOfParams) {
+      return null;
+    }
+    const paramInfoRelativeOffset = this.exports.offset_of_param_info!.value;
 
     const paramInfoOffset =
       staticPtr + paramInfoRelativeOffset + n * sizeOfParamInfo;
@@ -107,7 +119,7 @@ export class Instance {
     const offset =
       this.outPtrs[this.outPtrs.length - 1] + numSamples * sizeOfFloat; // TODO
     for (let i = 0; i < this.exports.number_of_params.value; i++) {
-      const descriptor = this.getNthDescriptor(i);
+      const descriptor = this.getNthDescriptor(i)!;
       info.push({ descriptor, ptr: offset + numSamples * sizeOfFloat * i });
     }
     return info;
@@ -161,11 +173,13 @@ export class Instance {
     instance.test();
     console.log("number_of_in_channels:", exp.number_of_in_channels.value);
     console.log("number_of_out_channels:", exp.number_of_out_channels.value);
-    console.log("params:", exp.params?.value); // TODO
     console.log("number_of_params:", exp.number_of_params.value);
-    console.log("static:", exp.static.value);
-    console.log("inputs:", exp.in_0.value);
-    console.log("outputs:", exp.out_0.value);
+
+    console.log("pointer_of_in_channels:", exp.pointer_of_in_channels.value);
+    console.log("pointer_of_out_channels:", exp.pointer_of_out_channels.value);
+    // console.log("pointer_of_params:", exp.pointer_of_params.value);// TODO
+    console.log("pointer_of_static_data:", exp.pointer_of_static_data?.value);
+    console.log("offset_of_param_info:", exp.offset_of_param_info?.value);
     console.log("in_0", instance.getNthInputBuffer(0));
     console.log("in_1", instance.getNthInputBuffer(1));
     console.log("out_0", instance.getNthOutputBuffer(0));

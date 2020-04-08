@@ -192,14 +192,20 @@ class GlobalScope implements Scope {
     }
     return arrays;
   }
-  declareArray(name: string, itemType: ItemType, numberOfItems: number): void {
+  declareArray(
+    name: string,
+    itemType: ItemType,
+    numberOfItems: number
+  ): number {
+    const byteOffset = this.byteOffset;
     this.declareType(name, {
       $: "ArrayType",
       itemType,
       numberOfItems,
-      byteOffset: this.byteOffset,
+      byteOffset,
     });
     this.byteOffset += sizeOf(itemType) * numberOfItems;
+    return byteOffset;
   }
   getAllArrays(): [string, ArrayType][] {
     const arrays: [string, ArrayType][] = [];
@@ -425,54 +431,79 @@ export function validate(
   }
 
   // predefined
-  state.globalVariableDeclarations.push({
-    $: "GlobalVariableDeclaration",
-    name: "number_of_in_channels",
-    type: primitives.int32Type,
-    mutable: false,
-    init: makeConstant(primitives.int32Type, 2),
-    export: true,
-  });
-  state.globalVariableDeclarations.push({
-    $: "GlobalVariableDeclaration",
-    name: "number_of_out_channels",
-    type: primitives.int32Type,
-    mutable: false,
-    init: makeConstant(primitives.int32Type, 2),
-    export: true,
-  });
-  validateArrayDeclaration(
-    state,
-    scope,
-    "in_0",
-    primitives.float32Type,
-    state.numSamples,
-    null
-  );
-  validateArrayDeclaration(
-    state,
-    scope,
-    "in_1",
-    primitives.float32Type,
-    state.numSamples,
-    null
-  );
-  validateArrayDeclaration(
-    state,
-    scope,
-    "out_0",
-    primitives.float32Type,
-    state.numSamples,
-    null
-  );
-  validateArrayDeclaration(
-    state,
-    scope,
-    "out_1",
-    primitives.float32Type,
-    state.numSamples,
-    null
-  );
+  const numberOfInChannels = 2;
+  const numberOfOutChannels = 2;
+  // inputs
+  if (numberOfInChannels > 0) {
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      name: "number_of_in_channels",
+      type: primitives.int32Type,
+      mutable: false,
+      init: makeConstant(primitives.int32Type, numberOfInChannels),
+      export: true,
+    });
+  }
+  for (let i = 0; i < numberOfInChannels; i++) {
+    const internalVarName = `in_${i}`;
+    const offset = validateArrayDeclaration(
+      state,
+      scope,
+      internalVarName,
+      primitives.float32Type,
+      state.numSamples,
+      null
+    );
+    if (offset == null) {
+      throw new Error("unreachable");
+    }
+    if (i === 0) {
+      state.globalVariableDeclarations.push({
+        $: "GlobalVariableDeclaration",
+        name: "pointer_of_in_channels",
+        type: primitives.int32Type,
+        mutable: false,
+        init: makeConstant(primitives.int32Type, offset),
+        export: true,
+      });
+    }
+  }
+  // outputs
+  if (numberOfOutChannels > 0) {
+    state.globalVariableDeclarations.push({
+      $: "GlobalVariableDeclaration",
+      name: "number_of_out_channels",
+      type: primitives.int32Type,
+      mutable: false,
+      init: makeConstant(primitives.int32Type, numberOfOutChannels),
+      export: true,
+    });
+  }
+  for (let i = 0; i < numberOfInChannels; i++) {
+    const internalVarName = `out_${i}`;
+    const offset = validateArrayDeclaration(
+      state,
+      scope,
+      internalVarName,
+      primitives.float32Type,
+      state.numSamples,
+      null
+    );
+    if (offset == null) {
+      throw new Error("unreachable");
+    }
+    if (i === 0) {
+      state.globalVariableDeclarations.push({
+        $: "GlobalVariableDeclaration",
+        name: "pointer_of_out_channels",
+        type: primitives.int32Type,
+        mutable: false,
+        init: makeConstant(primitives.int32Type, offset),
+        export: true,
+      });
+    }
+  }
+
   // user definitions
   for (let statement of ast.statements) {
     validateGlobalStatement(state, scope, statement);
@@ -495,7 +526,7 @@ export function validate(
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
     type: primitives.int32Type,
-    name: "static",
+    name: "pointer_of_static_data",
     mutable: false,
     init: makeConstant(primitives.int32Type, staticSegmentOffset),
     export: true,
@@ -510,6 +541,17 @@ export function validate(
     init: makeConstant(primitives.int32Type, state.paramInfo.length),
     export: true,
   });
+  if (state.paramInfo.length > 0) {
+    // TODO
+    // state.globalVariableDeclarations.push({
+    //   $: "GlobalVariableDeclaration",
+    //   name: "pointer_of_params",
+    //   type: primitives.int32Type,
+    //   mutable: false,
+    //   init: makeConstant(primitives.int32Type, offset),
+    //   export: true,
+    // });
+  }
   for (let i = 0; i < state.paramInfo.length; i++) {
     const { structType, fieldValues } = state.paramInfo[i];
     const infoStructOffset = pushStructToDataBuilder(
@@ -524,7 +566,7 @@ export function validate(
       state.globalVariableDeclarations.push({
         $: "GlobalVariableDeclaration",
         type: primitives.int32Type,
-        name: "params",
+        name: "offset_of_param_info",
         mutable: false,
         init: makeConstant(primitives.int32Type, infoStructOffset),
         export: true,
@@ -548,15 +590,15 @@ function validateArrayDeclaration(
   itemType: ItemType,
   numberOfItems: number,
   ast: ast.VariableDeclaration | null
-): void {
+): number | null {
   if (scope.isDeclaredInThisScope(name)) {
     if (ast == null) {
       throw new Error("already declared: " + name);
     }
     state.errors.push(new AlreadyDeclared(ast.range, "variable", name));
-    return;
+    return null;
   }
-  scope.declareArray(name, itemType, numberOfItems);
+  return scope.declareArray(name, itemType, numberOfItems);
 }
 function validateImport(
   state: GlobalState,
