@@ -110,7 +110,8 @@ type FoundExp =
   | FunctionGet
   | ArrayGet
   | StructTypeWithOffset
-  | ConstantType;
+  | ConstantType
+  | ItemGet;
 type LookupResult =
   | [FoundExp, ExpressionType]
   | { $: "Ambiguous"; modules: string[] }
@@ -144,6 +145,7 @@ class GlobalScope implements Scope {
     | ArrayType
     | FunctionType
     | ConstantType
+    | ItemGet
   >();
   private importNameMap = new Map<string, string[]>();
   constructor() {}
@@ -178,6 +180,12 @@ class GlobalScope implements Scope {
       | ArrayType
       | FunctionType
   ): void {
+    if (this.isDeclaredInThisScope(name)) {
+      throw new Error(name + " is already declared in this scope");
+    }
+    this.declaredTypesOrStaticValue.set(name, type);
+  }
+  declareItemGet(name: string, type: ItemGet): void {
     if (this.isDeclaredInThisScope(name)) {
       throw new Error(name + " is already declared in this scope");
     }
@@ -268,6 +276,9 @@ class GlobalScope implements Scope {
         },
         typeOrStaticValue,
       ];
+    }
+    if (typeOrStaticValue.$ === "ItemGet") {
+      return [typeOrStaticValue, typeOrStaticValue.pointer.itemType];
     }
     throw new Error("unreachable");
   }
@@ -804,14 +815,36 @@ function validateParamDeclaration(
       });
     }
   } else {
-    scope.declareType(ast.name.name, valueType);
-    state.globalVariableDeclarations.push({
-      $: "GlobalVariableDeclaration",
-      type: valueType,
-      name: ast.name.name,
-      mutable: true,
-      init: makeConstant(valueType, 0),
-      export: true,
+    const sealedArrayName = "_" + ast.name.name;
+    const byteOffset = validateArrayDeclaration(
+      state,
+      scope,
+      "_" + ast.name.name,
+      valueType,
+      1,
+      null
+    );
+    if (byteOffset == null) {
+      throw new Error("unreachable");
+    }
+    if (state.paramInfo.length === 0) {
+      state.globalVariableDeclarations.push({
+        $: "GlobalVariableDeclaration",
+        name: "pointer_of_params",
+        type: primitives.int32Type,
+        mutable: false,
+        init: makeConstant(primitives.int32Type, byteOffset),
+        export: true,
+      });
+    }
+    scope.declareItemGet(ast.name.name, {
+      $: "ItemGet",
+      pointer: {
+        byteOffset: byteOffset,
+        itemType: valueType,
+        name: sealedArrayName,
+        index: makeConstant(primitives.int32Type, 0),
+      },
     });
   }
   if (optionValue == null) {
@@ -1317,7 +1350,7 @@ function validateAssignableIdentifier(
   state: State,
   scope: Scope,
   leftAst: ast.Identifier
-): [LocalGet | GlobalGet, ExpressionType] | null {
+): [LocalGet | GlobalGet | ItemGet, ExpressionType] | null {
   const left = validateIdentifier(state, scope, leftAst);
   if (left == null) {
     return null;

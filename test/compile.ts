@@ -33,7 +33,8 @@ function createUtilForTest(callback: (value: any) => void) {
 describe("Compile", function () {
   it("exports memory layout", () => {
     const src = `
-param float[] a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }
+param float a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }
+param float[] b { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }
 void process() {}
 void test() {}
     `;
