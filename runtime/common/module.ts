@@ -1,14 +1,15 @@
 import {
   LanguageSpecificInstance,
   LanguageSpecificExports,
+  numSamples,
+  sizeOfInt,
+  sizeOfFloat,
+  sizeOfParamInfo,
+  ParamInfo,
+  StructFieldTypes,
+  paramInfoFieldTypes,
 } from "./definition.js";
-import {
-  pointerToInt,
-  pointerToFloat,
-  pointerToString,
-  Lib,
-  pointerToBool,
-} from "./lib";
+import { pointerToInt, pointerToFloat, pointerToString, Lib } from "./lib";
 
 export function createImportObject(
   memory: WebAssembly.Memory,
@@ -25,22 +26,26 @@ export function createImportObject(
   return importObject;
 }
 
-export type Descriptor = {
-  name: string;
-  defaultValue: number;
-  minValue: number;
-  maxValue: number;
-  automationRate: string; // "a-rate" | "k-rate"
-};
-export type ParamInfo = {
-  descriptor: Descriptor;
-  ptr: number;
-};
+function readStruct(
+  memory: WebAssembly.Memory,
+  fieldTypes: StructFieldTypes,
+  offset: number
+): number[] {
+  const result = [];
+  for (const t of fieldTypes) {
+    if (t === "int") {
+      result.push(pointerToInt(memory, offset));
+      offset += sizeOfInt;
+    } else if (t === "float") {
+      result.push(pointerToFloat(memory, offset));
+      offset += sizeOfFloat;
+    } else {
+      throw new Error("unreachable");
+    }
+  }
+  return result;
+}
 
-const numSamples = 128;
-const sizeOfInt = 4;
-const sizeOfFloat = 4;
-const sizeOfParamInfo = 20; // TODO
 export class Instance {
   private memory: WebAssembly.Memory;
   private exports: LanguageSpecificExports;
@@ -103,11 +108,13 @@ export class Instance {
     const paramInfoOffset =
       staticPtr + paramInfoRelativeOffset + n * sizeOfParamInfo;
     // get struct
-    const namePtr = pointerToInt(memory, paramInfoOffset + 0);
-    const defaultValue = pointerToFloat(memory, paramInfoOffset + 4);
-    const minValue = pointerToFloat(memory, paramInfoOffset + 8);
-    const maxValue = pointerToFloat(memory, paramInfoOffset + 12);
-    const automationRatePtr = pointerToInt(memory, paramInfoOffset + 16);
+    const [
+      namePtr,
+      defaultValue,
+      minValue,
+      maxValue,
+      automationRatePtr,
+    ] = readStruct(memory, paramInfoFieldTypes, paramInfoOffset);
     // get string
     const name = pointerToString(memory, staticPtr + namePtr);
     const automationRate = pointerToString(
