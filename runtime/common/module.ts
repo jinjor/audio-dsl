@@ -114,8 +114,7 @@ export class Instance {
       memory,
       staticPtr + automationRatePtr
     );
-    const pointer_of_params =
-      this.outPtrs[this.outPtrs.length - 1] + sizeOfFloat * numSamples; // TODO
+    const pointer_of_params = this.exports.pointer_of_params!.value;
     const ptr = pointer_of_params + sizeOfFloat * numSamples * n; // TODO: consider single value
     return {
       descriptor: {
