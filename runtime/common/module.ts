@@ -78,7 +78,10 @@ export class Instance {
   }
   private getStaticBuffer(): ArrayBuffer {
     const ptr = this.exports.pointer_of_static_data!.value;
-    return this.memory.buffer.slice(ptr, ptr + 100); // TODO: ?
+    return this.memory.buffer.slice(
+      ptr,
+      ptr + this.exports.size_of_static_data
+    );
   }
   getParamInfoBuffer(): ArrayBuffer | null {
     if (this.exports.offset_of_param_info == null) {
@@ -190,6 +193,7 @@ export class Instance {
     console.log("pointer_of_out_channels:", exp.pointer_of_out_channels?.value);
     console.log("pointer_of_params:", exp.pointer_of_params?.value);
     console.log("pointer_of_static_data:", exp.pointer_of_static_data?.value);
+    console.log("size_of_static_data:", exp.size_of_static_data.value);
     console.log("offset_of_param_info:", exp.offset_of_param_info?.value);
     console.log("in_0", instance.getNthInputBuffer(0));
     console.log("in_1", instance.getNthInputBuffer(1));

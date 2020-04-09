@@ -6,6 +6,7 @@ export type LanguageSpecificExports = WebAssembly.Exports & {
   pointer_of_out_channels: WebAssembly.Global | undefined;
   pointer_of_params: WebAssembly.Global | undefined;
   pointer_of_static_data: WebAssembly.Global | undefined;
+  size_of_static_data: WebAssembly.Global;
   offset_of_param_info: WebAssembly.Global | undefined;
   memory: WebAssembly.Memory;
   test: Function | null;

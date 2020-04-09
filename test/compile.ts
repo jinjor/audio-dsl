@@ -57,6 +57,7 @@ void test() {}
         4 * 128 * exports.number_of_out_channels.value,
       exports.pointer_of_params
     );
+    assert.notEqual(exports.size_of_static_data, undefined);
   });
   it("compiles", () => {
     const src = `

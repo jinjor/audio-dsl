@@ -532,7 +532,7 @@ export function validate(
     });
   }
 
-  // string pointers
+  // start static
   const staticSegmentOffset = scope.byteOffset;
   state.globalVariableDeclarations.push({
     $: "GlobalVariableDeclaration",
@@ -573,6 +573,16 @@ export function validate(
       });
     }
   }
+  // end static
+  const sizeOfStaticData = dataBuilder.size;
+  state.globalVariableDeclarations.push({
+    $: "GlobalVariableDeclaration",
+    type: primitives.int32Type,
+    name: "size_of_static_data",
+    mutable: false,
+    init: makeConstant(primitives.int32Type, sizeOfStaticData),
+    export: true,
+  });
 
   // log.debug(util.inspect(state, { colors: true, depth: 10 }));
   return {
