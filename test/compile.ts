@@ -88,6 +88,62 @@ void test() {
     compile(src, [util]);
     assert.deepStrictEqual(output, [1, -1, 2.0, -2.0, true, false, "Hello"]);
   });
+  it("handles global variables", () => {
+    const src = `
+var int i = 1;
+var float f = 2.0;
+var bool b = 1 > 0;
+param float p1 { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }
+param float[] p2 { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }
+void process() {}
+void test() {
+  p1 = 3.0;
+  p2[0] = 4.0;
+  log_i(i);
+  log_f(f);
+  log_b(b);
+  log_f(p1);
+  log_f(p2[0]);
+  i = 5;
+  f = 6.0;
+  b = 1 < 0;
+  log_i(i);
+  log_f(f);
+  log_b(b);
+}
+    `;
+    const output: any[] = [];
+    const util = createUtilForTest((value: any) => {
+      output.push(value);
+    });
+    compile(src, [util]);
+    assert.deepStrictEqual(output, [1, 2, true, 3, 4, 5, 6, false]);
+  });
+  it("handles local variables", () => {
+    const src = `
+void process() {}
+void test() {
+  int i = 1;
+  float f = 2.0;
+  bool b = 1 > 0;
+  log_i(i);
+  log_f(f);
+  log_b(b);
+  i = 5;
+  f = 6.0;
+  b = 1 < 0;
+  log_i(i);
+  log_f(f);
+  log_b(b);
+}
+    `;
+    const output: any[] = [];
+    const util = createUtilForTest((value: any) => {
+      output.push(value);
+    });
+    compile(src, [util]);
+    assert.deepStrictEqual(output, [1, 2, true, 5, 6, false]);
+  });
   it("exports param info", () => {
     const src = `
 param float[] note {
@@ -95,7 +151,7 @@ param float[] note {
   minValue = 0.0;
   maxValue = 127.0;
 }
-param float[] wave_type {
+param float wave_type {
   defaultValue = 0.0;
   minValue = 0.0;
   maxValue = 4.0;
@@ -103,7 +159,6 @@ param float[] wave_type {
 void process() {}
 void test() {}
     `;
-    // TODO: case of single value
     const instance = compile(src, []);
     assert.equal(instance.numberOfParams, 2);
     assert.deepStrictEqual(instance.getNthParamInfo(0)?.descriptor, {
@@ -118,7 +173,7 @@ void test() {}
       defaultValue: 0,
       minValue: 0,
       maxValue: 4,
-      automationRate: "a-rate",
+      automationRate: "k-rate",
     });
   });
 });
