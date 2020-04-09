@@ -344,6 +344,7 @@ export type FunctionCall = {
 export type Call = FunctionCall | BuiltinFunctionCall;
 export type BuiltinFunctionKind =
   | "IntToFloat"
+  | "FloatToInt"
   | "F32Abs"
   | "F32Neg"
   | "F32Ceil"

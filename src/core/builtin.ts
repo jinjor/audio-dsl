@@ -9,6 +9,12 @@ builtInModule.types.set("to_float", {
   returnType: primitives.float32Type,
   builtinFunctionKind: "IntToFloat",
 });
+builtInModule.types.set("to_int", {
+  $: "FunctionType",
+  params: [primitives.float32Type],
+  returnType: primitives.int32Type,
+  builtinFunctionKind: "FloatToInt",
+});
 builtInModule.types.set("abs", {
   $: "FunctionType",
   params: [primitives.float32Type],
@@ -24,25 +30,25 @@ builtInModule.types.set("neg", {
 builtInModule.types.set("ceil", {
   $: "FunctionType",
   params: [primitives.float32Type],
-  returnType: primitives.int32Type,
+  returnType: primitives.float32Type,
   builtinFunctionKind: "F32Ceil",
 });
 builtInModule.types.set("floor", {
   $: "FunctionType",
   params: [primitives.float32Type],
-  returnType: primitives.int32Type,
+  returnType: primitives.float32Type,
   builtinFunctionKind: "F32Floor",
 });
 builtInModule.types.set("trunc", {
   $: "FunctionType",
   params: [primitives.float32Type],
-  returnType: primitives.int32Type,
+  returnType: primitives.float32Type,
   builtinFunctionKind: "F32Trunc",
 });
 builtInModule.types.set("nearest", {
   $: "FunctionType",
   params: [primitives.float32Type],
-  returnType: primitives.int32Type,
+  returnType: primitives.float32Type,
   builtinFunctionKind: "F32Nearest",
 });
 builtInModule.types.set("sqrt", {
