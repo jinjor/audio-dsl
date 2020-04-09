@@ -346,16 +346,27 @@ describe("Validate", function () {
       `param float a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; } void a () {}`
     );
   });
-  it("cast", () => {
-    // TODO: test built-in funcs instead of "cast"
+  it("built-in functions", () => {
     assertOk(`void f() { float a = to_float(0); }`);
+    assertOk(`void f() { float a = abs(0.0); }`);
+    assertOk(`void f() { float a = neg(0.0); }`);
+    assertOk(`void f() { int a = ceil(0.0); }`);
     assertOk(`void f() { int a = floor(0.0); }`);
+    assertOk(`void f() { int a = trunc(0.0); }`);
+    assertOk(`void f() { int a = nearest(0.0); }`);
+    assertOk(`void f() { float a = sqrt(0.0); }`);
+    assertOk(`void f() { float a = min(0.0, 0.0); }`);
+    assertOk(`void f() { float a = max(0.0, 0.0); }`);
     assertErrorExists(`void f() { float a = to_float(0.0); }`);
     assertErrorExists(`void f() { float a = floor(0.0); }`);
     assertErrorExists(`void f() { int a = to_float(0); }`);
     assertErrorExists(`void f() { int a = floor(0); }`);
     assertErrorExists(`void f() { int a = to_float(0.0); }`);
     assertErrorExists(`void f() { float a = floor(0); }`);
+    assertErrorExists(`void f() { int a = floor(0.0, 0.0); }`);
+    assertErrorExists(`void f() { int a = floor(); }`);
+    assertErrorExists(`void f() { float a = max(0.0); }`);
+    assertErrorExists(`void f() { float a = max(0.0, 0.0, 0.0); }`);
   });
   it("import", () => {
     assertOk(`void f() { float a = sin(0.0); }`);
