@@ -166,11 +166,50 @@ void test() {
     compile(src, [util]);
     assert.deepStrictEqual(output, [3, -1, 2, 1, 3, -1, 2, 0.5]);
   });
+  it("compare with bin ops", () => {
+    const src = `
+void process() {}
+void test() {
+  log_b(2 > 1);
+  log_b(1 > 1);
+  log_b(2 >= 1);
+  log_b(1 >= 1);
+  log_b(1 < 2);
+  log_b(1 < 1);
+  log_b(1 <= 2);
+  log_b(1 <= 1);
+  log_b(2 == 1);
+  log_b(1 == 1);
+  log_b(2 != 1);
+  log_b(1 != 1);
+}
+    `;
+    const output: any[] = [];
+    const util = createUtilForTest((value: any) => {
+      output.push(value);
+    });
+    compile(src, [util]);
+    assert.deepStrictEqual(output, [
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+    ]);
+  });
   it("calculates with built-in functions", () => {
     const src = `
 void process() {}
 void test() {
   log_f(to_float(1));
+  log_i(to_int(1.0));
   log_f(ceil(1.5));
   log_f(ceil(-1.5));
   log_f(floor(1.5));
@@ -189,7 +228,7 @@ void test() {
       output.push(value);
     });
     compile(src, [util]);
-    assert.deepStrictEqual(output, [1, 2, -1, 1, -2, 1, -1, 2, -2, 3, 2, 1]);
+    assert.deepStrictEqual(output, [1, 1, 2, -1, 1, -2, 1, -1, 2, -2, 3, 2, 1]);
   });
   it("exports param info", () => {
     const src = `

@@ -348,6 +348,7 @@ describe("Validate", function () {
   });
   it("built-in functions", () => {
     assertOk(`void f() { float a = to_float(0); }`);
+    assertOk(`void f() { int a = to_int(0.0); }`);
     assertOk(`void f() { float a = abs(0.0); }`);
     assertOk(`void f() { float a = neg(0.0); }`);
     assertOk(`void f() { float a = ceil(0.0); }`);

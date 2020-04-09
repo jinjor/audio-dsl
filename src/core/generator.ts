@@ -197,6 +197,9 @@ export class Module {
     if (exp.$ === "IntToFloat") {
       return this.raw.f32.convert_s.i32(this.expression(exp.args[0])) as X;
     }
+    if (exp.$ === "FloatToInt") {
+      return this.raw.i32.trunc_s.f32(this.expression(exp.args[0])) as X;
+    }
     if (exp.$ === "F32Abs") {
       return this.raw.f32.abs(this.expression(exp.args[0])) as X;
     }
