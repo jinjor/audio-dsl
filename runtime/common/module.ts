@@ -150,7 +150,7 @@ export class Instance {
   ) {
     const arrayLength = automationRate === "a-rate" ? numSamples : 1;
     const view = new Float32Array(this.memory.buffer, ptr, arrayLength);
-    if (param.length === 1) {
+    if (param.length === 1 || arrayLength === 1) {
       view.fill(param[0]);
     } else {
       view.set(param);

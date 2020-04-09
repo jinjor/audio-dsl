@@ -9,7 +9,7 @@ param float[] note {
   minValue = 0.0;
   maxValue = 127.0;
 }
-param float[] wave_type {
+param float wave_type {
   defaultValue = 0.0;
   minValue = 0.0;
   maxValue = 3.0;
@@ -39,7 +39,7 @@ float calc_triangle() {
   return angle < PI ? 2.0 * angle / PI - 1.0 : -2.0 * angle / PI + 3.0;
 }
 void process() {
-  float type = wave_type[0];
+  float type = wave_type;
   loop {
     out_0[i] = (
       type == 0.0 ? calc_sin() :
