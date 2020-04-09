@@ -266,9 +266,9 @@ describe("Validate", function () {
     assertErrorExists(`void f() { loop { float length = 0.0; } }`);
     assertErrorExists(`void f() { loop { i = 0.0; } }`);
     assertErrorExists(`void f() { loop { i = ""; } }`);
-    // TODO
+
+    // These are unexpected use case, but allowed for now.
     // assertErrorExists(`void f() { loop { return; } }`);
-    // TODO
     // assertErrorExists(`void f() { loop { loop { } } }`);
   });
   it("param", () => {
