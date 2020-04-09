@@ -1,8 +1,9 @@
 import { textToBinary } from "../src/core/compiler";
-import { base64ToBytes } from "../runtime/common/util";
-import { Instance } from "../runtime/common/module";
+import { Instance, createImportObject } from "../runtime/common/module";
 import { Lib, pointerToString } from "../runtime/common/lib";
 import assert from "assert";
+import { LanguageSpecificInstance } from "../runtime/common/definition";
+import { base64ToBytes } from "../runtime/common/util";
 
 function compile(src: string, libs: Lib[]) {
   const binary = textToBinary(src);
@@ -30,6 +31,32 @@ function createUtilForTest(callback: (value: any) => void) {
 }
 
 describe("Compile", function () {
+  it("exports memory layout", () => {
+    const src = `
+param float[] a { defaultValue = 0.0; minValue = 0.0; maxValue = 0.0; }
+void process() {}
+void test() {}
+    `;
+    const binary = textToBinary(src);
+    const memory = new WebAssembly.Memory({ initial: 1, maximum: 1 });
+    const mod = new WebAssembly.Module(binary);
+    const importObject = createImportObject(memory, []);
+    const instance = new WebAssembly.Instance(
+      mod,
+      importObject
+    ) as LanguageSpecificInstance;
+    const exports = instance.exports;
+    assert.equal(
+      exports.pointer_of_in_channels!.value +
+        4 * 128 * exports.number_of_in_channels.value,
+      exports.pointer_of_out_channels
+    );
+    assert.equal(
+      exports.pointer_of_out_channels!.value +
+        4 * 128 * exports.number_of_out_channels.value,
+      exports.pointer_of_params
+    );
+  });
   it("compiles", () => {
     const src = `
 void process() {}
@@ -40,7 +67,7 @@ void test() {}
     assert.equal(instance.numberOfOutChannels, 2);
     assert.equal(instance.numberOfParams, 0);
   });
-  it("compiles", () => {
+  it("logs values", () => {
     const src = `
 void process() {}
 void test() {

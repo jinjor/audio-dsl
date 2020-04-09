@@ -10,7 +10,10 @@ import {
   pointerToBool,
 } from "./lib";
 
-function createImportObject(memory: WebAssembly.Memory, libs: Lib[]): any {
+export function createImportObject(
+  memory: WebAssembly.Memory,
+  libs: Lib[]
+): any {
   const importObject: any = {
     env: {
       memory,
@@ -55,12 +58,12 @@ export class Instance {
     this.exports = instance.exports;
     for (let i = 0; i < this.exports.number_of_in_channels.value; i++) {
       this.inPtrs[i] =
-        this.exports.pointer_of_in_channels.value +
+        this.exports.pointer_of_in_channels!.value +
         numSamples * sizeOfFloat * i;
     }
     for (let i = 0; i < this.exports.number_of_out_channels.value; i++) {
       this.outPtrs[i] =
-        this.exports.pointer_of_out_channels.value +
+        this.exports.pointer_of_out_channels!.value +
         numSamples * sizeOfFloat * i;
     }
   }
@@ -74,7 +77,7 @@ export class Instance {
     return this.getAudioArrayAt(this.outPtrs[n]);
   }
   private getStaticBuffer(): ArrayBuffer {
-    const ptr = this.exports.pointer_of_static_data.value;
+    const ptr = this.exports.pointer_of_static_data!.value;
     return this.memory.buffer.slice(ptr, ptr + 100); // TODO: ?
   }
   getParamInfoBuffer(): ArrayBuffer | null {
@@ -82,13 +85,13 @@ export class Instance {
       return null;
     }
     const ptr =
-      this.exports.pointer_of_static_data.value +
+      this.exports.pointer_of_static_data!.value +
       this.exports.offset_of_param_info.value;
     return this.memory.buffer.slice(ptr, ptr + sizeOfParamInfo);
   }
   getNthParamInfo(n: number): ParamInfo | null {
     const memory = this.memory;
-    const staticPtr = this.exports.pointer_of_static_data.value;
+    const staticPtr = this.exports.pointer_of_static_data!.value;
     if (n >= this.numberOfParams) {
       return null;
     }
@@ -183,10 +186,9 @@ export class Instance {
     console.log("number_of_in_channels:", exp.number_of_in_channels.value);
     console.log("number_of_out_channels:", exp.number_of_out_channels.value);
     console.log("number_of_params:", exp.number_of_params.value);
-
-    console.log("pointer_of_in_channels:", exp.pointer_of_in_channels.value);
-    console.log("pointer_of_out_channels:", exp.pointer_of_out_channels.value);
-    // console.log("pointer_of_params:", exp.pointer_of_params.value);// TODO
+    console.log("pointer_of_in_channels:", exp.pointer_of_in_channels?.value);
+    console.log("pointer_of_out_channels:", exp.pointer_of_out_channels?.value);
+    console.log("pointer_of_params:", exp.pointer_of_params?.value);
     console.log("pointer_of_static_data:", exp.pointer_of_static_data?.value);
     console.log("offset_of_param_info:", exp.offset_of_param_info?.value);
     console.log("in_0", instance.getNthInputBuffer(0));

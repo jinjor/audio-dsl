@@ -541,17 +541,6 @@ export function validate(
     init: makeConstant(primitives.int32Type, state.paramInfo.length),
     export: true,
   });
-  if (state.paramInfo.length > 0) {
-    // TODO
-    // state.globalVariableDeclarations.push({
-    //   $: "GlobalVariableDeclaration",
-    //   name: "pointer_of_params",
-    //   type: primitives.int32Type,
-    //   mutable: false,
-    //   init: makeConstant(primitives.int32Type, offset),
-    //   export: true,
-    // });
-  }
   for (let i = 0; i < state.paramInfo.length; i++) {
     const { structType, fieldValues } = state.paramInfo[i];
     const infoStructOffset = pushStructToDataBuilder(
@@ -793,7 +782,7 @@ function validateParamDeclaration(
     return;
   }
   if (isArray) {
-    validateArrayDeclaration(
+    const offset = validateArrayDeclaration(
       state,
       scope,
       ast.name.name,
@@ -801,6 +790,19 @@ function validateParamDeclaration(
       state.numSamples,
       null
     );
+    if (offset == null) {
+      throw new Error("unreachable");
+    }
+    if (state.paramInfo.length === 0) {
+      state.globalVariableDeclarations.push({
+        $: "GlobalVariableDeclaration",
+        name: "pointer_of_params",
+        type: primitives.int32Type,
+        mutable: false,
+        init: makeConstant(primitives.int32Type, offset),
+        export: true,
+      });
+    }
   } else {
     scope.declareType(ast.name.name, valueType);
     state.globalVariableDeclarations.push({
