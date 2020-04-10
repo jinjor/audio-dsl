@@ -27,13 +27,6 @@ function deepEq<T, T2 = Exclude<T, "range">>(a: T, b: T2) {
 }
 
 describe("Parser", function () {
-  it.skip("todo", () => {
-    deepEq(parseExpression(`[]`), { $: "ArrayLiteral", items: [] });
-    deepEq(parseExpression(`[ 1 ]`), {
-      $: "ArrayLiteral",
-      items: [{ $: "IntLiteral", value: 1 }],
-    });
-  });
   it("literal", () => {
     deepEq(parseExpression("0"), { $: "IntLiteral", value: 0 });
     deepEq(parseExpression("10"), { $: "IntLiteral", value: 10 });
