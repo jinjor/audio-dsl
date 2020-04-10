@@ -4,7 +4,7 @@ import * as path from "path";
 import * as log from "../core/log";
 
 const targets: string[] = [];
-const options: any = {
+const options: Record<string, string | null> = {
   outDir: null,
 };
 for (let i = 3; i < process.argv.length; i++) {

@@ -11,11 +11,13 @@ import {
 } from "./definition.js";
 import { pointerToInt, pointerToFloat, pointerToString, Lib } from "./lib";
 
+export type ImportObject = Record<string, Record<string, any>>;
+
 export function createImportObject(
   memory: WebAssembly.Memory,
   libs: Lib[]
-): any {
-  const importObject: any = {
+): ImportObject {
+  const importObject: ImportObject = {
     env: {
       memory,
     },

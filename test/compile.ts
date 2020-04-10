@@ -12,10 +12,10 @@ function compile(src: string, libs: Lib[]) {
   return Instance.create(bytes, libs);
 }
 
-function createUtilForTest(callback: (value: any) => void) {
+function createUtilForTest(callback: (value: any) => void): Lib {
   return {
     name: "util",
-    create(memory: WebAssembly.Memory): any {
+    create(memory: WebAssembly.Memory): Record<string, Function> {
       return {
         log_i: callback,
         log_f: callback,

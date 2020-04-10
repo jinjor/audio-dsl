@@ -37,11 +37,11 @@ export function pointerToString(
 
 export type Lib = {
   name: string;
-  create(memory: WebAssembly.Memory): any;
+  create(memory: WebAssembly.Memory): Record<string, Function>;
 };
 export const util: Lib = {
   name: "util",
-  create(memory: WebAssembly.Memory): any {
+  create(memory: WebAssembly.Memory): Record<string, Function> {
     return {
       log_i: function (arg: number) {
         console.log("log_i:", arg);
@@ -60,7 +60,7 @@ export const util: Lib = {
 };
 export const math: Lib = {
   name: "math",
-  create(memory: WebAssembly.Memory): any {
+  create(memory: WebAssembly.Memory): Record<string, Function> {
     return {
       abs: Math.abs,
       acos: Math.acos,
