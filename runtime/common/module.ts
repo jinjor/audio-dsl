@@ -142,13 +142,13 @@ export class Instance {
     }
     return info;
   }
-  setFloat32ArrayToNthInput(n: number, incommingInput: Float32Array) {
+  setFloat32ArrayToNthInput(n: number, incomingInput: Float32Array) {
     const view = new Float32Array(
       this.memory.buffer,
       this.inPtrs[n],
       numSamples
     );
-    view.set(incommingInput);
+    view.set(incomingInput);
   }
   setFloat32ArrayToParam(
     automationRate: string,
