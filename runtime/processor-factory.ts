@@ -23,7 +23,7 @@ export function createProcessorClass(instance: Instance) {
       const inLength = Math.min(input.length, numInputs);
       const outLength = Math.min(output.length, numOutputs);
       for (let ch = 0; ch < inLength; ch++) {
-        instance.setFloat32ArrayToNthInput(ch, input[ch]);
+        instance.setFloat32ArrayToInput(ch, input[ch]);
       }
       for (const paramInfo of params) {
         const { name, automationRate } = paramInfo.descriptor;
@@ -32,7 +32,7 @@ export function createProcessorClass(instance: Instance) {
       }
       instance.process();
       for (let ch = 0; ch < outLength; ch++) {
-        instance.getFloat32ArrayFromNthOutput(ch, output[ch]);
+        instance.getFloat32ArrayFromOutput(ch, output[ch]);
       }
       return true;
     }

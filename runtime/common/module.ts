@@ -110,10 +110,10 @@ export class Instance {
   private getAudioArrayAt(ptr: number): ArrayBuffer {
     return this.memory.buffer.slice(ptr, ptr + numSamples * sizeOfFloat);
   }
-  private getNthInputBuffer(n: number): ArrayBuffer {
+  private getInputBuffer(n: number): ArrayBuffer {
     return this.getAudioArrayAt(this.inPtrs[n]);
   }
-  private getNthOutputBuffer(n: number): ArrayBuffer {
+  private getOutputBuffer(n: number): ArrayBuffer {
     return this.getAudioArrayAt(this.outPtrs[n]);
   }
   private getStaticBuffer(): ArrayBuffer {
@@ -132,17 +132,17 @@ export class Instance {
       this.exports.offset_of_param_info.value;
     return this.memory.buffer.slice(ptr, ptr + sizeOfParamInfo);
   }
-  getNthParamInfo(n: number): ParamInfo | null {
+  getParamInfo(n: number): ParamInfo | null {
     return this.paramInfo[n];
   }
   getParamInfoList(): ParamInfo[] {
     const info: ParamInfo[] = [];
     for (let i = 0; i < this.numberOfParams; i++) {
-      info.push(this.getNthParamInfo(i)!);
+      info.push(this.getParamInfo(i)!);
     }
     return info;
   }
-  setFloat32ArrayToNthInput(n: number, incomingInput: Float32Array) {
+  setFloat32ArrayToInput(n: number, incomingInput: Float32Array) {
     const view = new Float32Array(
       this.memory.buffer,
       this.inPtrs[n],
@@ -163,7 +163,7 @@ export class Instance {
       view.set(param);
     }
   }
-  getFloat32ArrayFromNthOutput(n: number, outgoingOutput: Float32Array) {
+  getFloat32ArrayFromOutput(n: number, outgoingOutput: Float32Array) {
     const view = new Float32Array(
       this.memory.buffer,
       this.outPtrs[n],
@@ -202,10 +202,10 @@ export class Instance {
     console.log("pointer_of_static_data:", exp.pointer_of_static_data?.value);
     console.log("size_of_static_data:", exp.size_of_static_data.value);
     console.log("offset_of_param_info:", exp.offset_of_param_info?.value);
-    console.log("in_0", instance.getNthInputBuffer(0));
-    console.log("in_1", instance.getNthInputBuffer(1));
-    console.log("out_0", instance.getNthOutputBuffer(0));
-    console.log("out_1", instance.getNthOutputBuffer(1));
+    console.log("in_0", instance.getInputBuffer(0));
+    console.log("in_1", instance.getInputBuffer(1));
+    console.log("out_0", instance.getOutputBuffer(0));
+    console.log("out_1", instance.getOutputBuffer(1));
     console.log("static", instance.getStaticBuffer());
     console.log("params", instance.getParamInfoBuffer());
     return instance;
