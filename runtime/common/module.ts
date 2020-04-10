@@ -53,6 +53,7 @@ export class Instance {
   private exports: LanguageSpecificExports;
   private inPtrs: number[] = [];
   private outPtrs: number[] = [];
+  private paramInfo: ParamInfo[] = [];
   constructor(bytes: Uint8Array, libs: Lib[]) {
     const memory = new WebAssembly.Memory({ initial: 1, maximum: 1 });
     const mod = new WebAssembly.Module(bytes);
@@ -72,6 +73,38 @@ export class Instance {
       this.outPtrs[i] =
         this.exports.pointer_of_out_channels!.value +
         numSamples * sizeOfFloat * i;
+    }
+    if (this.exports.number_of_params?.value ?? 0 > 1) {
+      const staticPtr = this.exports.pointer_of_static_data!.value;
+      let infoPtr = staticPtr + this.exports.offset_of_param_info!.value;
+      let paramPtr = this.exports.pointer_of_params!.value;
+      for (let i = 0; i < this.exports.number_of_params!.value; i++) {
+        const [
+          namePtr,
+          defaultValue,
+          minValue,
+          maxValue,
+          automationRatePtr,
+        ] = readStruct(memory, paramInfoFieldTypes, infoPtr);
+        const name = pointerToString(memory, staticPtr + namePtr);
+        const automationRate = pointerToString(
+          memory,
+          staticPtr + automationRatePtr
+        );
+        this.paramInfo[i] = {
+          descriptor: {
+            name,
+            defaultValue,
+            minValue,
+            maxValue,
+            automationRate,
+          },
+          ptr: paramPtr,
+        };
+        const length = automationRate === "a-rate" ? numSamples : 1;
+        infoPtr += sizeOfParamInfo;
+        paramPtr += length;
+      }
     }
   }
   private getAudioArrayAt(ptr: number): ArrayBuffer {
@@ -100,41 +133,7 @@ export class Instance {
     return this.memory.buffer.slice(ptr, ptr + sizeOfParamInfo);
   }
   getNthParamInfo(n: number): ParamInfo | null {
-    const memory = this.memory;
-    const staticPtr = this.exports.pointer_of_static_data!.value;
-    if (n >= this.numberOfParams) {
-      return null;
-    }
-    const paramInfoRelativeOffset = this.exports.offset_of_param_info!.value;
-
-    const paramInfoOffset =
-      staticPtr + paramInfoRelativeOffset + n * sizeOfParamInfo;
-    // get struct
-    const [
-      namePtr,
-      defaultValue,
-      minValue,
-      maxValue,
-      automationRatePtr,
-    ] = readStruct(memory, paramInfoFieldTypes, paramInfoOffset);
-    // get string
-    const name = pointerToString(memory, staticPtr + namePtr);
-    const automationRate = pointerToString(
-      memory,
-      staticPtr + automationRatePtr
-    );
-    const pointer_of_params = this.exports.pointer_of_params!.value;
-    const ptr = pointer_of_params + sizeOfFloat * numSamples * n; // TODO: consider single value
-    return {
-      descriptor: {
-        name,
-        defaultValue,
-        minValue,
-        maxValue,
-        automationRate,
-      },
-      ptr,
-    };
+    return this.paramInfo[n];
   }
   getParamInfoList(): ParamInfo[] {
     const info: ParamInfo[] = [];
