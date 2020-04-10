@@ -123,11 +123,16 @@ describe("Validate", function () {
     assertOk(`int a = 0; int b = a + a;`);
     assertOk(`int a = 0; bool b = 1 > a;`);
     assertOk(`bool a = 1 > 0; bool b = a;`);
+    assertOk(`int a = 1 > 0 ? 1 : 0;`);
     assertErrorExists(`int a = 0; float b = float(a);`); // maybe need a static function
     assertErrorExists(`var int a = 0; int b = a;`);
     assertErrorExists(`var int a = 0; var int b = a;`);
     assertErrorExists(`int a = 0; int b = float(a);`);
     assertErrorExists(`var int a = 0; bool b = 1 > a;`);
+    assertErrorExists(`var int a = 0; int b = 1 > 0 ? a : 1;`);
+    assertErrorExists(`var int a = 0; int b = 1 > 0 ? 1 : a;`);
+    assertErrorExists(`var int a = 0; int b = 1 < 0 ? a : 1;`);
+    assertErrorExists(`var int a = 0; int b = 1 < 0 ? 1 : a;`);
   });
   it("op (+)", () => {
     assertOk(`int a = 0 + 0;`);
