@@ -184,7 +184,7 @@ export class Module {
       throw new Error("FunctionGet is not supported in generator");
     }
     if (exp.$ === "StringGet") {
-      const info = this.raw.getMemorySegmentInfoByIndex(0); // string segment
+      const info = this.raw.getMemorySegmentInfoByIndex(0); // static data segment
       const offset = info.offset + exp.relativeByteOffset;
       return this.i32Const(offset as N);
     }
