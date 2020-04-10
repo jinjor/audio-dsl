@@ -9,7 +9,7 @@ function compile(src: string, libs: Lib[]) {
   const binary = textToBinary(src);
   const base64 = Buffer.from(binary.buffer).toString("base64");
   const bytes = base64ToBytes(base64);
-  return Instance.create(bytes, libs);
+  return new Instance(bytes, libs);
 }
 
 function createUtilForTest(callback: (value: any) => void): Lib {

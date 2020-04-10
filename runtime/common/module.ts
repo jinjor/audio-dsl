@@ -205,7 +205,4 @@ export class Instance {
   get numberOfParams(): number {
     return this.exports.number_of_params.value;
   }
-  static create(bytes: Uint8Array, libs: Lib[]): Instance {
-    return new Instance(bytes, libs);
-  }
 }

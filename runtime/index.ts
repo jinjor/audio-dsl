@@ -8,7 +8,7 @@ declare function registerProcessor(name: string, processorClasss: any): void;
 export function register(moduleName: string, base64: string): void {
   const bytes = base64ToBytes(base64);
   const libs = [util, math];
-  const instance = Instance.create(bytes, libs);
+  const instance = new Instance(bytes, libs);
   instance.test();
   registerProcessor(moduleName, createProcessorClass(instance));
 }
