@@ -76,7 +76,6 @@ import {
   AssigningToConstantValueIsNotAllowed,
   NonAssignableType,
   AssigningInGlobalIsNotAllowed,
-  UsingConditionalOperatorInGlobalIsNotSupported,
   ReturningNonPrimitiveTypesIsNotSupported,
   ReceivingNonPrimitiveTypesIsNotSupported,
   DeclaringArrayInLocalIsNotSupported,
@@ -1739,10 +1738,7 @@ function evaluateGlobalExpression(
     return evaluateGlobalBinOp(state, scope, ast);
   }
   if (ast.$ === "CondOp") {
-    state.errors.push(
-      new UsingConditionalOperatorInGlobalIsNotSupported(ast.range)
-    );
-    return null;
+    return evaluateGlobalCondOp(state, scope, ast);
   }
   throw new Error("unreachable");
 }
@@ -1779,6 +1775,43 @@ function evaluateGlobalBinOp(
     throw new Error("there should not be an operator to accept string");
   }
   return [found.evaluate(leftExp, rightExp), found.returnType];
+}
+
+function evaluateGlobalCondOp(
+  state: GlobalState,
+  scope: GlobalScope,
+  ast: ast.CondOp
+):
+  | [ConstantType | StringGet, Int32Type | Float32Type | BoolType | StringType]
+  | null {
+  const cond = evaluateGlobalExpression(state, scope, ast.condition);
+  const ifTrue = validateExpression(state, scope, ast.ifTrue); // TODO: avoid double check
+  const ifFalse = validateExpression(state, scope, ast.ifFalse); // TODO: avoid double check
+  if (cond == null || ifTrue == null || ifFalse == null) {
+    return null;
+  }
+  const [ifTrueExp, ifTrueType] = ifTrue;
+  const [ifFalseExp, ifFalseType] = ifFalse;
+  if (!isTypeEqual(ifTrueType, ifFalseType)) {
+    state.errors.push(
+      new BranchesShouldReturnTheSameType(
+        { start: ast.ifTrue.range.start, end: ast.ifFalse.range.end },
+        ifTrueType,
+        ifFalseType
+      )
+    );
+    return null;
+  }
+  const [condExp, condType] = cond;
+  if (condExp.$ !== "BoolConst" || condType.$ !== "BoolType") {
+    state.errors.push(new ConditionShouldBeBool(ast.condition.range, condType));
+    return null;
+  }
+  if (condExp.value > 0) {
+    return evaluateGlobalExpression(state, scope, ast.ifTrue);
+  } else {
+    return evaluateGlobalExpression(state, scope, ast.ifFalse);
+  }
 }
 
 namespace binop {
