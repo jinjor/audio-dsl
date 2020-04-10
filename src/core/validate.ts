@@ -1763,12 +1763,6 @@ function evaluateGlobalBinOp(
   }
   const [leftExp, leftType] = left;
   const [rightExp, rightType] = right;
-  if (leftExp.$ === "StringGet") {
-    throw new Error("there should not be a way to get string from global");
-  }
-  if (rightExp.$ === "StringGet") {
-    throw new Error("there should not be a way to get string from global");
-  }
   const found = binop.get(ast.operator, leftType, rightType);
   if (found == null) {
     state.errors.push(
@@ -1780,6 +1774,9 @@ function evaluateGlobalBinOp(
       )
     );
     return null;
+  }
+  if (leftExp.$ === "StringGet" || rightExp.$ === "StringGet") {
+    throw new Error("there should not be an operator to accept string");
   }
   return [found.evaluate(leftExp, rightExp), found.returnType];
 }

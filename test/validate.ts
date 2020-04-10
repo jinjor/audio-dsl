@@ -138,6 +138,8 @@ describe("Validate", function () {
     // wrong combination
     assertErrorExists(`float a = 0 + 0.0;`);
     assertErrorExists(`float a = 0.0 + 0;`);
+    assertErrorExists(`float a = "" + 0.0;`);
+    assertErrorExists(`float a = (1 > 0) + 0.0;`);
   });
   it("op (-)", () => {
     assertOk(`int a = 0 - 0;`);
