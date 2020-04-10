@@ -179,6 +179,22 @@ export class Instance {
       console.log("testing module...");
       this.exports.test();
     }
+    const exp = this.exports;
+    console.log("number_of_in_channels:", exp.number_of_in_channels.value);
+    console.log("number_of_out_channels:", exp.number_of_out_channels.value);
+    console.log("number_of_params:", exp.number_of_params.value);
+    console.log("pointer_of_in_channels:", exp.pointer_of_in_channels?.value);
+    console.log("pointer_of_out_channels:", exp.pointer_of_out_channels?.value);
+    console.log("pointer_of_params:", exp.pointer_of_params?.value);
+    console.log("pointer_of_static_data:", exp.pointer_of_static_data?.value);
+    console.log("size_of_static_data:", exp.size_of_static_data.value);
+    console.log("offset_of_param_info:", exp.offset_of_param_info?.value);
+    console.log("in_0", this.getInputBuffer(0));
+    console.log("in_1", this.getInputBuffer(1));
+    console.log("out_0", this.getOutputBuffer(0));
+    console.log("out_1", this.getOutputBuffer(1));
+    console.log("static", this.getStaticBuffer());
+    console.log("params", this.getParamInfoBuffer());
   }
   get numberOfInChannels(): number {
     return this.exports.number_of_in_channels.value;
@@ -190,24 +206,6 @@ export class Instance {
     return this.exports.number_of_params.value;
   }
   static create(bytes: Uint8Array, libs: Lib[]): Instance {
-    const instance = new Instance(bytes, libs);
-    const exp = instance.exports;
-    instance.test();
-    console.log("number_of_in_channels:", exp.number_of_in_channels.value);
-    console.log("number_of_out_channels:", exp.number_of_out_channels.value);
-    console.log("number_of_params:", exp.number_of_params.value);
-    console.log("pointer_of_in_channels:", exp.pointer_of_in_channels?.value);
-    console.log("pointer_of_out_channels:", exp.pointer_of_out_channels?.value);
-    console.log("pointer_of_params:", exp.pointer_of_params?.value);
-    console.log("pointer_of_static_data:", exp.pointer_of_static_data?.value);
-    console.log("size_of_static_data:", exp.size_of_static_data.value);
-    console.log("offset_of_param_info:", exp.offset_of_param_info?.value);
-    console.log("in_0", instance.getInputBuffer(0));
-    console.log("in_1", instance.getInputBuffer(1));
-    console.log("out_0", instance.getOutputBuffer(0));
-    console.log("out_1", instance.getOutputBuffer(1));
-    console.log("static", instance.getStaticBuffer());
-    console.log("params", instance.getParamInfoBuffer());
-    return instance;
+    return new Instance(bytes, libs);
   }
 }

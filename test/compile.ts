@@ -86,7 +86,8 @@ void test() {
     const util = createUtilForTest((value: any) => {
       output.push(value);
     });
-    compile(src, [util]);
+    const instance = compile(src, [util]);
+    instance.test();
     assert.deepStrictEqual(output, [1, -1, 2.0, -2.0, true, false, "Hello"]);
   });
   it("handles global variables", () => {
@@ -117,7 +118,8 @@ void test() {
     const util = createUtilForTest((value: any) => {
       output.push(value);
     });
-    compile(src, [util]);
+    const instance = compile(src, [util]);
+    instance.test();
     assert.deepStrictEqual(output, [1, 2, true, 3, 4, 5, 6, false]);
   });
   it("handles local variables", () => {
@@ -142,7 +144,8 @@ void test() {
     const util = createUtilForTest((value: any) => {
       output.push(value);
     });
-    compile(src, [util]);
+    const instance = compile(src, [util]);
+    instance.test();
     assert.deepStrictEqual(output, [1, 2, true, 5, 6, false]);
   });
   it("calculates with bin ops", () => {
@@ -163,7 +166,8 @@ void test() {
     const util = createUtilForTest((value: any) => {
       output.push(value);
     });
-    compile(src, [util]);
+    const instance = compile(src, [util]);
+    instance.test();
     assert.deepStrictEqual(output, [3, -1, 2, 1, 3, -1, 2, 0.5]);
   });
   it("compare with bin ops", () => {
@@ -188,7 +192,8 @@ void test() {
     const util = createUtilForTest((value: any) => {
       output.push(value);
     });
-    compile(src, [util]);
+    const instance = compile(src, [util]);
+    instance.test();
     assert.deepStrictEqual(output, [
       true,
       false,
@@ -227,7 +232,8 @@ void test() {
     const util = createUtilForTest((value: any) => {
       output.push(value);
     });
-    compile(src, [util]);
+    const instance = compile(src, [util]);
+    instance.test();
     assert.deepStrictEqual(output, [1, 1, 2, -1, 1, -2, 1, -1, 2, -2, 3, 2, 1]);
   });
   it("exports param info", () => {
