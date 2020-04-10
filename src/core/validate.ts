@@ -1704,7 +1704,7 @@ function evaluateGlobalExpression(
     if (id == null) {
       return null;
     }
-    const [idExp, idType] = id; // TODO: compare types
+    const [idExp] = id;
     if (idExp.$ === "LocalGet") {
       throw new Error("unexpected LocalGet");
     }
