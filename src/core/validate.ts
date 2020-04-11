@@ -48,6 +48,7 @@ import {
   makeConstant,
   makeAssign,
   assertNever,
+  CompOpKind,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -934,7 +935,11 @@ function evaluateStructLiteralInGlobal(
         break;
       }
     }
-    const right = evaluateGlobalExpression(state, scope, fieldAst.right);
+    const exp = validateExpression(state, scope, fieldAst.right, true);
+    if (exp == null) {
+      continue;
+    }
+    const right = evaluateGlobalExpression(exp[0]);
     if (right == null) {
       continue;
     }
@@ -1013,7 +1018,7 @@ function validateFunctionCallStatement(
   localStatements: LocalStatement[],
   ast: ast.FunctionCall
 ): void {
-  const func = validateFunctionCall(state, scope, ast);
+  const func = validateFunctionCall(state, scope, ast, false);
   if (func == null) {
     return;
   }
@@ -1051,7 +1056,7 @@ function validateLocalVariableDeclaration(
   if (ast.right == null) {
     [rightExp, rightType] = [defaultValueOf(leftType), leftType];
   } else {
-    const right = validateExpression(state, scope, ast.right);
+    const right = validateExpression(state, scope, ast.right, false);
     if (right == null) {
       return;
     }
@@ -1176,7 +1181,7 @@ function validateReturn(
   let returnExp = null;
   let returnType: AnyType = primitives.voidType;
   if (ast.value != null) {
-    const _return = validateExpression(state, scope, ast.value);
+    const _return = validateExpression(state, scope, ast.value, false);
     if (_return == null) {
       return;
     }
@@ -1264,7 +1269,11 @@ function validateGlobalDeclaration(
     const _rightExp = defaultValueOf(type);
     [rightExp, rightType] = [_rightExp, type];
   } else {
-    const right = evaluateGlobalExpression(state, scope, ast.right);
+    const exp = validateExpression(state, scope, ast.right, true);
+    if (exp == null) {
+      return;
+    }
+    const right = evaluateGlobalExpression(exp[0]);
     if (right == null) {
       return;
     }
@@ -1327,7 +1336,7 @@ function validateAssign(
     }
     const [leftExp, _leftType] = left;
     const leftType = validateAssignableType(state, scope, ast.left, _leftType);
-    const right = validateExpression(state, scope, ast.right);
+    const right = validateExpression(state, scope, ast.right, false);
     if (leftType == null || right == null) {
       return null;
     }
@@ -1344,7 +1353,7 @@ function validateAssign(
     }
     const [leftExp, _leftType] = left;
     const leftType = validateAssignableType(state, scope, ast.left, _leftType);
-    const right = validateExpression(state, scope, ast.right);
+    const right = validateExpression(state, scope, ast.right, false);
     if (leftType == null || right == null) {
       return null;
     }
@@ -1409,8 +1418,8 @@ function validateArrayAccess(
   scope: Scope,
   ast: ast.ArrayAccess
 ): [ItemGet, ItemType] | null {
-  const array = validateExpression(state, scope, ast.array);
-  const index = validateExpression(state, scope, ast.index);
+  const array = validateExpression(state, scope, ast.array, false);
+  const index = validateExpression(state, scope, ast.index, false);
   if (array == null || index == null) {
     return null;
   }
@@ -1463,7 +1472,8 @@ function validateAssignableType(
 function validateExpression(
   state: State,
   scope: Scope,
-  ast: ast.Expression
+  ast: ast.Expression,
+  forEvaluation: boolean
 ): [Expression, ExpressionType] | null {
   if (ast.$ === "IntLiteral") {
     return [
@@ -1481,11 +1491,35 @@ function validateExpression(
     state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
     return null;
   } else if (ast.$ === "Identifier") {
-    return validateIdentifier(state, scope, ast);
+    const id = validateIdentifier(state, scope, ast);
+    if (forEvaluation) {
+      if (id == null) {
+        return null;
+      }
+      const [idExp] = id;
+      if (idExp.$ === "LocalGet") {
+        throw new Error("unexpected LocalGet");
+      }
+      if (idExp.$ === "ArrayGet") {
+        state.errors.push(new GettingArrayInGlobalIsNotSupported(ast.range));
+        return null;
+      }
+      if (idExp.$ === "GlobalGet") {
+        state.errors.push(
+          new ReferringMutableValueInGlobalIsNotAllowed(ast.range)
+        );
+        return null;
+      }
+    }
+    return id;
   } else if (ast.$ === "ArrayAccess") {
+    if (forEvaluation) {
+      state.errors.push(new GettingArrayInGlobalIsNotSupported(ast.range));
+      return null;
+    }
     return validateArrayAccess(state, scope, ast);
   } else if (ast.$ === "FunctionCall") {
-    const funcCall = validateFunctionCall(state, scope, ast);
+    const funcCall = validateFunctionCall(state, scope, ast, forEvaluation);
     if (funcCall == null) {
       return funcCall;
     }
@@ -1496,9 +1530,9 @@ function validateExpression(
     }
     return [funcCallExp, funcCallType];
   } else if (ast.$ === "BinOp") {
-    return validateBinOp(state, scope, ast);
+    return validateBinOp(state, scope, ast, forEvaluation);
   } else if (ast.$ === "CondOp") {
-    return validateCondOp(state, scope, ast);
+    return validateCondOp(state, scope, ast, forEvaluation);
   } else {
     throw new Error("unreachable");
   }
@@ -1522,10 +1556,11 @@ function validateStringLiteral(
 function validateBinOp(
   state: State,
   scope: Scope,
-  ast: ast.BinOp
+  ast: ast.BinOp,
+  forEvaluation: boolean
 ): [BinOp, Int32Type | Float32Type | BoolType] | null {
-  const left = validateExpression(state, scope, ast.left);
-  const right = validateExpression(state, scope, ast.right);
+  const left = validateExpression(state, scope, ast.left, forEvaluation);
+  const right = validateExpression(state, scope, ast.right, forEvaluation);
   if (left == null || right == null) {
     return null;
   }
@@ -1556,11 +1591,17 @@ function validateBinOp(
 function validateCondOp(
   state: State,
   scope: Scope,
-  ast: ast.CondOp
+  ast: ast.CondOp,
+  forEvaluation: boolean
 ): [CondOp, ExpressionType] | null {
-  const condition = validateExpression(state, scope, ast.condition);
-  const ifTrue = validateExpression(state, scope, ast.ifTrue);
-  const ifFalse = validateExpression(state, scope, ast.ifFalse);
+  const condition = validateExpression(
+    state,
+    scope,
+    ast.condition,
+    forEvaluation
+  );
+  const ifTrue = validateExpression(state, scope, ast.ifTrue, forEvaluation);
+  const ifFalse = validateExpression(state, scope, ast.ifFalse, forEvaluation);
   if (condition == null || ifTrue == null || ifFalse == null) {
     return null;
   }
@@ -1597,15 +1638,28 @@ function validateCondOp(
 function validateFunctionCall(
   state: State,
   scope: Scope,
-  ast: ast.FunctionCall
+  ast: ast.FunctionCall,
+  forEvaluation: boolean
 ): [Call, ReturnType] | null {
-  const func = validateCallee(state, scope, ast.func);
+  const func = validateCallee(state, scope, ast.func, forEvaluation);
   if (func == null) {
     return null;
   }
   const [funcExp, funcType] = func;
-  const args = validateArguments(state, scope, funcType, ast.args);
+  const args = validateArguments(
+    state,
+    scope,
+    funcType,
+    ast.args,
+    forEvaluation
+  );
   if (args == null) {
+    return null;
+  }
+  if (forEvaluation && funcType.builtinFunctionKind == null) {
+    state.errors.push(
+      new CallingNonBuiltInFunctionInGlobalIsNotSupported(ast.func.range)
+    );
     return null;
   }
   if (funcType.builtinFunctionKind != null) {
@@ -1632,9 +1686,10 @@ function validateFunctionCall(
 function validateCallee(
   state: State,
   scope: Scope,
-  ast: ast.Expression
+  ast: ast.Expression,
+  forEvaluation: boolean
 ): [FunctionGet, FunctionType] | null {
-  const func = validateExpression(state, scope, ast);
+  const func = validateExpression(state, scope, ast, forEvaluation);
   if (func == null) {
     return null;
   }
@@ -1654,7 +1709,8 @@ function validateArguments(
   state: State,
   scope: Scope,
   funcType: FunctionType,
-  astArgs: ast.FunctionArguments
+  astArgs: ast.FunctionArguments,
+  forEvaluation: boolean
 ): [Expression, ExpressionType][] | null {
   const args = new Array<[Expression, ExpressionType] | null>(
     astArgs.values.length
@@ -1663,7 +1719,7 @@ function validateArguments(
   const paramLength = funcType.params.length;
   for (let i = 0; i < astArgs.values.length; i++) {
     const argAst = astArgs.values[i];
-    const arg = validateExpression(state, scope, argAst);
+    const arg = validateExpression(state, scope, argAst, forEvaluation);
     if (arg == null) {
       args[i] = null;
       continue;
@@ -1698,263 +1754,142 @@ function validateArguments(
 }
 
 function evaluateGlobalExpression(
-  state: GlobalState,
-  scope: GlobalScope,
-  ast: ast.Expression
+  exp: Expression
 ):
   | [ConstantType | StringGet, Int32Type | Float32Type | BoolType | StringType]
   | null {
-  if (ast.$ === "IntLiteral") {
+  if (
+    exp.$ === "LocalGet" ||
+    exp.$ === "GlobalGet" ||
+    exp.$ === "FunctionGet" ||
+    exp.$ === "StructTypeWithOffset" ||
+    exp.$ === "ArrayGet" ||
+    exp.$ === "ItemGet" ||
+    exp.$ === "FunctionCall"
+  ) {
+    throw new Error("unexpected " + exp.$);
+  }
+  if (isConstantType(exp)) {
+    return [exp, typeOfConstant(exp)];
+  }
+  if (exp.$ === "StringGet") {
+    return [exp, primitives.stringType];
+  }
+  if (binop.isBinOp(exp)) {
+    const args: Expression[] = [exp.left, exp.right];
+    assertArgumentsIsConstants(args);
+    const result = binop.evaluate(exp.$, args[0], args[1]);
+    return [result, typeOfConstant(result)];
+  }
+  if (exp.$ === "CondOp") {
+    const condition = evaluateGlobalExpression(exp.condition);
+    if (condition == null) {
+      throw new Error("unexpected condition");
+    }
+    const [condExp] = condition;
+    if (condExp.$ !== "BoolConst") {
+      throw new Error("unexpected " + condExp.$);
+    }
+    if (condExp.value > 0) {
+      return evaluateGlobalExpression(exp.ifTrue);
+    } else {
+      return evaluateGlobalExpression(exp.ifFalse);
+    }
+  }
+  if (exp.$ === "IntToFloat") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.int32Type, ast.value),
-      primitives.int32Type,
-    ];
-  } else if (ast.$ === "FloatLiteral") {
-    return [
-      makeConstant(primitives.float32Type, ast.value),
-      primitives.float32Type,
-    ];
-  } else if (ast.$ === "StringLiteral") {
-    const offset = state.strings.set(ast.value);
-    return [
-      {
-        $: "StringGet",
-        relativeByteOffset: offset,
-      },
-      primitives.stringType,
-    ];
-  } else if (ast.$ === "ArrayLiteral") {
-    state.errors.push(new ArrayLiteralIsNotSupported(ast.range));
-    return null;
-  } else if (ast.$ === "Identifier") {
-    const id = validateIdentifier(state, scope, ast);
-    if (id == null) {
-      return null;
-    }
-    const [idExp] = id;
-    if (idExp.$ === "LocalGet") {
-      throw new Error("unexpected LocalGet");
-    }
-    if (idExp.$ === "ArrayGet") {
-      state.errors.push(new GettingArrayInGlobalIsNotSupported(ast.range));
-      return null;
-    }
-    if (idExp.$ === "FunctionGet") {
-      state.errors.push(new GettingFunctionInGlobalIsNotSupported(ast.range));
-      return null;
-    }
-    if (idExp.$ === "GlobalGet") {
-      state.errors.push(
-        new ReferringMutableValueInGlobalIsNotAllowed(ast.range)
-      );
-      return null;
-    }
-    if (isConstantType(idExp)) {
-      return [idExp, typeOfConstant(idExp)];
-    }
-    throw new Error("maybe undeachable");
-  }
-  if (ast.$ === "ArrayAccess") {
-    state.errors.push(new GettingArrayItemInGlobalIsNotSupported(ast.range));
-    return null;
-  }
-  if (ast.$ === "FunctionCall") {
-    return evaluateFunctionCallInGlobal(state, scope, ast);
-  }
-  if (ast.$ === "BinOp") {
-    return evaluateGlobalBinOp(state, scope, ast);
-  }
-  if (ast.$ === "CondOp") {
-    return evaluateGlobalCondOp(state, scope, ast);
-  }
-  throw new Error("unreachable");
-}
-
-function evaluateFunctionCallInGlobal(
-  state: GlobalState,
-  scope: GlobalScope,
-  ast: ast.FunctionCall
-): [ConstantType, Int32Type | Float32Type | BoolType] | null {
-  const func = validateCallee(state, scope, ast.func); // TODO: evaluate
-  if (func == null) {
-    return null;
-  }
-  const [funcExp, funcType] = func;
-  const args = validateArguments(state, scope, funcType, ast.args); // TODO: avoid double check
-  if (args == null) {
-    return null;
-  }
-  if (funcType.builtinFunctionKind == null) {
-    state.errors.push(
-      new CallingNonBuiltInFunctionInGlobalIsNotSupported(ast.func.range)
-    );
-    return null;
-  }
-  const validatedArgs: ConstantType[] = [];
-  let hasErr = false;
-  for (let i = 0; i < args.length; i++) {
-    const evaluatedArg = evaluateGlobalExpression(
-      state,
-      scope,
-      ast.args.values[i]
-    );
-    if (evaluatedArg == null) {
-      hasErr = true;
-      continue;
-    }
-    if (evaluatedArg[0].$ === "StringGet") {
-      throw new Error(
-        "there should not be a function that takes a string argument"
-      );
-    }
-    validatedArgs.push(evaluatedArg[0]);
-  }
-  if (hasErr) {
-    return null;
-  }
-  if (funcType.builtinFunctionKind === "IntToFloat") {
-    return [
-      makeConstant(primitives.float32Type, validatedArgs[0].value),
+      makeConstant(primitives.float32Type, exp.args[0].value),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "FloatToInt") {
+  if (exp.$ === "FloatToInt") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.int32Type, validatedArgs[0].value),
+      makeConstant(primitives.int32Type, exp.args[0].value),
       primitives.int32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Abs") {
+  if (exp.$ === "F32Abs") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.float32Type, Math.abs(validatedArgs[0].value)),
+      makeConstant(primitives.float32Type, Math.abs(exp.args[0].value)),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Neg") {
+  if (exp.$ === "F32Neg") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.float32Type, -validatedArgs[0].value),
+      makeConstant(primitives.float32Type, -exp.args[0].value),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Ceil") {
+  if (exp.$ === "F32Ceil") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.float32Type, Math.ceil(validatedArgs[0].value)),
+      makeConstant(primitives.float32Type, Math.ceil(exp.args[0].value)),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Floor") {
+  if (exp.$ === "F32Floor") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.float32Type, Math.floor(validatedArgs[0].value)),
+      makeConstant(primitives.float32Type, Math.floor(exp.args[0].value)),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Trunc") {
+  if (exp.$ === "F32Trunc") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.float32Type, Math.trunc(validatedArgs[0].value)),
+      makeConstant(primitives.float32Type, Math.trunc(exp.args[0].value)),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Nearest") {
+  if (exp.$ === "F32Nearest") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.float32Type, Math.round(validatedArgs[0].value)),
+      makeConstant(primitives.float32Type, Math.round(exp.args[0].value)),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Sqrt") {
+  if (exp.$ === "F32Sqrt") {
+    assertArgumentsIsConstants(exp.args);
     return [
-      makeConstant(primitives.float32Type, Math.sqrt(validatedArgs[0].value)),
+      makeConstant(primitives.float32Type, Math.sqrt(exp.args[0].value)),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Min") {
+  if (exp.$ === "F32Min") {
+    assertArgumentsIsConstants(exp.args);
     return [
       makeConstant(
         primitives.float32Type,
-        Math.min(validatedArgs[0].value, validatedArgs[1].value)
+        Math.min(exp.args[0].value, exp.args[1].value)
       ),
       primitives.float32Type,
     ];
   }
-  if (funcType.builtinFunctionKind === "F32Max") {
+  if (exp.$ === "F32Max") {
+    assertArgumentsIsConstants(exp.args);
     return [
       makeConstant(
         primitives.float32Type,
-        Math.max(validatedArgs[0].value, validatedArgs[1].value)
+        Math.max(exp.args[0].value, exp.args[1].value)
       ),
       primitives.float32Type,
     ];
   }
-  assertNever(funcType.builtinFunctionKind);
+
+  assertNever(exp.$);
 }
 
-function evaluateGlobalBinOp(
-  state: GlobalState,
-  scope: GlobalScope,
-  ast: ast.BinOp
-): [ConstantType, Int32Type | Float32Type | BoolType] | null {
-  const bin = validateBinOp(state, scope, ast);
-  if (bin == null) {
-    return null;
-  }
-  const left = evaluateGlobalExpression(state, scope, ast.left);
-  const right = evaluateGlobalExpression(state, scope, ast.right);
-  if (left == null || right == null) {
-    return null;
-  }
-  const [leftExp, leftType] = left;
-  const [rightExp, rightType] = right;
-  const found = binop.get(ast.operator, leftType, rightType);
-  if (found == null) {
-    state.errors.push(
-      new InvalidTypeCombinationForBinOp(
-        ast.range,
-        ast.operator,
-        leftType,
-        rightType
-      )
-    );
-    return null;
-  }
-  if (leftExp.$ === "StringGet" || rightExp.$ === "StringGet") {
-    throw new Error("there should not be an operator to accept string");
-  }
-  return [found.evaluate(leftExp, rightExp), found.returnType];
-}
-
-function evaluateGlobalCondOp(
-  state: GlobalState,
-  scope: GlobalScope,
-  ast: ast.CondOp
-):
-  | [ConstantType | StringGet, Int32Type | Float32Type | BoolType | StringType]
-  | null {
-  const cond = evaluateGlobalExpression(state, scope, ast.condition);
-  const ifTrue = validateExpression(state, scope, ast.ifTrue); // TODO: avoid double check
-  const ifFalse = validateExpression(state, scope, ast.ifFalse); // TODO: avoid double check
-  if (cond == null || ifTrue == null || ifFalse == null) {
-    return null;
-  }
-  const [ifTrueExp, ifTrueType] = ifTrue;
-  const [ifFalseExp, ifFalseType] = ifFalse;
-  if (!isTypeEqual(ifTrueType, ifFalseType)) {
-    state.errors.push(
-      new BranchesShouldReturnTheSameType(
-        { start: ast.ifTrue.range.start, end: ast.ifFalse.range.end },
-        ifTrueType,
-        ifFalseType
-      )
-    );
-    return null;
-  }
-  const [condExp, condType] = cond;
-  if (condExp.$ !== "BoolConst" || condType.$ !== "BoolType") {
-    state.errors.push(new ConditionShouldBeBool(ast.condition.range, condType));
-    return null;
-  }
-  if (condExp.value > 0) {
-    return evaluateGlobalExpression(state, scope, ast.ifTrue);
-  } else {
-    return evaluateGlobalExpression(state, scope, ast.ifFalse);
+function assertArgumentsIsConstants(
+  args: Expression[]
+): asserts args is ConstantType[] {
+  for (const arg of args) {
+    if (!isConstantType(arg)) {
+      throw new Error("unexpected non-constant argument: " + arg.$);
+    }
   }
 }
 
@@ -1963,11 +1898,24 @@ namespace binop {
   type BinOpRightType = Int32Type | Float32Type | BoolType;
   type BinOpReturnType = Int32Type | Float32Type | BoolType;
   type FoundBinOp = {
-    kind: BinOpKind;
+    kind: BinOpKind | CompOpKind;
     returnType: BinOpReturnType;
-    evaluate: (left: ConstantType, right: ConstantType) => ConstantType;
   };
   const map = new Map<string, FoundBinOp>();
+  const kindToEval = new Map<
+    string,
+    (left: ConstantType, right: ConstantType) => ConstantType
+  >();
+  export function isBinOp(exp: Expression): exp is BinOp {
+    return kindToEval.has(exp.$);
+  }
+  export function evaluate(
+    kind: BinOpKind,
+    left: ConstantType,
+    right: ConstantType
+  ): ConstantType {
+    return kindToEval.get(kind)!(left, right);
+  }
   function makeKey(
     astKind: ast.BinOpKind,
     leftTypeKind: string,
@@ -1986,9 +1934,10 @@ namespace binop {
     map.set(makeKey(astKind, leftType.$, rightType.$), {
       kind,
       returnType,
-      evaluate: (left: ConstantType, right: ConstantType) =>
-        makeConstant(returnType, evaluate(left, right)),
     });
+    kindToEval.set(kind, (left: ConstantType, right: ConstantType) =>
+      makeConstant(returnType, evaluate(left, right))
+    );
   }
   export function get(
     kind: ast.BinOpKind,
