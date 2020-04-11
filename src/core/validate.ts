@@ -47,7 +47,7 @@ import {
   typeOfConstant,
   makeConstant,
   makeAssign,
-  unreachable,
+  assertNever,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -1884,7 +1884,7 @@ function evaluateFunctionCallInGlobal(
       primitives.float32Type,
     ];
   }
-  unreachable(funcType.builtinFunctionKind);
+  assertNever(funcType.builtinFunctionKind);
 }
 
 function evaluateGlobalBinOp(

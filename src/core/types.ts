@@ -293,11 +293,11 @@ export const paramInfoType: StructType = {
     { name: "automationRate", type: { $: "Int32Type" } }, // pointer to "a-rate" | "k-rate"
   ],
 };
-export function unreachable(value: never): never {
+export function assertNever(value: never): never {
   if (value != null) {
-    throw new Error("unexpectedly found a value: " + value);
+    throw new Error("unexpectedly came here with a value: " + value);
   }
-  return value;
+  throw new Error("unexpectedly came here");
 }
 
 // --------------------

@@ -343,10 +343,12 @@ export class Module {
     if (statement.pointer.itemType.$ === "Float32Type") {
       return this.f32Load(pointer);
     }
-    throw new Error("unreachable");
+    if (statement.pointer.itemType.$ === "BoolType") {
+      return this.i32Load(pointer);
+    }
+    types.assertNever(statement.pointer.itemType);
   }
   fieldSet(statement: types.FieldSet): X {
-    // console.log("fieldSet", statement);
     const pointer = this.structFieldPointer(statement.pointer);
     const value = this.expression(statement.value);
     if (statement.pointer.fieldType.$ === "Int32Type") {
@@ -355,7 +357,10 @@ export class Module {
     if (statement.pointer.fieldType.$ === "Float32Type") {
       return this.f32Store(pointer, value);
     }
-    throw new Error("unreachable");
+    if (statement.pointer.fieldType.$ === "BoolType") {
+      return this.i32Store(pointer, value);
+    }
+    types.assertNever(statement.pointer.fieldType);
   }
   structFieldPointer(pointer: types.StructFieldPointer): X {
     return this.i32Add(
