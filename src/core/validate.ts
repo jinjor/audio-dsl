@@ -1,6 +1,4 @@
 import * as ast from "./ast";
-import * as log from "./log";
-import * as util from "util";
 import {
   ParamType,
   ReturnType,
@@ -585,8 +583,6 @@ export function validate(
     init: makeConstant(primitives.int32Type, sizeOfStaticData),
     export: true,
   });
-
-  // log.debug(util.inspect(state, { colors: true, depth: 10 }));
   return {
     imports: state.imports,
     globalVariableDeclarations: state.globalVariableDeclarations,
