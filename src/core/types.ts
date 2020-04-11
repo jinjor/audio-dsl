@@ -315,7 +315,6 @@ export type Expression =
   | StringGet
   | Call
   | BinOp
-  | CompOp
   | CondOp;
 // Other Expressions
 export type LocalGet = {
@@ -370,41 +369,31 @@ export type BuiltinFunctionCall = {
   $: BuiltinFunctionKind;
   args: Expression[];
 };
-export type Int32CompOpKind =
+export type Int32BinOpKind =
+  | "Int32AddOp"
+  | "Int32SubOp"
+  | "Int32MulOp"
+  | "Int32RemOp"
   | "Int32LT"
   | "Int32LE"
   | "Int32GT"
   | "Int32GE"
   | "Int32EQ"
   | "Int32NE";
-export type Float32CompOpKind =
+export type Float32BinOpKind =
+  | "Float32AddOp"
+  | "Float32SubOp"
+  | "Float32MulOp"
+  | "Float32DivOp"
   | "Float32LT"
   | "Float32LE"
   | "Float32GT"
   | "Float32GE"
   | "Float32EQ"
   | "Float32NE";
-export type Int32BinOpKind =
-  | "Int32AddOp"
-  | "Int32SubOp"
-  | "Int32MulOp"
-  | "Int32RemOp"
-  | Int32CompOpKind;
-export type Float32BinOpKind =
-  | "Float32AddOp"
-  | "Float32SubOp"
-  | "Float32MulOp"
-  | "Float32DivOp"
-  | Float32CompOpKind;
 export type BinOpKind = Int32BinOpKind | Float32BinOpKind;
 export type BinOp = {
   $: BinOpKind;
-  left: Expression;
-  right: Expression;
-};
-export type CompOpKind = Int32CompOpKind | Float32CompOpKind;
-export type CompOp = {
-  $: CompOpKind;
   left: Expression;
   right: Expression;
 };
@@ -487,7 +476,7 @@ export type Loop = {
   $: "Loop";
   init: LocalStatement[];
   body: LocalStatement[];
-  continueIf: CompOp;
+  continueIf: BinOp;
 };
 export type Return = {
   $: "Return";

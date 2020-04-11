@@ -9,7 +9,6 @@ import {
   primitives,
   makeConstant,
   BinOpKind,
-  CompOpKind,
 } from "./types";
 import * as ast from "./ast";
 
@@ -17,7 +16,7 @@ type BinOpLeftType = Int32Type | Float32Type | BoolType;
 type BinOpRightType = Int32Type | Float32Type | BoolType;
 type BinOpReturnType = Int32Type | Float32Type | BoolType;
 type FoundBinOp = {
-  kind: BinOpKind | CompOpKind;
+  kind: BinOpKind;
   returnType: BinOpReturnType;
 };
 const map = new Map<string, FoundBinOp>();
