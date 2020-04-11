@@ -322,11 +322,6 @@ export class CallingNonBuiltInFunctionInGlobalIsNotSupported extends Unsupported
     super(range, "calling non-built-in function in global");
   }
 }
-export class GettingArrayItemInGlobalIsNotSupported extends Unsupported {
-  constructor(public range: ast.Range) {
-    super(range, "getting array item in global");
-  }
-}
 export class ArrayLiteralIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
     super(range, "array literal");
@@ -335,10 +330,5 @@ export class ArrayLiteralIsNotSupported extends Unsupported {
 export class GettingArrayInGlobalIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
     super(range, "getting array in global");
-  }
-}
-export class GettingFunctionInGlobalIsNotSupported extends Unsupported {
-  constructor(public range: ast.Range) {
-    super(range, "getting function in global");
   }
 }
