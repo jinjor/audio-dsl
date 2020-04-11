@@ -1,3 +1,9 @@
+import { Range } from "./ast";
+
+export type SourceInfo = {
+  range: Range | null;
+};
+
 // --------------------
 //  Basic
 // --------------------
@@ -31,7 +37,7 @@ export type ArrayType = {
   numberOfItems: number;
   byteOffset: number;
 };
-export type FunctionType = {
+export type FunctionType = SourceInfo & {
   $: "FunctionType";
   params: ParamType[];
   returnType: ReturnType;
@@ -287,6 +293,12 @@ export const paramInfoType: StructType = {
     { name: "automationRate", type: { $: "Int32Type" } }, // pointer to "a-rate" | "k-rate"
   ],
 };
+export function unreachable(value: never): never {
+  if (value != null) {
+    throw new Error("unexpectedly found a value: " + value);
+  }
+  return value;
+}
 
 // --------------------
 //  Expressions
@@ -316,7 +328,7 @@ export type GlobalGet = {
   name: string;
   type: Int32Type | Float32Type | BoolType;
 };
-export type FunctionGet = {
+export type FunctionGet = SourceInfo & {
   $: "FunctionGet";
   name: string;
 };

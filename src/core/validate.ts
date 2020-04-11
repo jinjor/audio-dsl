@@ -47,6 +47,7 @@ import {
   typeOfConstant,
   makeConstant,
   makeAssign,
+  unreachable,
 } from "./types";
 import { ModuleCache } from "./loader";
 import {
@@ -88,7 +89,7 @@ import {
   GettingArrayInGlobalIsNotSupported,
   GettingFunctionInGlobalIsNotSupported,
   ReferringMutableValueInGlobalIsNotAllowed,
-  CallingInGlobalIsNotSupported,
+  CallingNonBuiltInFunctionInGlobalIsNotSupported,
   VoidCannotBeAnArrayItem,
   DeclaringArrayWithInitialValueNotSupported,
   DeclaringMutableArraysIsNotAllowed,
@@ -254,7 +255,10 @@ class GlobalScope implements Scope {
       ];
     }
     if (typeOrStaticValue.$ === "FunctionType") {
-      return [{ $: "FunctionGet", name }, typeOrStaticValue];
+      return [
+        { range: typeOrStaticValue.range, $: "FunctionGet", name },
+        typeOrStaticValue,
+      ];
     }
     if (typeOrStaticValue.$ === "StructTypeWithOffset") {
       return [
@@ -749,6 +753,7 @@ function validateFunctionDeclaration(
     );
   } else {
     scope.declareType(ast.name.name, {
+      range: ast.name.range,
       $: "FunctionType",
       params: paramTypes,
       returnType,
@@ -1594,28 +1599,70 @@ function validateFunctionCall(
   scope: Scope,
   ast: ast.FunctionCall
 ): [Call, ReturnType] | null {
-  const func = validateExpression(state, scope, ast.func);
+  const func = validateCallee(state, scope, ast.func);
+  if (func == null) {
+    return null;
+  }
+  const [funcExp, funcType] = func;
+  const args = validateArguments(state, scope, funcType, ast.args);
+  if (args == null) {
+    return null;
+  }
+  if (funcType.builtinFunctionKind != null) {
+    return [
+      {
+        $: funcType.builtinFunctionKind,
+        args: args.map((item) => item![0]),
+      },
+      funcType.returnType,
+    ];
+  }
+  return [
+    {
+      $: "FunctionCall",
+      target: funcExp,
+      args: args.map((item) => item![0]),
+      // params,
+      returnType: funcType.returnType,
+    },
+    funcType.returnType,
+  ];
+}
+
+function validateCallee(
+  state: State,
+  scope: Scope,
+  ast: ast.Expression
+): [FunctionGet, FunctionType] | null {
+  const func = validateExpression(state, scope, ast);
   if (func == null) {
     return null;
   }
   const [funcExp, funcType] = func;
   if (funcExp.$ !== "FunctionGet") {
-    state.errors.push(
-      new CallingArbitraryExpressionIsNotSupported(ast.func.range)
-    );
+    state.errors.push(new CallingArbitraryExpressionIsNotSupported(ast.range));
     return null;
   }
   if (funcType.$ !== "FunctionType") {
     state.errors.push(new ShouldNotCallNonFunctionType(ast.range));
     return null;
   }
+  return [funcExp, funcType];
+}
+
+function validateArguments(
+  state: State,
+  scope: Scope,
+  funcType: FunctionType,
+  astArgs: ast.FunctionArguments
+): [Expression, ExpressionType][] | null {
   const args = new Array<[Expression, ExpressionType] | null>(
-    ast.args.values.length
+    astArgs.values.length
   );
   const argLength = args.length;
   const paramLength = funcType.params.length;
-  for (let i = 0; i < ast.args.values.length; i++) {
-    const argAst = ast.args.values[i];
+  for (let i = 0; i < astArgs.values.length; i++) {
+    const argAst = astArgs.values[i];
     const arg = validateExpression(state, scope, argAst);
     if (arg == null) {
       args[i] = null;
@@ -1638,7 +1685,7 @@ function validateFunctionCall(
   }
   if (args.length < paramLength) {
     state.errors.push(
-      new TooFewArguments(ast.args.range, paramLength, argLength)
+      new TooFewArguments(astArgs.range, paramLength, argLength)
     );
     return null;
   }
@@ -1647,26 +1694,7 @@ function validateFunctionCall(
       return null;
     }
   }
-  if (funcType.builtinFunctionKind != null) {
-    return [
-      {
-        $: funcType.builtinFunctionKind,
-        args: args.map((item) => item![0]),
-      },
-      funcType.returnType,
-    ];
-  }
-
-  return [
-    {
-      $: "FunctionCall",
-      target: funcExp,
-      args: args.map((item) => item![0]),
-      // params,
-      returnType: funcType.returnType,
-    },
-    funcType.returnType,
-  ];
+  return args.map((item) => item!);
 }
 
 function evaluateGlobalExpression(
@@ -1731,8 +1759,7 @@ function evaluateGlobalExpression(
     return null;
   }
   if (ast.$ === "FunctionCall") {
-    state.errors.push(new CallingInGlobalIsNotSupported(ast.range));
-    return null;
+    return evaluateFunctionCallInGlobal(state, scope, ast);
   }
   if (ast.$ === "BinOp") {
     return evaluateGlobalBinOp(state, scope, ast);
@@ -1741,6 +1768,123 @@ function evaluateGlobalExpression(
     return evaluateGlobalCondOp(state, scope, ast);
   }
   throw new Error("unreachable");
+}
+
+function evaluateFunctionCallInGlobal(
+  state: GlobalState,
+  scope: GlobalScope,
+  ast: ast.FunctionCall
+): [ConstantType, Int32Type | Float32Type | BoolType] | null {
+  const func = validateCallee(state, scope, ast.func); // TODO: evaluate
+  if (func == null) {
+    return null;
+  }
+  const [funcExp, funcType] = func;
+  const args = validateArguments(state, scope, funcType, ast.args); // TODO: avoid double check
+  if (args == null) {
+    return null;
+  }
+  if (funcType.builtinFunctionKind == null) {
+    state.errors.push(
+      new CallingNonBuiltInFunctionInGlobalIsNotSupported(ast.func.range)
+    );
+    return null;
+  }
+  const validatedArgs: ConstantType[] = [];
+  let hasErr = false;
+  for (let i = 0; i < args.length; i++) {
+    const evaluatedArg = evaluateGlobalExpression(
+      state,
+      scope,
+      ast.args.values[i]
+    );
+    if (evaluatedArg == null) {
+      hasErr = true;
+      continue;
+    }
+    if (evaluatedArg[0].$ === "StringGet") {
+      throw new Error(
+        "there should not be a function that takes a string argument"
+      );
+    }
+    validatedArgs.push(evaluatedArg[0]);
+  }
+  if (hasErr) {
+    return null;
+  }
+  if (funcType.builtinFunctionKind === "IntToFloat") {
+    return [
+      makeConstant(primitives.float32Type, validatedArgs[0].value),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "FloatToInt") {
+    return [
+      makeConstant(primitives.int32Type, validatedArgs[0].value),
+      primitives.int32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Abs") {
+    return [
+      makeConstant(primitives.float32Type, Math.abs(validatedArgs[0].value)),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Neg") {
+    return [
+      makeConstant(primitives.float32Type, -validatedArgs[0].value),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Ceil") {
+    return [
+      makeConstant(primitives.float32Type, Math.ceil(validatedArgs[0].value)),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Floor") {
+    return [
+      makeConstant(primitives.float32Type, Math.floor(validatedArgs[0].value)),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Trunc") {
+    return [
+      makeConstant(primitives.float32Type, Math.trunc(validatedArgs[0].value)),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Nearest") {
+    return [
+      makeConstant(primitives.float32Type, Math.round(validatedArgs[0].value)),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Sqrt") {
+    return [
+      makeConstant(primitives.float32Type, Math.sqrt(validatedArgs[0].value)),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Min") {
+    return [
+      makeConstant(
+        primitives.float32Type,
+        Math.min(validatedArgs[0].value, validatedArgs[1].value)
+      ),
+      primitives.float32Type,
+    ];
+  }
+  if (funcType.builtinFunctionKind === "F32Max") {
+    return [
+      makeConstant(
+        primitives.float32Type,
+        Math.max(validatedArgs[0].value, validatedArgs[1].value)
+      ),
+      primitives.float32Type,
+    ];
+  }
+  unreachable(funcType.builtinFunctionKind);
 }
 
 function evaluateGlobalBinOp(

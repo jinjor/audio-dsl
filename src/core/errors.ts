@@ -317,9 +317,9 @@ export class ReturningNonPrimitiveTypesIsNotSupported extends Unsupported {
     super(range, "returning non-primitive types");
   }
 }
-export class CallingInGlobalIsNotSupported extends Unsupported {
+export class CallingNonBuiltInFunctionInGlobalIsNotSupported extends Unsupported {
   constructor(public range: ast.Range) {
-    super(range, "calling in global");
+    super(range, "calling non-built-in function in global");
   }
 }
 export class GettingArrayItemInGlobalIsNotSupported extends Unsupported {
