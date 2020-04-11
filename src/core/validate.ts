@@ -99,6 +99,7 @@ import {
   AmbiguousName,
 } from "./errors";
 import { DataBuilder, StringBuilder } from "./data-builder";
+import * as builtin from "./builtin";
 
 // Scopes
 type FoundExp =
@@ -1790,90 +1791,11 @@ function evaluateGlobalExpression(
       return evaluateGlobalExpression(exp.ifFalse);
     }
   }
-  if (exp.$ === "IntToFloat") {
+  if (builtin.isBuiltinFunctionKind(exp.$)) {
     assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, exp.args[0].value),
-      primitives.float32Type,
-    ];
+    const result = builtin.evaluate(exp.$, exp.args);
+    return [result, typeOfConstant(result)];
   }
-  if (exp.$ === "FloatToInt") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.int32Type, exp.args[0].value),
-      primitives.int32Type,
-    ];
-  }
-  if (exp.$ === "F32Abs") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, Math.abs(exp.args[0].value)),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Neg") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, -exp.args[0].value),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Ceil") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, Math.ceil(exp.args[0].value)),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Floor") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, Math.floor(exp.args[0].value)),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Trunc") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, Math.trunc(exp.args[0].value)),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Nearest") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, Math.round(exp.args[0].value)),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Sqrt") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(primitives.float32Type, Math.sqrt(exp.args[0].value)),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Min") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(
-        primitives.float32Type,
-        Math.min(exp.args[0].value, exp.args[1].value)
-      ),
-      primitives.float32Type,
-    ];
-  }
-  if (exp.$ === "F32Max") {
-    assertArgumentsIsConstants(exp.args);
-    return [
-      makeConstant(
-        primitives.float32Type,
-        Math.max(exp.args[0].value, exp.args[1].value)
-      ),
-      primitives.float32Type,
-    ];
-  }
-
   assertNever(exp.$);
 }
 
