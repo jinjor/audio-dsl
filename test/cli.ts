@@ -1,7 +1,7 @@
 import assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
 
 const tmpDir = path.join(__dirname, "../../tmp");
 const binDir = path.join(__dirname, "../../bin/dsl");
@@ -18,7 +18,7 @@ describe("CLI", function () {
     const outputPath = path.join(tmpDir, "a.js");
     const runtimePath = path.join(tmpDir, "_runtime.js");
     fs.writeFileSync(filePath, src);
-    execSync(`${command} compile a.dsl`, { cwd: tmpDir });
+    spawnSync(command, ["compile", "a.dsl"], { cwd: tmpDir, stdio: "inherit" });
     assert(fs.existsSync(outputPath));
     assert(fs.existsSync(runtimePath));
   });
@@ -31,7 +31,11 @@ describe("CLI", function () {
     const runtimePath = path.join(tmpDir, "_runtime.js");
     fs.writeFileSync(filePath1, src);
     fs.writeFileSync(filePath2, src);
-    execSync(`${command} compile *.dsl`, { cwd: tmpDir });
+    spawnSync(command, ["compile", "*.dsl"], {
+      cwd: tmpDir,
+      shell: true,
+      stdio: "inherit",
+    });
     assert(fs.existsSync(outputPath1));
     assert(fs.existsSync(outputPath2));
     assert(fs.existsSync(runtimePath));
@@ -42,8 +46,31 @@ describe("CLI", function () {
     const outputPath = path.join(tmpDir, "js/a.js");
     const runtimePath = path.join(tmpDir, "js/_runtime.js");
     fs.writeFileSync(filePath, src);
-    execSync(`${command} compile a.dsl --outDir js`, { cwd: tmpDir });
+    spawnSync(command, ["compile", "a.dsl", "--outDir", "js"], {
+      cwd: tmpDir,
+      stdio: "inherit",
+    });
     assert(fs.existsSync(outputPath));
     assert(fs.existsSync(runtimePath));
+  });
+  it("compiles files in complex paths", () => {
+    const src = `void process() {}`;
+    const filePath1 = path.join(tmpDir, "a.dsl");
+    const filePath2 = path.join(tmpDir, "lib/a.dsl");
+    const outputPath1 = path.join(tmpDir, "js/a.js");
+    const outputPath2 = path.join(tmpDir, "js/lib/a.js");
+    const runtimePath = path.join(tmpDir, "js/_runtime.js");
+    const wrongRuntimePath = path.join(tmpDir, "js/lib/_runtime.js");
+    fs.mkdirSync(path.join(tmpDir, "lib"), { recursive: true });
+    fs.writeFileSync(filePath1, src);
+    fs.writeFileSync(filePath2, src);
+    spawnSync(command, ["compile", "a.dsl", "lib/a.dsl", "--outDir", "js"], {
+      cwd: tmpDir,
+      stdio: "inherit",
+    });
+    assert(fs.existsSync(outputPath1));
+    assert(fs.existsSync(outputPath2));
+    assert(fs.existsSync(runtimePath));
+    assert(!fs.existsSync(wrongRuntimePath));
   });
 });

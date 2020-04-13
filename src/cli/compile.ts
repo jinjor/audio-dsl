@@ -28,11 +28,37 @@ for (let i = 3; i < process.argv.length; i++) {
 log.debug("targets:", targets);
 log.debug("options:", options);
 
+function getCommonDir(targets: string[]): string {
+  const pathPartsList = targets.map((p) => path.resolve(p).split(path.sep));
+  const commonPathParts = [];
+  loop: for (let i = 0; ; i++) {
+    let part = null;
+    for (const pathParts of pathPartsList) {
+      part = part ?? pathParts[i];
+      if (pathParts[i] == null || pathParts[i] !== part) {
+        break loop;
+      }
+    }
+    commonPathParts.push(part);
+  }
+  const commonPath = commonPathParts.join(path.sep);
+  if (fs.statSync(commonPath).isDirectory()) {
+    return commonPath;
+  }
+  return path.dirname(commonPath);
+}
+
+const commonDir = getCommonDir(targets);
+const outDir = options.outDir ?? commonDir;
+
 for (const srcFile of targets) {
   const srcFileBasename = path.basename(srcFile, ".dsl");
+  const srcFileDirname = path.dirname(srcFile);
   const outFileBasename = srcFileBasename + ".js";
-  const outDir = options.outDir ?? path.dirname(srcFile);
-  const outFile = path.join(outDir, outFileBasename);
+  const srcDirRelPath = path.relative(commonDir, srcFileDirname);
+  const commonDirFromSrc = path.relative(srcFileDirname, commonDir);
+
+  const outFile = path.join(outDir, srcDirRelPath, outFileBasename);
   if (!fs.existsSync(srcFile)) {
     console.log(`source file "${srcFile}" not found`);
     process.exit(1);
@@ -44,11 +70,11 @@ for (const srcFile of targets) {
   const base64 = Buffer.from(binary.buffer).toString("base64");
 
   const moduleName = srcFileBasename;
-  const RUNTIME_PATH = "./_runtime.js";
+  const RUNTIME_PATH = path.join(commonDirFromSrc, "_runtime.js");
   const MODULE_NAME = moduleName;
   const WASM_BASE64 = base64;
   const processorSourceText = `
-import { register } from "${RUNTIME_PATH}";
+import { register } from "./${RUNTIME_PATH}";
 const moduleName = "${MODULE_NAME}";
 const base64 = "${WASM_BASE64}";
 register(moduleName, base64);
