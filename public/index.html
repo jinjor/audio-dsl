@@ -1,30 +1,47 @@
-<button id="start">Start</button>
-<input id="wave_type" type="range" min="0" max="4" value="0" />
-<button class="note" data-note="60">C3</button>
-<button class="note" data-note="72">C4</button>
+<!-- This keyboard's source is not public yet. -->
+<script
+  type="module"
+  src="https://jinjor.github.io/music-tools/js/keyboard.js"
+></script>
+<label>
+  <span>Wave</span>
+  <input id="wave_type" type="range" min="0" max="4" value="0" />
+</label>
+<div id="keyboard"></div>
 <script type="module">
   const context = new AudioContext();
   let node = null;
   context.audioWorklet.addModule("js/a.js").then(() => {
-    document.getElementById("start").onclick = (e) => {
-      context.resume();
-      node = new AudioWorkletNode(context, "a");
-      node.connect(context.destination);
-    };
+    node = new AudioWorkletNode(context, "a");
+    node.connect(context.destination);
     document.getElementById("wave_type").oninput = (e) => {
+      context.resume();
       const param = node.parameters.get("wave_type");
       const waveType = parseInt(e.target.value);
       param.value = waveType;
     };
-    for (const el of document.getElementsByClassName("note")) {
-      el.addEventListener("click", (e) => {
+    const Keyboard = customElements.get("x-keyboard");
+    const el = new Keyboard({
+      onDown: async (e) => {
+        context.resume();
         const param = node.parameters.get("note");
-        const note = parseInt(e.target.dataset.note);
-        // param.value = note
-        // param.setValueAtTime(note, context.currentTime + 0.3);
-        // param.linearRampToValueAtTime(note, context.currentTime + 0.3);
-        param.exponentialRampToValueAtTime(note, context.currentTime + 0.3);
-      });
-    }
+        param.cancelScheduledValues(context.currentTime);
+        param.exponentialRampToValueAtTime(e.note, context.currentTime + 0.1);
+        if (e.isMouseDown) {
+          const param = node.parameters.get("gain");
+          param.cancelScheduledValues(context.currentTime);
+          param.linearRampToValueAtTime(0.1, context.currentTime + 0.01);
+        }
+      },
+      onUp: (e) => {
+        context.resume();
+        if (e.isMouseUp) {
+          const param = node.parameters.get("gain");
+          param.cancelScheduledValues(context.currentTime);
+          param.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.3);
+        }
+      },
+    });
+    document.getElementById("keyboard").appendChild(el);
   });
 </script>

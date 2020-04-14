@@ -4,15 +4,20 @@ int sample_rate = 48000;
 float HALF_PI = PI * 0.5;
 float TWO_PI = PI * 2.0;
 
+param float wave_type {
+  defaultValue = 0.0;
+  minValue = 0.0;
+  maxValue = 4.0;
+}
 param float[] note {
   defaultValue = base_note;
   minValue = 0.0;
   maxValue = 127.0;
 }
-param float wave_type {
+param float[] gain {
   defaultValue = 0.0;
   minValue = 0.0;
-  maxValue = 4.0;
+  maxValue = 1.0;
 }
 
 // util
@@ -23,7 +28,6 @@ float angle_per_sample(float hz) {
   return TWO_PI * hz / to_float(sample_rate);
 }
 
-float gain = 0.1;
 var float angle = 1.0;
 
 float calc_sin() {
@@ -50,7 +54,7 @@ void process() {
       type == 2.0 ? calc_saw() :
       type == 3.0 ? calc_triangle() :
       calc_noise()
-    ) * gain;
+    ) * gain[i];
     angle = angle + angle_per_sample(note_to_hz(note[i]));
     angle = angle > TWO_PI ? angle - TWO_PI : angle;
   }
