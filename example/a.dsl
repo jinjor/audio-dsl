@@ -12,7 +12,7 @@ param float[] note {
 param float wave_type {
   defaultValue = 0.0;
   minValue = 0.0;
-  maxValue = 3.0;
+  maxValue = 4.0;
 }
 
 // util
@@ -38,6 +38,9 @@ float calc_saw() {
 float calc_triangle() {
   return angle < PI ? 2.0 * angle / PI - 1.0 : -2.0 * angle / PI + 3.0;
 }
+float calc_noise() {
+  return random() * 2.0 - 1.0;
+}
 void process() {
   float type = wave_type;
   loop {
@@ -45,7 +48,8 @@ void process() {
       type == 0.0 ? calc_sin() :
       type == 1.0 ? calc_square() :
       type == 2.0 ? calc_saw() :
-      calc_triangle()
+      type == 3.0 ? calc_triangle() :
+      calc_noise()
     ) * gain;
     angle = angle + angle_per_sample(note_to_hz(note[i]));
     angle = angle > TWO_PI ? angle - TWO_PI : angle;
