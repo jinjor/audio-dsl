@@ -1,47 +1,72 @@
-<!-- This keyboard's source is not public yet. -->
-<script
-  type="module"
-  src="https://jinjor.github.io/music-tools/js/keyboard.js"
-></script>
-<label>
-  <span>Wave</span>
-  <input id="wave_type" type="range" min="0" max="4" value="0" />
-</label>
-<div id="keyboard"></div>
-<script type="module">
-  const context = new AudioContext();
-  let node = null;
-  context.audioWorklet.addModule("js/a.js").then(() => {
-    node = new AudioWorkletNode(context, "a");
-    node.connect(context.destination);
-    document.getElementById("wave_type").oninput = (e) => {
-      context.resume();
-      const param = node.parameters.get("wave_type");
-      const waveType = parseInt(e.target.value);
-      param.value = waveType;
-    };
-    const Keyboard = customElements.get("x-keyboard");
-    const el = new Keyboard({
-      onDown: async (e) => {
-        context.resume();
-        const param = node.parameters.get("note");
-        param.cancelScheduledValues(context.currentTime);
-        param.exponentialRampToValueAtTime(e.note, context.currentTime + 0.1);
-        if (e.isMouseDown) {
-          const param = node.parameters.get("gain");
-          param.cancelScheduledValues(context.currentTime);
-          param.linearRampToValueAtTime(0.1, context.currentTime + 0.01);
-        }
-      },
-      onUp: (e) => {
-        context.resume();
-        if (e.isMouseUp) {
-          const param = node.parameters.get("gain");
-          param.cancelScheduledValues(context.currentTime);
-          param.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.3);
-        }
-      },
-    });
-    document.getElementById("keyboard").appendChild(el);
-  });
-</script>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Audio DSL Example</title>
+  </head>
+  <body>
+    <h1>Audio DSL Example</h1>
+    <div>
+      <a
+        href="https://github.com/jinjor/audio-dsl"
+        target="_blank"
+        rel="noopener"
+        >Source</a
+      >
+    </div>
+    <hr />
+    <label>
+      <span>Wave</span>
+      <input id="wave_type" type="range" min="0" max="4" value="0" />
+    </label>
+    <div id="keyboard"></div>
+    <!-- This keyboard's source is not public yet. -->
+    <script
+      type="module"
+      src="https://jinjor.github.io/music-tools/js/keyboard.js"
+    ></script>
+    <script type="module">
+      const context = new AudioContext();
+      let node = null;
+      context.audioWorklet.addModule("js/a.js").then(() => {
+        node = new AudioWorkletNode(context, "a");
+        node.connect(context.destination);
+        document.getElementById("wave_type").oninput = (e) => {
+          context.resume();
+          const param = node.parameters.get("wave_type");
+          const waveType = parseInt(e.target.value);
+          param.value = waveType;
+        };
+        const Keyboard = customElements.get("x-keyboard");
+        const el = new Keyboard({
+          onDown: async (e) => {
+            context.resume();
+            const param = node.parameters.get("note");
+            param.cancelScheduledValues(context.currentTime);
+            param.exponentialRampToValueAtTime(
+              e.note,
+              context.currentTime + 0.1
+            );
+            if (e.isMouseDown) {
+              const param = node.parameters.get("gain");
+              param.cancelScheduledValues(context.currentTime);
+              param.linearRampToValueAtTime(0.1, context.currentTime + 0.01);
+            }
+          },
+          onUp: (e) => {
+            context.resume();
+            if (e.isMouseUp) {
+              const param = node.parameters.get("gain");
+              param.cancelScheduledValues(context.currentTime);
+              param.exponentialRampToValueAtTime(
+                0.0001,
+                context.currentTime + 0.3
+              );
+            }
+          },
+        });
+        document.getElementById("keyboard").appendChild(el);
+      });
+    </script>
+  </body>
+</html>
