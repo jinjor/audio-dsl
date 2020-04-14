@@ -86,5 +86,5 @@ register(moduleName, base64);
   const runtimeSourceFile = path.join(__dirname, "../../runtime.js");
   fs.copyFileSync(runtimeSourceFile, runtimeOutputFile);
 
-  console.log("compiled:", srcFile, "->", path.dirname(outFile));
+  console.log("compiled:", srcFile, "->", outFile);
 }
