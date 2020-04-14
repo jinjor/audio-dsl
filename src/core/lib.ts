@@ -17,6 +17,13 @@ mathModule.types.set("pow", {
   returnType: primitives.float32Type,
   builtinFunctionKind: null,
 });
+mathModule.types.set("random", {
+  range: null,
+  $: "FunctionType",
+  params: [],
+  returnType: primitives.float32Type,
+  builtinFunctionKind: null,
+});
 mathModule.types.set("PI", { $: "Float32Const", value: Math.PI });
 
 export const utilModule = {

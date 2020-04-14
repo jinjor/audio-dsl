@@ -62,23 +62,16 @@ export const math: Lib = {
   name: "math",
   create(memory: WebAssembly.Memory): Record<string, Function> {
     return {
-      abs: Math.abs,
       acos: Math.acos,
       asin: Math.asin,
       atan: Math.atan,
       atan2: Math.atan2,
-      ceil: Math.ceil,
       cos: Math.cos,
       exp: Math.exp,
-      floor: Math.floor,
       log: Math.log,
       log10: Math.log10,
-      max: Math.max,
-      min: Math.min,
       pow: Math.pow,
-      round: Math.fround,
       sin: Math.sin,
-      sqrt: Math.sqrt,
       tan: Math.tan,
       acosh: Math.acosh,
       asinh: Math.asinh,
@@ -86,6 +79,7 @@ export const math: Lib = {
       cosh: Math.cosh,
       sinh: Math.sinh,
       tanh: Math.tanh,
+      random: Math.random,
     };
   },
 };
