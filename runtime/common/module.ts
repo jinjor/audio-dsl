@@ -102,7 +102,7 @@ export class Instance {
           ptr: paramPtr,
         };
         const length =
-          automationRate === "a-rate" ? sizeOfFloat * numSamples : 1;
+          sizeOfFloat * (automationRate === "a-rate" ? numSamples : 1);
         infoPtr += sizeOfParamInfo;
         paramPtr += length;
       }
