@@ -28,7 +28,7 @@
     <script type="module">
       const context = new AudioContext();
       let node = null;
-      context.audioWorklet.addModule("js/a.js").then(() => {
+      context.audioWorklet.addModule("js/a.mjs").then(() => {
         node = new AudioWorkletNode(context, "a");
         node.connect(context.destination);
         document.getElementById("wave_type").oninput = (e) => {
