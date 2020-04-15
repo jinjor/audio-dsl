@@ -14,7 +14,7 @@
     "build": "run-s build:**",
     "build:compiler": "tsc",
     "build:runtime": "tsc -p runtime",
-    "build:runtime:bundle": "rollup runtime/dist/index.js --format es --file dist/runtime.js",
+    "build:runtime:bundle": "rollup runtime/dist/index.js --format es --file dist/runtime.mjs",
     "format": "prettier --write src/** runtime/** test/**",
     "test": "run-s test:*",
     "test:compiler": "mocha -r source-map-support/register dist/test/**/*.js",

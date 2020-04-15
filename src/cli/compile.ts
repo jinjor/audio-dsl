@@ -54,7 +54,7 @@ const outDir = options.outDir ?? commonDir;
 for (const srcFile of targets) {
   const srcFileBasename = path.basename(srcFile, ".dsl");
   const srcFileDirname = path.dirname(srcFile);
-  const outFileBasename = srcFileBasename + ".js";
+  const outFileBasename = srcFileBasename + ".mjs";
   const srcDirRelPath = path.relative(commonDir, srcFileDirname);
   const commonDirFromSrc = path.relative(srcFileDirname, commonDir);
 
@@ -70,7 +70,7 @@ for (const srcFile of targets) {
   const base64 = Buffer.from(binary.buffer).toString("base64");
 
   const moduleName = srcFileBasename;
-  const RUNTIME_PATH = path.join(commonDirFromSrc, "_runtime.js");
+  const RUNTIME_PATH = path.join(commonDirFromSrc, "_runtime.mjs");
   const MODULE_NAME = moduleName;
   const WASM_BASE64 = base64;
   const processorSourceText = `
@@ -83,7 +83,7 @@ register(moduleName, base64);
   fs.writeFileSync(outFile, processorSourceText);
 
   const runtimeOutputFile = path.join(outDir, RUNTIME_PATH);
-  const runtimeSourceFile = path.join(__dirname, "../../runtime.js");
+  const runtimeSourceFile = path.join(__dirname, "../../runtime.mjs");
   fs.copyFileSync(runtimeSourceFile, runtimeOutputFile);
 
   console.log("compiled:", srcFile, "->", outFile);

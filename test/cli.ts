@@ -15,8 +15,8 @@ describe("CLI", function () {
   it("compiles dsl files", () => {
     const src = `void process() {}`;
     const filePath = path.join(tmpDir, "a.dsl");
-    const outputPath = path.join(tmpDir, "a.js");
-    const runtimePath = path.join(tmpDir, "_runtime.js");
+    const outputPath = path.join(tmpDir, "a.mjs");
+    const runtimePath = path.join(tmpDir, "_runtime.mjs");
     fs.writeFileSync(filePath, src);
     spawnSync(command, ["compile", "a.dsl"], { cwd: tmpDir, stdio: "inherit" });
     assert(fs.existsSync(outputPath));
@@ -26,9 +26,9 @@ describe("CLI", function () {
     const src = `void process() {}`;
     const filePath1 = path.join(tmpDir, "a.dsl");
     const filePath2 = path.join(tmpDir, "b.dsl");
-    const outputPath1 = path.join(tmpDir, "a.js");
-    const outputPath2 = path.join(tmpDir, "a.js");
-    const runtimePath = path.join(tmpDir, "_runtime.js");
+    const outputPath1 = path.join(tmpDir, "a.mjs");
+    const outputPath2 = path.join(tmpDir, "b.mjs");
+    const runtimePath = path.join(tmpDir, "_runtime.mjs");
     fs.writeFileSync(filePath1, src);
     fs.writeFileSync(filePath2, src);
     spawnSync(command, ["compile", "*.dsl"], {
@@ -43,8 +43,8 @@ describe("CLI", function () {
   it("compiles with --outDir option", () => {
     const src = `void process() {}`;
     const filePath = path.join(tmpDir, "a.dsl");
-    const outputPath = path.join(tmpDir, "js/a.js");
-    const runtimePath = path.join(tmpDir, "js/_runtime.js");
+    const outputPath = path.join(tmpDir, "js/a.mjs");
+    const runtimePath = path.join(tmpDir, "js/_runtime.mjs");
     fs.writeFileSync(filePath, src);
     spawnSync(command, ["compile", "a.dsl", "--outDir", "js"], {
       cwd: tmpDir,
@@ -57,10 +57,10 @@ describe("CLI", function () {
     const src = `void process() {}`;
     const filePath1 = path.join(tmpDir, "a.dsl");
     const filePath2 = path.join(tmpDir, "lib/a.dsl");
-    const outputPath1 = path.join(tmpDir, "js/a.js");
-    const outputPath2 = path.join(tmpDir, "js/lib/a.js");
-    const runtimePath = path.join(tmpDir, "js/_runtime.js");
-    const wrongRuntimePath = path.join(tmpDir, "js/lib/_runtime.js");
+    const outputPath1 = path.join(tmpDir, "js/a.mjs");
+    const outputPath2 = path.join(tmpDir, "js/lib/a.mjs");
+    const runtimePath = path.join(tmpDir, "js/_runtime.mjs");
+    const wrongRuntimePath = path.join(tmpDir, "js/lib/_runtime.mjs");
     fs.mkdirSync(path.join(tmpDir, "lib"), { recursive: true });
     fs.writeFileSync(filePath1, src);
     fs.writeFileSync(filePath2, src);

@@ -1,6 +1,7 @@
 node_modules
 *.wasm
 *.js
+*.mjs
 *.d.ts
 *.js.map
 *.vsix

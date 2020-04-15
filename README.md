@@ -39,7 +39,7 @@ index.html
 <button id="start">Start</button>
 <script type="module">
   const context = new AudioContext();
-  context.audioWorklet.addModule("noise.js").then(() => {
+  context.audioWorklet.addModule("noise.mjs").then(() => {
     document.getElementById("start").onclick = (e) => {
       context.resume();
       const node = new AudioWorkletNode(context, "noise");
@@ -50,7 +50,7 @@ index.html
 ```
 
 ```shell
-dsl compile noise.dsl # generats `noise.js` and `_runtime.js`
+dsl compile noise.dsl # generats `noise.mjs` and `_runtime.mjs`
 python3 -m http.server # or something else
 # then, go to http://localhost:8000
 ```
